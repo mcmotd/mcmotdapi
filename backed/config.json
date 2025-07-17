@@ -1,0 +1,6 @@
+{
+  "javaDefaultPort": 25565,
+  "bedrockDefaultPort": 19132,
+  "queryTimeout": 5000,
+  "serverPort": 3123
+}

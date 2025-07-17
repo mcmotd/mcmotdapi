@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iframe 嵌入测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            /* 在移动端减小边距 */
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .iframe-wrapper {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .iframe-wrapper h2 {
+            font-size: 1.2rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        /* [核心改动] 为 iframe 添加响应式样式 */
+        .responsive-iframe {
+            display: block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 0 auto;
+            /* 关键：宽度为100%，以适应其父容器 */
+            width: 100%;
+            /* (可选) 您可以设置一个最大宽度，防止在超大屏幕上过宽 */
+            max-width: 800px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>我的网站 - 服务器状态嵌入测试</h1>
+        <p style="text-align: center;">这里模拟一个第三方网站，它嵌入了来自您的查询应用的状态信息。</p>
+
+        <div class="iframe-wrapper">
+            <h2>测试 1：查询默认BE务器 (亮色模式)</h2>
+            <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
+            <iframe id="mc-status-play.easecation.net" class="responsive-iframe"  frameborder="0" width="700" height="396" scrolling="no"
+                src="http://localhost:3123/iframe?ip=play.easecation.net&port=19132&dark=true&source=mc-status-play.easecation.net"></iframe>
+            <script>
+                window.addEventListener('message', function (event) {
+                    var iframe = document.getElementById('mc-status-play.easecation.net');
+                    if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
+                        iframe.style.height = event.data.height + 'px';
+                    }
+                });
+            </script>
+        </div>
+
+
+        <div class="iframe-wrapper">
+            <h2>测试 1：查询默认BE务器 (暗色模式)</h2>
+            <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
+            <iframe id="mc-status-play.easecation.net" class="responsive-iframe" frameborder="0" width="700" height="396"
+                scrolling="no"
+                src="http://localhost:5173/iframe?ip=play.easecation.net&port=19132&dark=false&source=mc-status-play.easecation.net"></iframe>
+            <script>
+                window.addEventListener('message', function (event) {
+                    var iframe = document.getElementById('mc-status-play.easecation.net');
+                    if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
+                        iframe.style.height = event.data.height + 'px';
+                    }
+                });
+            </script>
+        </div>
+
+
+
+
+        <div class="iframe-wrapper">
+            <h2>测试 2：查询一个JAVA的服务器</h2>
+            <p>下方应显示 <strong>hbe.vanmc.cn</strong> 的状态。</p>
+            <iframe id="mc-status-hbe.vanmc.cn" class="responsive-iframe" frameborder="0" width="700" height="450" scrolling="no"
+                src="http://localhost:5173/iframe?ip=hbe.vanmc.cn&port=18888&dark=false"></iframe>
+            <script>
+                window.addEventListener('message', function (event) {
+                    var iframe = document.getElementById('mc-status-hbe.vanmc.cn');
+                    if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
+                        iframe.style.height = event.data.height + 'px';
+                    }
+                });
+            </script>
+        </div>
+    </div>
+</body>
+
+</html>

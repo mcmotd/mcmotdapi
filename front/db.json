@@ -1,0 +1,18 @@
+{
+    "status": {
+        "online": true,
+        "ip": "play.hypixel.net",
+        "motd": {
+            "clean": [
+                "§aHypixel Network §c[1.8-1.20]",
+                "§e           www.hypixel.net"
+            ]
+        },
+        "players": {
+            "online": 45821,
+            "max": 200000
+        },
+        "version": "Requires 1.8-1.20",
+        "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAA... (这里是一长串图片数据)"
+    }
+}

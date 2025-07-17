@@ -1,0 +1,26 @@
+{
+  "name": "mcmotdapi",
+  "version": "0.0.1",
+  "private": true,
+  "description": "a local motd api",
+  "keywords": [
+    "motd",
+    "mc"
+  ],
+  "homepage": "https://github.com/Sbaoor-fly/mcmotdapi#readme",
+  "bugs": {
+    "url": "https://github.com/Sbaoor-fly/mcmotdapi/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sbaoor-fly/mcmotdapi.git"
+  },
+  "license": "MIT",
+  "author": "Sbaoor",
+  "type": "module",
+  "main": "./backed/server.js",
+  "scripts": {
+    "dev": "node backed/server.js",
+    "build":"cd front && npm run build"
+  }
+}
