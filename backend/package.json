@@ -1,5 +1,5 @@
 {
-"name": "mcmotdapi",
+  "name": "mcmotdapi",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
@@ -13,6 +13,7 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mcpe-ping": "^0.0.4",
+    "sharp": "^0.34.3",
     "varint": "^6.0.0"
   }
 }

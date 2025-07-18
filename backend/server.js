@@ -1,122 +1,36 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const config = require('./config.json');
-
-const PingMCServer = require("./java").fetch;
-const pingBedrock = require('mcpe-ping');
-
 const logger = require('./logger');
+
+// 导入所有路由模块
+const statusRoute = require('./routes/status');
+const statusImageRoute = require('./routes/status_img'); // 导入新的图片路由
 
 const app = express();
 const PORT = config.serverPort || 3000;
 
 app.use(cors());
 
-function pingBedrockPromise(ip, port) {
-  return new Promise((resolve, reject) => {
-    pingBedrock(ip, port, (err, res) => {
-      if (err) return reject(err);
-      resolve(res);
-    }, config.queryTimeout);
-  });
-}
+// --- API 路由 ---
+app.use('/api/status', statusRoute);
+app.use('/api/status_img', statusImageRoute); // 挂载新的图片路由
 
-// 统一的智能查询API端点
-app.get('/api/status', async (req, res) => {
-
-  const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
-  const { ip, port } = req.query;
-  logger.debug('[QUERY]',`${clientIP} 查询 ${ip}:${port}`);
-
-  if (!ip) {
-    return res.status(400).json({ error: '必须提供服务器IP地址 (ip)。' });
-  }
-
-  const now = Date.now();
-  const javaPort = port ? parseInt(port, 10) : config.javaDefaultPort;
-  const bedrockPort = port ? parseInt(port, 10) : config.bedrockDefaultPort;
-
-  // 1. [核心改动] 创建两个独立的查询Promise，并在成功后附加类型信息
-  const javaPromise = PingMCServer(ip, javaPort)
-    .then(response => ({ type: 'Java', data: response })); // 成功时，将结果包装在带有类型的对象中
-
-  const bedrockPromise = pingBedrockPromise(ip, bedrockPort)
-    .then(response => ({ type: 'Bedrock', data: response })); // 同上
-
-  try {
-    // 2. [核心改动] 使用 Promise.any() 同时执行两个查询，并等待第一个成功的结果
-    const result = await Promise.any([javaPromise, bedrockPromise]);
-
-    let formattedResponse;
-
-    // 3. 根据成功返回的类型来格式化数据
-    if (result.type === 'Java') {
-      const { data } = result;
-      // console.log(data.modinfo)
-      const playersSample = data.players.sample?.map(p => p.name).join(', ') || '无';
-      formattedResponse = {
-        type: 'Java',
-        status: 'online',
-        //host: data.srvRecord ? `${data.srvRecord.host}:${data.srvRecord.port}` : `${data.host}:${data.port}`,
-        host: `${ip}:${javaPort}`,
-        motd: data.description,
-        //motd_html: data.motd.html,
-        version: data.version.name,
-        protocol: data.version.protocol,
-        players: { online: data.players.online, max: data.players.max, sample: playersSample },
-        mod_info: data.modinfo,
-        icon: data.favicon,
-        delay: Date.now() - now,
-      };
-      //console.log( data.mod_info.modList.join(','))
-    } else { // result.type === 'Bedrock'
-      const { data } = result;
-      formattedResponse = {
-        type: 'Bedrock',
-        status: 'online',
-        host: `${ip}:${bedrockPort}`,
-        motd: data.name,
-        version: data.version,
-        players: { online: data.currentPlayers, max: data.maxPlayers },
-        gamemode: data.gameMode,
-        delay: Date.now() - now,
-        protocol: data.advertise.split(';')[2]
-      };
-    }
-
-    return res.json(formattedResponse);
-
-  } catch (error) {
-    // 4. [核心改动] 只有当所有Promise都失败时，Promise.any()才会抛出错误
-    logger.info('[QUERY]',`JE和BE查询均失败: ${ip}:${port}`);//, error);
-    return res.status(404).json({
-      status: 'offline',
-      error: '无法连接到服务器，它可能已离线或地址/端口不正确。'
-    });
-  }
-});
-
-const path = require('path');
-const { log } = require('console');
-console.log(path.join(__dirname, 'dist'))
-// 托管 Vue 打包后的静态文件
+// --- 静态文件托管与Vue Router支持 ---
 app.use(express.static(path.join(__dirname, 'dist')));
-
-// 所有未匹配的 GET 请求都返回 index.html（支持 Vue Router 的 history 模式）
-app.get('/', (req, res) => {
-  console.log(req.baseUrl)
+app.get('/', (req, res) => { // 使用 '*' 捕获所有未匹配的路由，包括 / 和 /iframe
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+app.get('/iframe', (req, res) => { // 使用 '*' 捕获所有未匹配的路由，包括 / 和 /iframe
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-
-app.get('/iframe', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
+// --- 启动服务器 ---
 app.listen(PORT, (err) => {
-  if(err){
-    logger.error('[SERVER]',err);
-  }else{
+  if (err) {
+    logger.error('[SERVER]', err);
+  } else {
     logger.info('[SERVER]', `后端服务器正在 http://localhost:${PORT} 上运行`);
   }
 });

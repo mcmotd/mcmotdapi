@@ -34,7 +34,7 @@ const iframeCode = computed(() => {
     }
   });
 <\/script>`;
-    return iframeTag;
+    return iframeTag + scriptTag;
 });
 
 // const copyToClipboard = () => {
