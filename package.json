@@ -18,9 +18,9 @@
   "license": "MIT",
   "author": "Sbaoor",
   "type": "module",
-  "main": "./backed/server.js",
+  "main": "./backend/server.js",
   "scripts": {
-    "start": "node backed/server.js",
+    "start": "node backend/server.js",
     "build":"cd front && npm run build"
   }
 }

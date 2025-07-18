@@ -52,6 +52,7 @@ app.get('/api/status', async (req, res) => {
     // 3. 根据成功返回的类型来格式化数据
     if (result.type === 'Java') {
       const { data } = result;
+      // console.log(data.modinfo)
       const playersSample = data.players.sample?.map(p => p.name).join(', ') || '无';
       formattedResponse = {
         type: 'Java',
