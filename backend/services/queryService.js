@@ -13,6 +13,58 @@ function pingBedrockPromise(ip, port) {
 }
 
 /**
+ * 一个通用的MOTD转换函数，可以将任何格式的MOTD（字符串或JSON对象）转换为纯文本字符串。
+ * 它会递归地解析JSON结构并剥离所有§格式化代码。
+ *
+ * @param {string|object} motd - 从服务器API获取的原始MOTD数据。
+ * @returns {string} - 清理过的、不包含任何格式信息的纯文本字符串。
+ */
+function motdToPlainText(motd) {
+    // 1. 处理无效输入
+    if (!motd) {
+        return '';
+    }
+
+    // 2. 如果输入已经是纯字符串，直接剥离§代码
+    if (typeof motd === 'string') {
+        return motd.replace(/§[0-9a-fk-or]/g, '');
+    }
+
+    // 3. 如果输入是JSON对象，则进行递归解析
+    if (typeof motd === 'object' && motd !== null) {
+        let plainText = '';
+
+        // 递归函数，用于遍历JSON组件
+        function parseComponent(component) {
+            // 如果组件本身就是字符串，直接添加
+            if (typeof component === 'string') {
+                plainText += component;
+                return;
+            }
+
+            // 如果组件有 'text' 属性，添加其内容
+            if (component && component.text) {
+                plainText += component.text;
+            }
+
+            // 如果组件有 'extra' 数组，递归遍历其中的每一个子组件
+            if (component && Array.isArray(component.extra)) {
+                component.extra.forEach(extraComponent => parseComponent(extraComponent));
+            }
+        }
+
+        // 从根MOTD对象开始解析
+        parseComponent(motd);
+
+        // 4. 对拼接后的完整字符串，最后再进行一次§代码剥离，以处理混合格式
+        return plainText.replace(/§[0-9a-fk-or]/g, '');
+    }
+
+    // 5. 对于其他意外的输入类型，返回空字符串
+    return '';
+}
+
+/**
  * 核心查询函数，可被任何路由复用
  * @param {string} ip 服务器IP
  * @param {string|number} port 端口号 (可选)
@@ -42,6 +94,7 @@ async function queryServerStatus(ip, port) {
             status: 'online',
             host: `${ip}:${javaPort}`,
             motd: data.description,
+            pureMotd: motdToPlainText(data.description),
             version: data.version.name,
             protocol: data.version.protocol,
             players: { online: data.players.online, max: data.players.max, sample: playersSample },
@@ -56,6 +109,7 @@ async function queryServerStatus(ip, port) {
             status: 'online',
             host: `${ip}:${bedrockPort}`,
             motd: data.name,
+            pureMotd:data.cleanName,
             version: data.version,
             players: { online: data.currentPlayers, max: data.maxPlayers },
             gamemode: data.gameMode,
