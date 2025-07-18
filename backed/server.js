@@ -5,6 +5,8 @@ const config = require('./config.json');
 const PingMCServer = require("./java").fetch;
 const pingBedrock = require('mcpe-ping');
 
+const logger = require('./logger');
+
 const app = express();
 const PORT = config.serverPort || 3000;
 
@@ -21,6 +23,10 @@ function pingBedrockPromise(ip, port) {
 
 // 统一的智能查询API端点
 app.get('/api/status', async (req, res) => {
+
+  const userip = req.ip;
+console.log(userip);
+
   const { ip, port } = req.query;
 
   if (!ip) {
@@ -58,11 +64,10 @@ app.get('/api/status', async (req, res) => {
         version: data.version.name,
         protocol: data.version.protocol,
         players: { online: data.players.online, max: data.players.max, sample: playersSample },
-        mod_info:data.modinfo,
+        mod_info: data.modinfo,
         icon: data.favicon,
         delay: Date.now() - now,
       };
-      console.log(data.players.sample)
       //console.log( data.mod_info.modList.join(','))
     } else { // result.type === 'Bedrock'
       const { data } = result;
@@ -75,23 +80,24 @@ app.get('/api/status', async (req, res) => {
         players: { online: data.currentPlayers, max: data.maxPlayers },
         gamemode: data.gameMode,
         delay: Date.now() - now,
-        protocol:  data.advertise.split(';')[2]
+        protocol: data.advertise.split(';')[2]
       };
     }
-    
+
     return res.json(formattedResponse);
 
   } catch (error) {
     // 4. [核心改动] 只有当所有Promise都失败时，Promise.any()才会抛出错误
-    console.error(`JE和BE查询均失败: ${ip}`, error);
-    return res.status(404).json({ 
+    logger.error('[QUERY]',`JE和BE查询均失败: ${ip}:${port}`);//, error);
+    return res.status(404).json({
       status: 'offline',
-      error: '无法连接到服务器，它可能已离线或地址/端口不正确。' 
+      error: '无法连接到服务器，它可能已离线或地址/端口不正确。'
     });
   }
 });
 
 const path = require('path');
+const { log } = require('console');
 console.log(path.join(__dirname, 'dist'))
 // 托管 Vue 打包后的静态文件
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -107,6 +113,10 @@ app.get('/iframe', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`后端服务器正在 http://localhost:${PORT} 上运行`);
+app.listen(PORT, (err) => {
+  if(err){
+    logger.error('[SERVER]',err);
+  }else{
+    logger.info('[SERVER]', `后端服务器正在 http://localhost:${PORT} 上运行`);
+  }
 });
