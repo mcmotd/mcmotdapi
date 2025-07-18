@@ -24,10 +24,9 @@ function pingBedrockPromise(ip, port) {
 // 统一的智能查询API端点
 app.get('/api/status', async (req, res) => {
 
-  const userip = req.ip;
-console.log(userip);
-
+  const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
   const { ip, port } = req.query;
+  logger.debug('[QUERY]',`${clientIP} 查询 ${ip}:${port}`);
 
   if (!ip) {
     return res.status(400).json({ error: '必须提供服务器IP地址 (ip)。' });
@@ -88,7 +87,7 @@ console.log(userip);
 
   } catch (error) {
     // 4. [核心改动] 只有当所有Promise都失败时，Promise.any()才会抛出错误
-    logger.error('[QUERY]',`JE和BE查询均失败: ${ip}:${port}`);//, error);
+    logger.info('[QUERY]',`JE和BE查询均失败: ${ip}:${port}`);//, error);
     return res.status(404).json({
       status: 'offline',
       error: '无法连接到服务器，它可能已离线或地址/端口不正确。'
