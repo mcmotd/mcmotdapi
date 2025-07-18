@@ -1,7 +1,6 @@
 // src/config/app.config.js
 
 export const defaultConfig = {
-    // ... header 和 serverAddress 配置不变 ...
     header: {
         title: 'MC 服务器状态查询',
         description: '我的世界基岩版/JAVA版本服务器实时状态，随时随地查看你的服务器信息。',
@@ -19,16 +18,16 @@ export const defaultConfig = {
 
     footer: {
         developer: {
-            name: 'Your Name', // 替换为你的名字或ID
-            url: 'https://github.com/your-repo', // 你的链接
+            name: 'Your Name',
+            url: 'https://github.com/your-repo',
         },
         poweredBy: {
-            name: 'Gemini', // 驱动方名称
-            url: 'https://gemini.google.com/', // 驱动方链接
+            name: 'Gemini',
+            url: 'https://gemini.google.com/',
         },
         company: {
-            name: 'Google', // 公司名称
-            url: 'https://google.com', // 公司链接
+            name: 'Google',
+            url: 'https://google.com',
         }
     }
 };

@@ -1,0 +1,47 @@
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-content {
+  flex-grow: 1;
+}
+
+.main-content-area {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem 2rem 1rem;
+  position: relative;
+}
+
+.top-content-block {
+  position: relative;
+  z-index: 10;
+  margin-top: -80px;
+}
+
+.bottom-content-block {
+  margin-top: 2rem;
+}
+
+.generator-container {
+  margin-top: 2rem;
+}
+
+.status-box {
+  padding: 2rem;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.error-box {
+  color: var(--error-color);
+  background-color: #fbebee;
+}
+
+@media (max-width: 768px) {
+  .top-content-block {
+    margin-top: 2rem;
+  }
+}

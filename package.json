@@ -2,6 +2,7 @@
   "name": "mcmotdapi",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "description": "a local motd api",
   "keywords": [
     "motd",
@@ -17,10 +18,19 @@
   },
   "license": "MIT",
   "author": "Sbaoor",
-  "type": "module",
-  "main": "./backend/server.js",
   "scripts": {
-    "start": "node backend/server.js",
-    "build":"cd front && npm run build"
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "element-plus": "^2.10.4",
+    "nuxt": "^4.0.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.17",
+    "vue-router": "^4.5.1"
   }
 }
