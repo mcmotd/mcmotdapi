@@ -20,7 +20,7 @@
   "type": "module",
   "main": "./backed/server.js",
   "scripts": {
-    "dev": "node backed/server.js",
+    "start": "node backed/server.js",
     "build":"cd front && npm run build"
   }
 }

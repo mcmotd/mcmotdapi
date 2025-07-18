@@ -1,6 +1,6 @@
 # 🚀 MC-MOTD-API  
 > 基于 Node.js 的 Minecraft 服务器 MOTD 实时查询与展示服务  
-> 前后端分离，前端 Vite + Vue3，后端 Express + TypeScript
+> 前后端分离，前端 Vite + Vue3，后端 Express + JavaScript
 
 ---
 
@@ -35,8 +35,8 @@ pnpm install
 
 | 步骤 | 命令 | 说明 |
 |------|------|------|
-| ① 启动后端 | `npm run start` | 默认监听 `http://localhost:3123` |
-| ② 启动前端 | `npm run build`   | 如果出现报错升级Nodejs版本到最新版 |
+| ① 编译静态文件 | `npm run build` | 如果出现报错升级Nodejs版本到最新版 |
+| ② 启动前端 | `npm run start`   | 默认监听 `http://localhost:3123` |
 
 > 浏览器打开 `http://localhost:3123` 即可查看效果。
 
