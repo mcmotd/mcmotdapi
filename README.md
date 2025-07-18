@@ -49,14 +49,14 @@ pnpm install
 **start.sh**
 ```bash
 #!/usr/bin/env bash
-npm run dev
+npm run start
 wait
 ```
 
 **start.bat**
 ```bat
 @echo off
-start cmd /k "npm run dev"
+start cmd /k "npm run start"
 ```
 
 赋予可执行权限后，只需 `./start.sh` 或双击 `start.bat` 即可同时启动前后端。
