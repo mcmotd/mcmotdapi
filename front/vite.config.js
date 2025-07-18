@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   build: {
-    outDir: '../backed/dist'   // ← 改这里
+    outDir: '../backend/dist'   // ← 改这里
   },
   server: {
     proxy: {
