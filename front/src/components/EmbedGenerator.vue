@@ -37,17 +37,58 @@ const iframeCode = computed(() => {
     return iframeTag + scriptTag;
 });
 
+// const copyToClipboard = () => {
+//     if (!iframeCode.value) return;
+//     navigator.clipboard.writeText(iframeCode.value).then(() => {
+//         copyButtonText.value = '已复制!';
+//         setTimeout(() => {
+//             copyButtonText.value = '复制';
+//         }, 2000);
+//     }).catch(err => {
+//         copyButtonText.value = '复制失败';
+//         console.error('Could not copy text: ', err);
+//     });
+// };
+
 const copyToClipboard = () => {
     if (!iframeCode.value) return;
-    navigator.clipboard.writeText(iframeCode.value).then(() => {
-        copyButtonText.value = '已复制!';
-        setTimeout(() => {
-            copyButtonText.value = '复制';
-        }, 2000);
-    }).catch(err => {
-        copyButtonText.value = '复制失败';
-        console.error('Could not copy text: ', err);
-    });
+
+    // 工具：把字符串写入剪贴板，优先用 Clipboard API，不支持则降级
+    const copyText = (text) => {
+        // 1. HTTPS / localhost 场景
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        }
+
+        // 2. HTTP 降级方案
+        return new Promise((resolve, reject) => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+
+            try {
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                ok ? resolve() : reject(new Error('execCommand failed'));
+            } catch (e) {
+                document.body.removeChild(ta);
+                reject(e);
+            }
+        });
+    };
+
+    copyText(iframeCode.value)
+        .then(() => {
+            copyButtonText.value = '已复制!';
+            setTimeout(() => (copyButtonText.value = '复制'), 2000);
+        })
+        .catch((err) => {
+            copyButtonText.value = '复制失败';
+            console.error('Could not copy text:', err);
+        });
 };
 
 const handleIframeMessage = (event) => {

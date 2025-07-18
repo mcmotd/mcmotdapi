@@ -67,8 +67,9 @@
         <div class="iframe-wrapper">
             <h2>测试 1：查询默认BE务器 (亮色模式)</h2>
             <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
-            <iframe id="mc-status-play.easecation.net" class="responsive-iframe"  frameborder="0" width="700" height="396" scrolling="no"
-                src="http://localhost:3123/iframe?ip=play.easecation.net&port=19132&dark=true&source=mc-status-play.easecation.net"></iframe>
+            <iframe id="mc-status-play.easecation.net" class="responsive-iframe" frameborder="0" width="700" height="427"
+                scrolling="no"
+                src="http://192.168.1.17:3123/iframe?ip=play.easecation.net&port=19132&dark=false&source=mc-status-play.easecation.net"></iframe>
             <script>
                 window.addEventListener('message', function (event) {
                     var iframe = document.getElementById('mc-status-play.easecation.net');
@@ -83,8 +84,8 @@
         <div class="iframe-wrapper">
             <h2>测试 1：查询默认BE务器 (暗色模式)</h2>
             <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
-            <iframe id="mc-status-play.easecation.net" class="responsive-iframe" frameborder="0" width="700" height="396"
-                scrolling="no"
+            <iframe id="mc-status-play.easecation.net" class="responsive-iframe" frameborder="0" width="700"
+                height="396" scrolling="no"
                 src="http://localhost:5173/iframe?ip=play.easecation.net&port=19132&dark=false&source=mc-status-play.easecation.net"></iframe>
             <script>
                 window.addEventListener('message', function (event) {
@@ -102,8 +103,8 @@
         <div class="iframe-wrapper">
             <h2>测试 2：查询一个JAVA的服务器</h2>
             <p>下方应显示 <strong>hbe.vanmc.cn</strong> 的状态。</p>
-            <iframe id="mc-status-hbe.vanmc.cn" class="responsive-iframe" frameborder="0" width="700" height="450" scrolling="no"
-                src="http://localhost:5173/iframe?ip=hbe.vanmc.cn&port=18888&dark=false"></iframe>
+            <iframe id="mc-status-hbe.vanmc.cn" class="responsive-iframe" frameborder="0" width="700" height="450"
+                scrolling="no" src="http://localhost:5173/iframe?ip=hbe.vanmc.cn&port=18888&dark=false"></iframe>
             <script>
                 window.addEventListener('message', function (event) {
                     var iframe = document.getElementById('mc-status-hbe.vanmc.cn');
