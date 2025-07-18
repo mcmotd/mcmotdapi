@@ -1,6 +1,7 @@
 <script setup>
 import { defaultConfig } from '../config/app.config.js';
 const { title, description } = defaultConfig.header;
+console.log(description)
 </script>
 
 <template>
