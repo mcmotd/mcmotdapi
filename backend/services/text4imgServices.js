@@ -77,7 +77,7 @@ const sharp = require('sharp');
 const W = 640;
 const H = 320;
 const LEFT_MARGIN = 60;                          // 文字左起点
-const FONT_FILE = path.join('C:\\Users\\lition\\Downloads\\Press_Start_2P', 'PressStart2P-Regular.ttf'); // 像素字体
+const FONT_FILE = path.join(__dirname, '../../', 'Assets/Fonts', 'font.ttf'); // 像素字体
 
 // 每行文字「上边距」数组（行顶部到画布顶部）
 const rowTopMargins = [30, 80, 120, 160, 200, 240, 280];
@@ -115,7 +115,40 @@ const rowTopMargins = [30, 80, 120, 160, 200, 240, 280];
     return await sharp(Buffer.from(svg)).png().toBuffer();
 }
 
-module.exports = {text4img}
+/**
+ * 背景图 + 任意报错
+ * @param {string} bgPath   背景图
+ * @param {string} outPath  输出图
+ * @param {string[]} lines  报错
+ */
+async function error4img(bgPath, lines) {
+    if (lines.length > 7) throw new Error('必须小于 7 行文字');
+
+    // 背景图 → base64
+    const bgBuffer = fs.readFileSync(bgPath);
+    const ext = path.extname(bgPath).slice(1);
+    const bgBase64 = `data:image/${ext};base64,${bgBuffer.toString('base64')}`;
+
+    // 构造 SVG
+    let svg = `
+    <svg width="${W}" height="${H}">
+      <image href="${bgBase64}" width="${W}" height="${H}" />
+      <text font-family="${FONT_FILE}"
+            shape-rendering="crispEdges"
+            text-rendering="optimizeSpeed">`;
+
+    lines.forEach((txt, idx) => {
+        const fs = idx === 0 ? 24 : 28;               // 字号
+        const fill = idx === 0 ? '#000000' : '#ffffff'; // 颜色
+        svg += `<tspan x="${LEFT_MARGIN}" y="${rowTopMargins[idx]}" font-size="${fs}" fill="${fill}">${txt}</tspan>`;
+    });
+
+    svg += '</text></svg>';
+
+    return await sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+module.exports = {text4img,error4img}
 
 /* ===== CLI 测试 ===== */
 // (async () => {
