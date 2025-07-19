@@ -30,5 +30,15 @@ export const defaultConfig = {
             name: 'Google', // 公司名称
             url: 'https://google.com', // 公司链接
         }
+    },
+
+    failureState: {
+        sloganApi: 'https://v1.hitokoto.cn/?encode=text', 
+        defaultSlogan: '山高路远，后会有期。', 
+        subtext: '服务器未响应或不存在', 
+    },
+    client: {
+        // 点击“下载”按钮后跳转的网页地址
+        downloadUrl: 'https://www.minecraft.net/zh-hans/download' // 这里可以替换为您指定的下载页面
     }
 };

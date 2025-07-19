@@ -10,21 +10,30 @@ const props = defineProps({
 });
 
 const width = ref(700);
-const height = ref(225);
+const height = ref(389);
 const darkMode = ref(false);
 const copyButtonText = ref('复制');
+const previewIframe = ref(null);
 
+// ==================== [核心修复] embedUrl 逻辑恢复为简单直接 ====================
 const embedUrl = computed(() => {
-    if (!props.serverData?.host) return '';
+    // 这个组件不关心查询是否成功。
+    // 它只负责根据接收到的 host (IP:Port) 生成URL。
+    // 如果 host 不存在，则返回空，这是为了防止初始渲染时出错。
+    if (!props.serverData?.host) {
+        return '';
+    }
+
     const [ip, port] = props.serverData.host.split(':');
     const fullBaseUrl = window.location.origin + defaultConfig.embed.baseUrl;
     return `${fullBaseUrl}?ip=${ip}&port=${port || ''}&dark=${darkMode.value}&source=mc-status-${ip}`;
 });
+// ==============================================================================
 
 const iframeCode = computed(() => {
     if (!embedUrl.value) return '';
-    const iframeId = `mc-status-${props.serverData.host.split(':')[0]}`;
-    const iframeTag = `<iframe id="${iframeId}" class="responsive-iframe"  frameborder="0" width="${width.value}" height="${height.value}" scrolling="no" src="${embedUrl.value}"></iframe>`;
+    const iframeId = `mc-status-${props.serverData.host.replace(':', '-')}`;
+    const iframeTag = `<iframe id="${iframeId}" class="responsive-iframe" frameborder="0" width="${width.value}" height="${height.value}" scrolling="no" src="${embedUrl.value}"></iframe>`;
     const scriptTag = `
 <script>
   window.addEventListener('message', function(event) {
@@ -37,30 +46,12 @@ const iframeCode = computed(() => {
     return iframeTag + scriptTag;
 });
 
-// const copyToClipboard = () => {
-//     if (!iframeCode.value) return;
-//     navigator.clipboard.writeText(iframeCode.value).then(() => {
-//         copyButtonText.value = '已复制!';
-//         setTimeout(() => {
-//             copyButtonText.value = '复制';
-//         }, 2000);
-//     }).catch(err => {
-//         copyButtonText.value = '复制失败';
-//         console.error('Could not copy text: ', err);
-//     });
-// };
-
 const copyToClipboard = () => {
     if (!iframeCode.value) return;
-
-    // 工具：把字符串写入剪贴板，优先用 Clipboard API，不支持则降级
     const copyText = (text) => {
-        // 1. HTTPS / localhost 场景
         if (navigator.clipboard && window.isSecureContext) {
             return navigator.clipboard.writeText(text);
         }
-
-        // 2. HTTP 降级方案
         return new Promise((resolve, reject) => {
             const ta = document.createElement('textarea');
             ta.value = text;
@@ -68,7 +59,6 @@ const copyToClipboard = () => {
             ta.style.opacity = '0';
             document.body.appendChild(ta);
             ta.select();
-
             try {
                 const ok = document.execCommand('copy');
                 document.body.removeChild(ta);
@@ -79,7 +69,6 @@ const copyToClipboard = () => {
             }
         });
     };
-
     copyText(iframeCode.value)
         .then(() => {
             copyButtonText.value = '已复制!';
@@ -103,7 +92,6 @@ const handleIframeMessage = (event) => {
     }
 };
 
-const previewIframe = ref(null);
 onMounted(() => {
     window.addEventListener('message', handleIframeMessage);
 });
@@ -134,9 +122,9 @@ onUnmounted(() => {
 
         <div class="preview-area">
             <h4>实时预览</h4>
-            <div class="iframe-container" :style="{ width: width + 'px', height: height + 'px' }">
-                <iframe ref="previewIframe" v-if="embedUrl" :key="embedUrl" width="100%"
-                    :style="{ height: height + 'px' }" :src="embedUrl" frameborder="0" scrolling="no">
+            <div class="iframe-container" :style="{ height: height + 'px'}">
+                <iframe ref="previewIframe" :key="embedUrl" :src="embedUrl" width="100%" :height="height"
+                    frameborder="0" scrolling="no" style="display: block;">
                 </iframe>
             </div>
         </div>
@@ -150,7 +138,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* [核心改动] 为卡片根元素显式设置字体 */
 .card.generator-card {
     font-family: 'Noto Sans SC', sans-serif;
     background-color: var(--card-background);
@@ -197,7 +184,6 @@ label {
     margin-bottom: 0.5rem;
 }
 
-/* 输入框继承字体 */
 .form-input {
     width: 100%;
     padding: 0.75rem 1rem;
@@ -223,27 +209,32 @@ label {
     width: 100%;
 }
 
+/* EmbedGenerator.vue */
 .iframe-container {
     border: 1px dashed var(--border-color);
     border-radius: 8px;
     background-color: var(--background-color);
     margin: 1rem auto;
-    transition: width 0.3s, height 0.3s;
-    max-width: 100%;
+    /* [核心修复] 只对高度应用过渡动画，宽度调整保持即时响应 */
+    transition: height 0.3s ease;
     box-sizing: border-box;
+    /* [核心修复] 移除 max-width，让内联样式的 width 完全生效 */
+    /* max-width: 700px; */
+    overflow: hidden;
+    max-width: 100%;
 }
-
 .iframe-container iframe {
     display: block;
     border: none;
     transition: height 0.3s ease;
+    width: 100%;
+    height: 100%;
 }
 
 .code-area {
     position: relative;
 }
 
-/* 代码框使用等宽字体 */
 .code-display {
     width: 100%;
     height: 120px;
@@ -262,7 +253,6 @@ label {
     font-weight: 700;
     cursor: pointer;
     transition: background-color 0.2s;
-    /* 按钮继承字体 */
     font-family: inherit;
 }
 

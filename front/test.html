@@ -14,7 +14,6 @@
             flex-direction: column;
             align-items: center;
             padding: 1rem;
-            /* 在移动端减小边距 */
             margin: 0;
         }
 
@@ -45,30 +44,39 @@
             margin-bottom: 1rem;
         }
 
-        /* [核心改动] 为 iframe 添加响应式样式 */
+        /* 统一的响应式样式，适用于 iframe */
         .responsive-iframe {
             display: block;
             border: 1px solid #ccc;
             border-radius: 4px;
             margin: 0 auto;
-            /* 关键：宽度为100%，以适应其父容器 */
             width: 100%;
-            /* (可选) 您可以设置一个最大宽度，防止在超大屏幕上过宽 */
             max-width: 800px;
+        }
+
+        /* 为卡片中的图片设计的响应式样式 */
+        .responsive-img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
+
+       
+
         <h1>我的网站 - 服务器状态嵌入测试</h1>
         <p style="text-align: center;">这里模拟一个第三方网站，它嵌入了来自您的查询应用的状态信息。</p>
 
         <div class="iframe-wrapper">
-            <h2>测试 1：查询默认BE务器 (亮色模式)</h2>
+            <h2>测试 1：查询默认BE服务器 (亮色模式)</h2>
             <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
-            <iframe id="mc-status-play.easecation.net" class="responsive-iframe" frameborder="0" width="700" height="427"
-                scrolling="no"
+            <iframe id="mc-status-play.easecation.net" class="responsive-iframe" frameborder="0" width="700"
+                height="427" scrolling="no"
                 src="http://localhost:3123/iframe?ip=play.easecation.net&port=19132&dark=false&source=mc-status-play.easecation.net"></iframe>
             <script>
                 window.addEventListener('message', function (event) {
@@ -78,12 +86,10 @@
                     }
                 });
             </script>
-           
         </div>
 
-
         <div class="iframe-wrapper">
-            <h2>测试 1：查询默认BE务器 (暗色模式)</h2>
+            <h2>测试 2：查询默认BE服务器 (暗色模式)</h2>
             <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
             <iframe id="mc-status-play.easecation.net-2" class="responsive-iframe" frameborder="0" width="700"
                 height="427" scrolling="no"
@@ -98,11 +104,8 @@
             </script>
         </div>
 
-
-
-
         <div class="iframe-wrapper">
-            <h2>测试 2：查询一个JAVA的服务器</h2>
+            <h2>测试 3：查询一个JAVA的服务器</h2>
             <p>下方应显示 <strong>hbe.vanmc.cn</strong> 的状态。</p>
             <iframe id="mc-status-hbe.vanmc.cn" class="responsive-iframe" frameborder="0" width="700" height="450"
                 scrolling="no" src="http://localhost:5173/iframe?ip=hbe.vanmc.cn&port=18888&dark=false"></iframe>
@@ -115,6 +118,14 @@
                 });
             </script>
         </div>
+
+        <div class="iframe-wrapper">
+            <h2>测试 4：获取状态图片</h2>
+            <p>这是一个动态生成的图片链接，你可以将它用于论坛签名档或文档中。</p>
+            <img src="http://localhost:3123/api/status_img?ip=play.starelement.net&port=33221" alt="服务器状态图片预览"
+                class="responsive-img">
+        </div>
+
     </div>
 </body>
 

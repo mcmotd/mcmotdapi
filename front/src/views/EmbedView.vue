@@ -13,16 +13,13 @@ const data = ref(null);
 // 这个 ref 用于引用内容的根元素，以便测量其高度
 const embedWrapperRef = ref(null);
 
-const serverIp = route.query.ip;
-const serverPort = route.query.port;
-const sourceId = route.query.source; // 用于精确通信
 const isDarkMode = computed(() => route.query.dark === 'true');
 
-// fetchData 逻辑保持不变
+// fetchData 函数本身不需要改变
 const fetchData = async () => {
-    loading.value = true;
-    error.value = null;
-    data.value = null;
+    const serverIp = route.query.ip;
+    const serverPort = route.query.port;
+
     if (!serverIp) {
         error.value = "URL中必须提供服务器IP参数。";
         loading.value = false;
@@ -40,6 +37,10 @@ const fetchData = async () => {
         } else {
             error.value = '无法连接到查询后端。';
         }
+        data.value = {
+            status: 'offline',
+            error: error.value
+        };
         console.error(err);
     } finally {
         loading.value = false;
@@ -54,15 +55,31 @@ const postHeight = () => {
         parent.postMessage({
             type: 'resize-iframe',
             height: height,
-            source: sourceId
+            source: route.query.source // 使用 query 中的 sourceId
         }, '*');
     }
 };
 
 let resizeObserver;
-// onMounted 和 onUnmounted 用于管理 ResizeObserver
+
+// [核心修复] onMounted 钩子函数
 onMounted(() => {
-    fetchData();
+    // 首先检查 URL 参数
+    if (route.query.status === 'offline') {
+        // 如果 URL 指示这是一个“失败”状态，我们就跳过 API 请求
+        // 直接创建一个“失败对象”，用来渲染标语界面
+        data.value = {
+            status: 'offline',
+            error: '服务器未响应或不存在'
+        };
+        // 并立即结束加载状态
+        loading.value = false;
+    } else {
+        // 否则，才执行常规的数据获取流程
+        fetchData();
+    }
+
+    // ResizeObserver 逻辑保持不变
     if (embedWrapperRef.value) {
         resizeObserver = new ResizeObserver(postHeight);
         resizeObserver.observe(embedWrapperRef.value);
@@ -78,7 +95,7 @@ onUnmounted(() => {
 // 当数据更新，DOM渲染完成后，也发送一次高度
 watch(data, () => {
     nextTick(postHeight);
-});
+}, { deep: true }); // 使用 deep watch 以确保在嵌套对象变化时也能触发
 </script>
 
 <template>

@@ -1,50 +1,67 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { defaultConfig } from '../config/app.config.js';
-import axios from 'axios'; // 1. 导入 axios
+import axios from 'axios';
 
-// 导入所有需要的组件
 import AppHeader from '../components/AppHeader.vue';
 import QueryForm from '../components/QueryForm.vue';
 import ServerStatusDisplay from '../components/ServerStatusDisplay.vue';
 import EmbedGenerator from '../components/EmbedGenerator.vue';
 import AppFooter from '../components/AppFooter.vue';
+import ImageLinkGenerator from '../components/ImageLinkGenerator.vue';
+import JoinServerModal from '../components/JoinServerModal.vue';
 
+const isJoinModalVisible = ref(false);
 const serverAddress = ref(defaultConfig.serverAddress);
 const port = ref(defaultConfig.port);
-const loading = ref(true); // 初始为 true，因为 onMounted 会立即查询
+const loading = ref(true);
 const error = ref(null);
 const data = ref(null);
 
-// [核心改动] 重写 handleFetchData 函数
+const openJoinModal = () => {
+    // 只有在查询成功后才打开弹窗
+    if (data.value && data.value.status !== 'offline') {
+        isJoinModalVisible.value = true;
+    }
+};
+
 const handleFetchData = async (payload) => {
     serverAddress.value = payload.address;
     port.value = payload.port;
 
     loading.value = true;
     error.value = null;
-    data.value = null;
 
     try {
-        // 2. 使用 axios 调用我们后端的智能查询 API
         const apiUrl = `/api/status`;
         const response = await axios.get(apiUrl, {
             params: {
                 ip: serverAddress.value,
-                port: port.value || undefined // 如果 port 为空字符串，则不发送该参数
+                port: port.value || undefined
             }
         });
         data.value = response.data;
     } catch (err) {
-        // 3. 处理来自后端的错误信息
+        const errorMessage = '无法连接到查询后端或发生未知错误。';
         if (err.response && err.response.data && err.response.data.error) {
             error.value = err.response.data.error;
         } else {
-            error.value = '无法连接到查询后端或发生未知错误。';
+            error.value = errorMessage;
         }
+
+        // ==================== [核心修复] 失败对象必须包含 host ====================
+        // 我们需要把用户尝试查询的地址 (payload) 传递下去，
+        // 这样 EmbedGenerator 才能拿到 IP 和 Port 来生成 iframe。
+        data.value = {
+            status: 'offline',
+            error: error.value,
+            // 构造 host 字段
+            host: `${payload.address}${payload.port ? ':' + payload.port : ''}`
+        };
+        // =======================================================================
+
         console.error(err);
     } finally {
-        // 4. 无论成功或失败，都结束加载状态
         loading.value = false;
     }
 };
@@ -53,6 +70,7 @@ onMounted(() => {
     handleFetchData({ address: serverAddress.value, port: port.value });
 });
 </script>
+
 <template>
     <div class="app-wrapper">
         <div class="app-content">
@@ -62,22 +80,22 @@ onMounted(() => {
                     <div v-if="loading" class="card status-box">
                         <p>正在连接服务器...</p>
                     </div>
-                    <div v-else-if="error" class="card status-box error-box">
-                        <strong>错误</strong>
-                        <p>{{ error }}</p>
-                    </div>
-                    <ServerStatusDisplay v-else-if="data" :server-data="data" />
+                    <ServerStatusDisplay v-else :server-data="data" @card-click="openJoinModal" />
                 </div>
+
                 <div class="bottom-content-block">
                     <QueryForm :initial-address="serverAddress" :initial-port="port" :loading="loading"
                         @start-query="handleFetchData" />
                 </div>
-                <div class="generator-container" v-if="data">
+
+                <div v-if="!loading" class="generators-section">
                     <EmbedGenerator :server-data="data" />
+                    <ImageLinkGenerator :server-data="data" />
                 </div>
             </div>
         </div>
         <AppFooter />
+        <JoinServerModal :show="isJoinModalVisible" :server-data="data" @close="isJoinModalVisible = false" />
     </div>
 </template>
 
@@ -109,14 +127,17 @@ onMounted(() => {
     margin-top: 2rem;
 }
 
+.generators-section {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
 @media (max-width: 768px) {
     .top-content-block {
         margin-top: 2rem;
     }
-}
-
-.generator-container {
-    margin-top: 2rem;
 }
 
 .card {
