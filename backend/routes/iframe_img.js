@@ -3,7 +3,7 @@ const fs = require('fs');
 const router = express.Router();
 const path = require('path');
 const bgPath = path.join(__dirname, '../', 'img', 'status_img.png');
-const { error4img } = require("../services/text4imgServices")
+const { text4img } = require("../services/text4imgServices")
 
 const config = require('../config.json');
 const PORT = config.serverPort || 3000;
@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
         // 设置视口大小
         await page.setViewport({ 
             width: 700, 
-            height: 400,
+            height: 365,
             deviceScaleFactor: 1
         });
         
@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
 
     } catch (error) {
         let errMsg = [`生成图片失败: ${error.message}`]
-        const pngBuffer = await error4img(bgPath, errMsg);
+        const pngBuffer = await text4img(bgPath, errMsg);
         return res.send(pngBuffer);
     }
 });
