@@ -1,5 +1,5 @@
 const config = require('../config.json');
-const PingMCServer = require("../java").fetch;
+const PingMCServer = require("../utils/java").fetch;
 const pingBedrock = require('mcpe-ping');
 
 // 将 mcpe-ping 包装成 Promise

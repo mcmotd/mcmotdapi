@@ -1,6 +1,6 @@
 // logger.js
 const { inspect } = require('util');
-const {log_level} = require("./config.json");
+const { log_level } = require("../config.json");
 
 class Logger {
     static COLORS = {

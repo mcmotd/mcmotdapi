@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const config = require('./config.json');
-const logger = require('./logger');
+const logger = require('./utils/logger');
 
 // 导入所有路由模块
 const statusRoute = require('./routes/status');

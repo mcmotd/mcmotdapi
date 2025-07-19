@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const logger = require('../logger');
+const logger = require('../utils/logger');
 const { queryServerStatus } = require('../services/queryService'); // 1. 导入核心查询服务
 
 router.get('/', async (req, res) => {
@@ -20,8 +20,9 @@ router.get('/', async (req, res) => {
     } catch (error) {
         // 4. 如果服务抛出错误（两种查询都失败），则返回404
         logger.info('[QUERY]', `查询失败: ${ip}:${port}`);
-        return res.status(404).json({
+        return res.json({
             status: 'offline',
+            "host": `${ip}:${port}`,
             error: '无法连接到服务器，它可能已离线或地址/端口不正确。'
         });
     }

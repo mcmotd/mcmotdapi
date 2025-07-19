@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.log(error)
         // 在这里，您可以发送一张表示“服务器离线”的图片
-        return res.status(404).send(fs.readFileSync(bgPath));
+        return res.send(fs.readFileSync(bgPath));
     }
 });
 
