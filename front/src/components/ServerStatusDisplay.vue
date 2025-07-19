@@ -403,10 +403,11 @@ onUnmounted(() => {
 
 .info-value {
     font-weight: 700;
+    color: var(--text-color);
+    /* <-- 新增此行，明确指定颜色 */
     word-wrap: break-word;
     word-break: break-all;
 }
-
 .info-value.version {
     color: var(--primary-color);
 }
@@ -441,6 +442,7 @@ onUnmounted(() => {
 
 .player-count {
     margin-bottom: 0.5rem;
+    color: var(--text-color);
 }
 
 .progress-bar {

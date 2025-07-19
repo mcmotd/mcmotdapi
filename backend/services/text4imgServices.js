@@ -75,12 +75,12 @@ const path = require('path');
 const sharp = require('sharp');
 
 const W = 640;
-const H = 320;
-const LEFT_MARGIN = 60;                          // 文字左起点
-const FONT_FILE = path.join('C:\\Users\\lition\\Downloads\\Press_Start_2P', 'PressStart2P-Regular.ttf'); // 像素字体
+const H = 360;
+const LEFT_MARGIN = 30;                          // 文字左起点
+const FONT_FILE = path.join('C:\\Users\\lition\\Downloads\\HanYiXiangSu-11px-U\\', 'HYPixel11pxU-2.ttf'); // 像素字体
 
 // 每行文字「上边距」数组（行顶部到画布顶部）
-const rowTopMargins = [30, 80, 120, 160, 200, 240, 280];
+const rowTopMargins = [35, 90, 135, 185, 235, 285, 335];
 
 /**
  * 背景图 + 7 行像素文字
@@ -105,7 +105,7 @@ const rowTopMargins = [30, 80, 120, 160, 200, 240, 280];
             text-rendering="optimizeSpeed">`;
 
     lines.forEach((txt, idx) => {
-        const fs = idx === 0 ? 24 : 28;               // 字号
+        const fs = idx === 0 ? 24 : 35;               // 字号
         const fill = idx === 0 ? '#000000' : '#ffffff'; // 颜色
         svg += `<tspan x="${LEFT_MARGIN}" y="${rowTopMargins[idx]}" font-size="${fs}" fill="${fill}">${txt}</tspan>`;
     });

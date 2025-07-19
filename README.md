@@ -35,6 +35,9 @@ pnpm install
 
 后端配置文件位于`backed/config`
 
+<details>
+  <summary>点击展开</summary>
+
 ``` json
 {
   "javaDefaultPort": 25565,  // java版本默认查询端口
@@ -45,7 +48,14 @@ pnpm install
 }
 ```
 
+</details>
+
+
+
 前端配置文件位于`front/src/config/app.config.js`
+
+<details>
+  <summary>点击展开</summary>
 
 ``` js
 export const defaultConfig = {
@@ -99,6 +109,10 @@ export const defaultConfig = {
     ]
 };
 ```
+
+</details>
+
+---
 
 ## 4. 🏁 启动项目
 

@@ -22,11 +22,9 @@
     --border-color: #333;
     --shadow-color: rgba(0, 0, 0, 0.2);
 
-    /* [核心改动] 提高文字颜色的亮度和对比度 */
-    --text-color: #f8f9fa;
-    /* 主要文字颜色，使用更亮的灰白色 */
+    --text-color: #e0e0e0;
+        /* 比 #f8f9fa 更柔和一些 */
     --text-color-light: #9ca2a8;
-    /* 次要文字颜色，从暗灰色改为清晰的亮灰色 */
 
     --primary-color: #3694ff;
     --primary-color-hover: #5fa5ff;
