@@ -14,6 +14,26 @@ const embedWrapperRef = ref(null);
 
 const isDarkMode = computed(() => route.query.dark === 'true');
 
+// [核心修复] 使用 onMounted 和 onUnmounted 动态修改 iframe 内部的样式
+onMounted(() => {
+    // 这段JS只会对当前组件所在的文档生效（即iframe的文档）
+    document.documentElement.style.height = '100%';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.height = '100%';
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+});
+
+onUnmounted(() => {
+    // 组件卸载时恢复默认样式（主要在开发模式的热重载中有用）
+    document.documentElement.style.height = '';
+    document.documentElement.style.overflow = '';
+    document.body.style.height = '';
+    document.body.style.margin = '';
+    document.body.style.padding = '';
+});
+
+
 const fetchData = async () => {
     const serverIp = route.query.ip;
     const serverPort = route.query.port;
@@ -98,16 +118,7 @@ watch(data, () => {
 </template>
 
 <style scoped>
-/* 新增 :global 样式，用于设置 iframe 内部的 html 和 body。
-  这能确保我们的根容器可以占满整个 iframe 的可用空间。
-*/
-:global(html, body) {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    /* 防止意外出现滚动条 */
-}
+/* [已移除] 不再需要 :global 样式，因为它会影响主页面 */
 
 /* 修改 .embed-wrapper 样式 */
 .embed-wrapper {
@@ -116,7 +127,6 @@ watch(data, () => {
     height: 100%;
     /* 使用 height 替代 min-height */
     box-sizing: border-box;
-    /* 移除 flex 布局和 padding，让内容自然填充 */
 }
 
 /* message-box 的样式保持不变，它只在加载和错误时出现 */
