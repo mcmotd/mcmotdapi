@@ -10,6 +10,7 @@ import EmbedGenerator from '../components/EmbedGenerator.vue';
 import AppFooter from '../components/AppFooter.vue';
 import ImageLinkGenerator from '../components/ImageLinkGenerator.vue';
 import JoinServerModal from '../components/JoinServerModal.vue';
+import Contributors from '../components/Contributors.vue';
 
 const isJoinModalVisible = ref(false);
 const serverAddress = ref(defaultConfig.serverAddress);
@@ -91,8 +92,10 @@ onMounted(() => {
                 <div v-if="!loading" class="generators-section">
                     <EmbedGenerator :server-data="data" />
                     <ImageLinkGenerator :server-data="data" />
-                </div>
+                </div>        
+                <Contributors />
             </div>
+
         </div>
         <AppFooter />
         <JoinServerModal :show="isJoinModalVisible" :server-data="data" @close="isJoinModalVisible = false" />

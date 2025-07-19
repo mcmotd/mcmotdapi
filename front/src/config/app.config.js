@@ -40,5 +40,15 @@ export const defaultConfig = {
     client: {
         // 点击“下载”按钮后跳转的网页地址
         downloadUrl: 'https://www.minecraft.net/zh-hans/download' // 这里可以替换为您指定的下载页面
-    }
+    },
+    contributors: [
+        {
+            name: 'Sbaoor',
+            title: '项目发起人 & 全栈开发',
+            github: 'https://github.com/Sbaoor-fly',
+            slogan: '把宇宙的问候写进第一行，把余生的热爱写进每一行。',
+            // 头像可以直接使用 GitHub 的，格式为 https://github.com/用户名.png
+            avatar: 'https://s21.ax1x.com/2025/07/19/pV3bX2F.jpg'
+        }
+    ]
 };
