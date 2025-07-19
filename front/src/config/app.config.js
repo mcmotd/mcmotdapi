@@ -1,7 +1,4 @@
-// src/config/app.config.js
-
 export const defaultConfig = {
-    // ... header 和 serverAddress 配置不变 ...
     header: {
         title: 'MC 服务器状态查询',
         description: '我的世界基岩版/JAVA版本服务器实时状态，随时随地查看你的服务器信息。',
