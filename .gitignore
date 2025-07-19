@@ -13,6 +13,9 @@ dist-ssr
 *.local
 .vscode/
 
+# ttf
+*.ttf
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

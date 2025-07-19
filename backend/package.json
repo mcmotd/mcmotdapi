@@ -10,6 +10,7 @@
     "client": "cd vue && npm run dev"
   },
   "dependencies": {
+    "canvas": "^3.1.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mcpe-ping": "^0.0.4",

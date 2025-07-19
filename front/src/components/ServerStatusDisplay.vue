@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import { parseMotdToHtml } from '../utils/motd-parser.js';
-import defaultIcon from '../assets/mc.png';
+import defaultIcon from '/mc.png';
 import InfoModal from './InfoModal.vue';
 import axios from 'axios';
 import { defaultConfig } from '../config/app.config.js';

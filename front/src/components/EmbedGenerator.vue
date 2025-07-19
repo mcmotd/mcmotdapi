@@ -87,7 +87,7 @@ const handleIframeMessage = (event) => {
         event.data &&
         event.data.type === 'resize-iframe'
     ) {
-        const requiredHeight = event.data.height + 32;
+        const requiredHeight = event.data.height;
         height.value = Math.round(requiredHeight);
     }
 };
@@ -122,7 +122,7 @@ onUnmounted(() => {
 
         <div class="preview-area">
             <h4>实时预览</h4>
-            <div class="iframe-container" :style="{ height: height + 'px'}">
+            <div class="iframe-container" :style="{ height: height + 'px' }">
                 <iframe ref="previewIframe" :key="embedUrl" :src="embedUrl" width="100%" :height="height"
                     frameborder="0" scrolling="no" style="display: block;">
                 </iframe>
@@ -223,6 +223,7 @@ label {
     overflow: hidden;
     max-width: 100%;
 }
+
 .iframe-container iframe {
     display: block;
     border: none;
