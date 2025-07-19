@@ -10,12 +10,30 @@ const loading = ref(true);
 const error = ref(null);
 const data = ref(null);
 
-// 这个 ref 用于引用内容的根元素，以便测量其高度
 const embedWrapperRef = ref(null);
 
 const isDarkMode = computed(() => route.query.dark === 'true');
 
-// fetchData 函数本身不需要改变
+// [核心修复] 使用 onMounted 和 onUnmounted 动态修改 iframe 内部的样式
+onMounted(() => {
+    // 这段JS只会对当前组件所在的文档生效（即iframe的文档）
+    document.documentElement.style.height = '100%';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.height = '100%';
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+});
+
+onUnmounted(() => {
+    // 组件卸载时恢复默认样式（主要在开发模式的热重载中有用）
+    document.documentElement.style.height = '';
+    document.documentElement.style.overflow = '';
+    document.body.style.height = '';
+    document.body.style.margin = '';
+    document.body.style.padding = '';
+});
+
+
 const fetchData = async () => {
     const serverIp = route.query.ip;
     const serverPort = route.query.port;
@@ -47,39 +65,29 @@ const fetchData = async () => {
     }
 };
 
-// 这个函数负责测量自身高度并向父页面发送消息
 const postHeight = () => {
     if (embedWrapperRef.value) {
         const height = embedWrapperRef.value.scrollHeight;
-        // 使用 parent.postMessage 发送数据
         parent.postMessage({
             type: 'resize-iframe',
             height: height,
-            source: route.query.source // 使用 query 中的 sourceId
+            source: route.query.source
         }, '*');
     }
 };
 
 let resizeObserver;
 
-// [核心修复] onMounted 钩子函数
 onMounted(() => {
-    // 首先检查 URL 参数
     if (route.query.status === 'offline') {
-        // 如果 URL 指示这是一个“失败”状态，我们就跳过 API 请求
-        // 直接创建一个“失败对象”，用来渲染标语界面
         data.value = {
             status: 'offline',
             error: '服务器未响应或不存在'
         };
-        // 并立即结束加载状态
         loading.value = false;
     } else {
-        // 否则，才执行常规的数据获取流程
         fetchData();
     }
-
-    // ResizeObserver 逻辑保持不变
     if (embedWrapperRef.value) {
         resizeObserver = new ResizeObserver(postHeight);
         resizeObserver.observe(embedWrapperRef.value);
@@ -92,10 +100,9 @@ onUnmounted(() => {
     }
 });
 
-// 当数据更新，DOM渲染完成后，也发送一次高度
 watch(data, () => {
     nextTick(postHeight);
-}, { deep: true }); // 使用 deep watch 以确保在嵌套对象变化时也能触发
+}, { deep: true });
 </script>
 
 <template>
@@ -111,29 +118,28 @@ watch(data, () => {
 </template>
 
 <style scoped>
-/* [核心改动] .embed-wrapper 不再需要自己定义背景色，它会从 body 继承 */
+/* [已移除] 不再需要 :global 样式，因为它会影响主页面 */
+
+/* 修改 .embed-wrapper 样式 */
 .embed-wrapper {
     background-color: transparent;
     width: 100%;
-    min-height: 100%;
+    height: 100%;
+    /* 使用 height 替代 min-height */
     box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 1rem;
 }
 
-/* message-box 的样式也应使用变量 */
+/* message-box 的样式保持不变，它只在加载和错误时出现 */
 .message-box {
+    height: 100%;
+    /* 让加载和错误提示也能撑满容器 */
     padding: 1rem;
     font-size: 1rem;
     text-align: center;
-    min-height: 100px;
     display: flex;
     justify-content: center;
     align-items: center;
     background: var(--card-background);
-    /* 使用变量 */
     border-radius: 12px;
     box-shadow: 0 4px 25px var(--shadow-color);
 }
@@ -141,6 +147,5 @@ watch(data, () => {
 .error-box {
     color: var(--error-color);
     background-color: var(--status-error-bg);
-    /* 使用变量 */
 }
 </style>

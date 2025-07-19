@@ -1,10 +1,20 @@
-// src/config/app.config.js
-
 export const defaultConfig = {
-    // ... header 和 serverAddress 配置不变 ...
     header: {
         title: 'MC 服务器状态查询',
         description: '我的世界基岩版/JAVA版本服务器实时状态，随时随地查看你的服务器信息。',
+
+        // ==================== [新增] 轮播图配置 ====================
+        carousel: {
+            // 每张图片显示的时长（毫秒），5000 = 5秒
+            duration: 5000,
+            // 图片列表，路径从 public 文件夹开始
+            images: [
+                'src/assets/head.png', // 替换为您自己的图片文件名
+                'https://s21.ax1x.com/2025/01/19/pEkadfK.jpg',
+                'https://s21.ax1x.com/2025/01/19/pEkaKYV.jpg',
+            ]
+        }
+        // ==========================================================
     },
     serverAddress: 'play.easecation.net',
     port: '19132',
