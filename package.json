@@ -21,6 +21,7 @@
   "main": "./backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "build":"cd front && npm run build"
+    "build:docker":"cd front && npm run build:docker",
+    "build:publish": "cd front && npm run build:dev"
   }
 }

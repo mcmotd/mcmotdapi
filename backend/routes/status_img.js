@@ -3,7 +3,6 @@ const fs = require("fs")
 const router = express.Router();
 const path  =require("path");
 const bgPath = path.join(__dirname,'../','img', 'status_img.png');
-const sharp = require("sharp")
 const { queryServerStatus } = require('../services/queryService');
 const { GenerateStatusImg } = require("../services/text4imgServices")
 

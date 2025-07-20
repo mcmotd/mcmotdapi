@@ -17,7 +17,7 @@ RUN npm install -g pnpm && pnpm install
 COPY front/ .
 
 # 执行前端构建命令，生成 /app/dist 文件夹
-RUN pnpm run build
+RUN pnpm run build:docker
 
 
 # =================================================================
