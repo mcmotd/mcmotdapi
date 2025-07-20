@@ -19,12 +19,10 @@ app.use('/api/status_img', statusImageRoute); // 挂载新的图片路由
 
 // --- 静态文件托管与Vue Router支持 ---
 app.use(express.static(path.join(__dirname, 'dist')));
-app.get('/', (req, res) => { // 使用 '*' 捕获所有未匹配的路由，包括 / 和 /iframe
+app.get(/(.*)/, (req, res) => { // 使用 '*' 捕获所有未匹配的路由，包括 / 和 /iframe
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
-app.get('/iframe', (req, res) => { // 使用 '*' 捕获所有未匹配的路由，包括 / 和 /iframe
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
+
 
 // --- 启动服务器 ---
 app.listen(PORT, (err) => {

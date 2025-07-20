@@ -9,7 +9,7 @@ export const defaultConfig = {
             duration: 5000,
             // 图片列表，路径从 public 文件夹开始
             images: [
-                'src/assets/head.png', // 替换为您自己的图片文件名
+                '/head.png', // 替换为您自己的图片文件名
                 'https://s21.ax1x.com/2025/01/19/pEkadfK.jpg',
                 'https://s21.ax1x.com/2025/01/19/pEkaKYV.jpg',
             ]

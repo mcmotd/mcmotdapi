@@ -4,9 +4,6 @@ import vue from '@vitejs/plugin-vue'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  build: {
-    outDir: '../backend/dist'   // ← 改这里
-  },
   server: {
     proxy: {
       // [核心改动] 定义代理规则
