@@ -3,6 +3,6 @@
   "bedrockDefaultPort": 19132,
   "queryTimeout": 1000,
   "serverPort": 3123,
-  "log_level": 5,
+  "log_level": 2,
   "customsFont":"./backend/HYPixel.ttf"
 }

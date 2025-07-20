@@ -3,20 +3,11 @@
 # =================================================================
 FROM node:24.4.1 AS frontend-builder
 
-# 设置工作目录
 WORKDIR /app
-
-# 复制前端的包管理文件
 COPY front/package*.json ./
 COPY front/pnpm-lock.yaml ./
-
-# 安装 pnpm 并安装前端的所有依赖
 RUN npm install -g pnpm && pnpm install
-
-# 复制前端的所有项目文件
 COPY front/ .
-
-# 执行前端构建命令，生成 /app/dist 文件夹
 RUN pnpm run build:docker
 
 
@@ -25,31 +16,38 @@ RUN pnpm run build:docker
 # =================================================================
 FROM node:18-alpine
 
-# 设置工作目录
 WORKDIR /app
 
-# [核心修复] 安装 node-canvas 所需的系统依赖
-# Alpine Linux 是一个极简的系统，需要手动安装编译工具和库
-RUN apk add --no-cache build-base g++ cairo-dev jpeg-dev pango-dev giflib-dev python3
+ENV PORT=3123
 
-ENV PORT=3000
-
-# 复制后端的包管理文件
+# --- [核心修正] ---
+# 步骤 1: 先只复制包管理文件
+# 这一层可以被 Docker 缓存。只要依赖不变，下次构建会直接跳过最耗时的 npm install 步骤。
 COPY backend/package*.json ./
 COPY backend/package-lock.json ./
 
-# 只安装后端的生产环境依赖 (使用 npm)
-# --omit=dev 是 npm v7+ 的推荐用法，等同于 --production 或 --prod
-RUN npm install --omit=dev
+# 步骤 2: 在一个 RUN 指令中，完成安装依赖、编译、清理
+# 由于上一步 COPY 了 package.json，现在容器内可以找到它们了。
+RUN \
+    # 安装 node-canvas 的【运行时】依赖，这些必须保留
+    apk add --no-cache cairo jpeg pango giflib \
+    \
+    # 将【编译时】的工具和开发库安装为一个虚拟包
+    && apk add --no-cache --virtual .build-deps build-base g++ python3 cairo-dev jpeg-dev pango-dev giflib-dev \
+    \
+    # 执行 npm install
+    && npm install --omit=dev \
+    \
+    # [关键] 删除所有编译时的依赖和缓存，为镜像瘦身
+    && apk del .build-deps \
+    && rm -rf /var/cache/apk/* /tmp/*
 
-# 复制后端的所有项目文件
+# 步骤 3: 复制后端的所有项目源代码
+# 这一步在 npm install 之后，这样修改业务代码不会导致依赖重新安装。
 COPY backend/ .
 
 # 从 frontend-builder 阶段复制已经构建好的前端文件
 COPY --from=frontend-builder /app/dist ./public
 
-# 声明服务端口
 EXPOSE $PORT
-
-# 定义容器启动命令，执行后端 package.json 中的 "start" 脚本
 CMD [ "npm", "run", "start" ]

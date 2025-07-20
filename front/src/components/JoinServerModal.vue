@@ -10,6 +10,7 @@ const emit = defineEmits(['close']);
 
 const handleJoin = () => {
     if (!props.serverData?.host) return;
+    // const [ip, port] = props.serverData.host.split(':');
     const host = props.serverData.host;
     let ip, port;
 
@@ -24,6 +25,7 @@ const handleJoin = () => {
         ip = parts.slice(0, -1).join(':'); // 兼容 IPv6 没有端口的情况（不常见）
         port = parts[parts.length - 1];
     }
+
     // 使用服务器的 MOTD 或名称作为标题，如果没有则使用IP
     const serverName = props.serverData.motd?.clean || ip;
     // 构造特殊的 URL scheme

@@ -1,8 +1,35 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const config = require('./config.json');
 const logger = require('./utils/logger');
+const fs = require('fs');
+
+
+// --- [核心改动] 配置文件自动创建逻辑 ---
+const configPath = path.join(__dirname, 'config.json');
+const exampleConfigPath = path.join(__dirname, 'config.example.json');
+
+// 检查 config.json 是否存在
+if (!fs.existsSync(configPath)) {
+  logger.warn('[CONFIG]', '未找到 config.json 文件。');
+  // 如果不存在，则检查 config.example.json 是否存在
+  if (fs.existsSync(exampleConfigPath)) {
+    try {
+      // 如果范例文件存在，则复制它来创建新的 config.json
+      fs.copyFileSync(exampleConfigPath, configPath);
+      logger.info('[CONFIG]', '已成功从 config.example.json 复制创建了新的 config.json 文件。');
+    } catch (err) {
+      logger.error('[CONFIG]', '从范例文件创建配置文件失败:', err);
+      process.exit(1); // 发生错误，退出程序
+    }
+  } else {
+    // 如果连范例文件都没有，程序无法运行
+    logger.error('[CONFIG]', '严重错误: config.json 和 config.example.json 均未找到。程序无法启动。');
+    process.exit(1);
+  }
+}
+const config = require('./config.json');
+
 
 // 导入所有路由模块
 const statusRoute = require('./routes/status');

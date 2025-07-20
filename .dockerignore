@@ -1,9 +1,9 @@
 # .dockerignore
 
-# 忽略前端和后端的依赖文件夹
-# 这是解决您问题的关键！
-front/node_modules
-backend/node_modules
+
+# 本地依赖
+node_modules
+*/node_modules
 
 # 忽略 pnpm 创建的存储目录（如果存在于项目内）
 front/.pnpm-store

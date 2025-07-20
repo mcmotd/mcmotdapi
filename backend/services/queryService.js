@@ -1,14 +1,22 @@
 const config = require('../config.json');
 const PingMCServer = require("../utils/java").fetch;
 const pingBedrock = require('../utils/bedrock');
+const Logger = require('../utils/logger');
+
 
 // 将 mcpe-ping 包装成 Promise
 function pingBedrockPromise(ip, port) {
     return new Promise((resolve, reject) => {
-        pingBedrock(ip, port, (err, res) => {
-            if (err) return reject(err);
-            resolve(res);
-        }, config.queryTimeout);
+        pingBedrock(ip, port, 
+            (err, res) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(res);
+            },
+            config.queryTimeout,
+            //true //FullQuery
+        );
     });
 }
 
@@ -76,8 +84,9 @@ async function queryServerStatus(ip, port) {
     const bedrockPort = port ? parseInt(port, 10) : config.bedrockDefaultPort;
 
     // 创建两个并行的查询Promise
-    const javaPromise = PingMCServer(ip, javaPort)
+    const javaPromise = PingMCServer(ip, javaPort,config.queryTimeout)
         .then(response => ({ type: 'Java', data: response }));
+
 
     const bedrockPromise = pingBedrockPromise(ip, bedrockPort)
         .then(response => ({ type: 'Bedrock', data: response }));
@@ -104,6 +113,19 @@ async function queryServerStatus(ip, port) {
         };
     } else { // result.type === 'Bedrock'
         const { data } = result;
+        const advertise = data.advertise.split(';')
+        const advertiseData = {
+            "serverType": advertise[0],
+            "motd": advertise[1],
+            "protocol": advertise[2],
+            "version": advertise[3],
+            "currentPlayers": advertise[4],
+            "maxPlayers": advertise[5],
+            "serverID": advertise[6],
+            "levelname": advertise[7],
+            "gamemode": advertise[8],
+        }
+
         return {
             type: 'Bedrock',
             status: 'online',
@@ -112,9 +134,10 @@ async function queryServerStatus(ip, port) {
             pureMotd:data.cleanName,
             version: data.version,
             players: { online: data.currentPlayers, max: data.maxPlayers },
-            gamemode: data.gameMode,
+            gamemode: advertiseData.gamemode,
             delay: Date.now() - now,
-            protocol: data.advertise.split(';')[2]
+            protocol: advertiseData.protocol,
+            levelname: advertiseData.levelname,
         };
     }
 }

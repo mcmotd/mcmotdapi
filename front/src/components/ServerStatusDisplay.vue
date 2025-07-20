@@ -24,8 +24,8 @@ const isOffline = computed(() => {
 
 const isModalVisible = ref(false);
 
-const infoLabels = { host: '服务器地址', version: '版本', protocol: '协议版本', gamemode: '游戏模式', delay: '延迟', mod_info: 'Mod 列表', players: '在线列表' };
-const displayKeys = ['host', 'version', 'protocol', 'gamemode', 'delay', 'mod_info', 'players'];
+const infoLabels = { host: '服务器地址', version: '版本', protocol: '协议版本', gamemode: '游戏模式', delay: '延迟', mod_info: 'Mod 列表', players: '在线列表' , levelname: '地图名称'};
+const displayKeys = ['host', 'version', 'protocol', 'gamemode', 'delay', 'mod_info', 'players', 'levelname'];
 
 const filteredInfoKeys = computed(() => {
     if (isOffline.value || !props.serverData) return [];
@@ -89,6 +89,7 @@ let motdUpdateInterval = null;
 const fetchLatestMotd = async () => {
     if (isOffline.value || !props.serverData?.host) return;
     try {
+        // const [ip, port] = props.serverData.host.split(':');
         const host = props.serverData.host;
         let ip, port;
 
@@ -103,6 +104,7 @@ const fetchLatestMotd = async () => {
             ip = parts.slice(0, -1).join(':'); // 兼容 IPv6 没有端口的情况（不常见）
             port = parts[parts.length - 1];
         }
+
         const apiUrl = `${defaultConfig.api.baseUrl}/status`;
         const response = await axios.get(apiUrl, { params: { ip, port: port || undefined } });
         dynamicMotd.value = { motd: response.data.motd, motd_html: response.data.motd_html };
