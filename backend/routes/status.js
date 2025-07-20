@@ -29,6 +29,7 @@ router.get('/', async (req, res) => {
     // 验证 2.1: 确保地址和端口参数都存在
     if (!targetAddress || !targetPort) {
         return res.status(400).json({
+            status:"error",
             error: '请求格式不正确。请使用 ?host=example.com:12345 或 ?ip=1.2.3.4&port=12345 的格式提供服务器地址。'
         });
     }

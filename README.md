@@ -148,11 +148,10 @@ npm run start
 
 ---
 
-## 6. 📦 构建生产版本
+## 6. 🐳 Docker部署（可选）
+
 ```bash
-# 前端打包
-cd front
-npm run build      # 输出到 ../backend/dist
+docker build -t mc-status-app .
 ```
 
 打包完成后，后端静态目录 `backend/dist` 即包含前端资源，可直接部署。

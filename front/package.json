@@ -2,7 +2,7 @@
   "scripts": {
     "dev": "vite",
     "build:dev": "vite build --emptyOutDir --outDir ../backend/dist",
-    "build:docker":"vite build --outDir public",
+    "build:docker":"vite build --outDir dist",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -2,12 +2,13 @@ const fs = require('fs');
 const path = require('path');
 // 1. 引入 node-canvas 的主要功能
 const { createCanvas, loadImage, registerFont } = require('canvas');
+const {customsFont} = require("../config.json")
 
 const W = 640;
 const H = 360;
 const LEFT_MARGIN = 30; // 文字左側邊距
 // 2. 將字體檔案路徑改為相對路徑（建議）
-const FONT_FILE = path.join(__dirname,"../", 'HYPixel.ttf');
+const FONT_FILE = customsFont;// path.join(__dirname,"../", 'HYPixel.ttf');
 // 3. 給您的字體起一個在程式碼中使用的名字
 const FONT_NAME = 'HYPixel';
 
