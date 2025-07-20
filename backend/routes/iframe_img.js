@@ -177,7 +177,7 @@ async function handleRequest(req, res) {
             bypassCSP: true,
             // 限制资源
             offline: false,
-            viewport: { width: 700, height: 365 },
+            viewport: { width: 700, height: 50 },
             deviceScaleFactor: 1,
             isMobile: false,
             hasTouch: false,
