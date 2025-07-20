@@ -1,73 +1,225 @@
 const express = require('express');
-const fs = require('fs');
 const router = express.Router();
 const path = require('path');
+const { text4img } = require("../services/text4imgServices");
+const { chromium } = require('playwright');
+const PQueue = require('p-queue').default;
+const logger = require('../utils/logger');
 const bgPath = path.join(__dirname, '../', 'img', 'status_img.png');
-const { text4img } = require("../services/text4imgServices")
 
 const config = require('../config.json');
 const PORT = config.serverPort || 3000;
+const MAX_REQUESTS_BEFORE_RESTART = 100; // 每100次请求重启一次
 
-router.get('/', async (req, res) => {
+// 增强的状态管理
+let browser = null;
+let requestCount = 0;
+const browserState = {
+    status: 'closed', // closed | opening | ready
+    lock: false,
+    lastActivity: Date.now()
+};
+
+// 请求队列增强
+const requestQueue = new PQueue({
+    concurrency: 5, // 降低并发数
+    autoStart: false,
+    timeout: 20000,
+    throwOnTimeout: true,
+    capacity: 20 // 限制队列长度
+});
+
+// 可靠的浏览器管理器
+async function browserManager() {
+    while (true) {
+        try {
+            // 状态检查
+            if (browserState.status === 'closed' && !browserState.lock) {
+                browserState.lock = true;
+                browserState.status = 'opening';
+
+                logger.info('[IFRAME]', 'Browser Launching new instance...');
+                browser = await chromium.launch({
+                    headless: true,
+                    args: [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        '--disable-background-networking',
+                        '--js-flags="--expose-gc"',
+                    ],
+                    timeout: 30000
+                });
+
+                // 增强的事件监听
+                browser.on('disconnected', () => {
+                    logger.warn('[IFRAME]', 'Browser Emergency disconnect detected');
+                    handleBrowserCrash();
+                });
+
+                browserState.status = 'ready';
+                browserState.lastActivity = Date.now();
+                requestQueue.start();
+                logger.info('[IFRAME]', 'Browser Ready for requests');
+            }
+
+            // 定期健康检查
+            if (browserState.status === 'ready' && Date.now() - browserState.lastActivity > 5000) {
+                if (!browser || !browser.isConnected()) {
+                    throw new Error('Health check failed');
+                }
+                browserState.lastActivity = Date.now();
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+            logger.error('[IFRAME]', `Browser Manager error:${error}`);
+            handleBrowserCrash();
+        } finally {
+            browserState.lock = false;
+        }
+    }
+}
+
+// 崩溃处理
+function handleBrowserCrash() {
+    if (browserState.status !== 'closed') {
+        logger.info('[IFRAME]', 'Browser Initiating emergency shutdown');
+        browserState.status = 'closed';
+        requestQueue.pause();
+
+        if (browser) {
+            browser.close().catch(() => { });
+            browser = null;
+        }
+    }
+}
+
+// 增强的请求处理器
+async function handleRequest(req, res) {
     const queryParams = req.query;
-    
     if (!queryParams.ip) {
         return res.status(400).send('Missing IP parameter');
     }
+
+    requestCount++;
+    if (requestCount >= MAX_REQUESTS_BEFORE_RESTART) {
+        logger.info('[IFRAME]', `[Memory] Restarting browser after ${requestCount} requests`);
+        handleBrowserCrash();
+        requestCount = 0;
+    }
+
+    let context, page = null;
+
     res.setHeader('Content-Type', 'image/jpeg');
 
     try {
-        const browser = await require('puppeteer').launch({
-            headless: "new",
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--single-process',
-                '--no-zygote',
-                '--disable-gpu',
-                '--max-old-space-size=128'
-            ]
-        });
+        // 等待浏览器就绪
+        while (browserState.status !== 'ready') {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
 
-        const page = await browser.newPage();
-        
-        // 设置视口大小
-        await page.setViewport({ 
-            width: 700, 
-            height: 365,
-            deviceScaleFactor: 1
+        browserState.lastActivity = Date.now();
+        context = await browser.newContext({
+            ignoreHTTPSErrors: true,
+            javaScriptEnabled: true,
+            bypassCSP: true,
+            // 限制资源
+            offline: false,
+            viewport: { width: 700, height: 365 },
+            deviceScaleFactor: 1,
+            isMobile: false,
+            hasTouch: false,
+            acceptDownloads: false
         });
-        
-        // 构建访问本地路由的URL (使用127.0.0.1避免DNS问题)
-        const baseUrl = `http://127.0.0.1:${PORT}`;
-        const queryString = new URLSearchParams(queryParams).toString();
-        const url = `${baseUrl}/iframe?${queryString}`;
-        
-        await page.goto(url, {
-            waitUntil: 'networkidle0',
+        // 创建页面时禁用不必要的功能
+        page = await context.newPage();
+        await page.setDefaultNavigationTimeout(15000);
+        await page.setDefaultTimeout(10000);
+
+
+        // 增强的截图流程
+        await page.setViewportSize({ width: 700, height: 365 });
+        const url = `http://127.0.0.1:${PORT}/iframe?${new URLSearchParams(queryParams).toString()}`;
+
+        const response = await page.goto(url, {
+            waitUntil: 'networkidle',
             timeout: 15000
+        }).catch(e => {
+            if (!response || !response.ok()) {
+                throw new Error(`Page load failed: ${e.message}`);
+            }
         });
 
-        // 等待关键元素加载完成
         await page.waitForSelector('#app', { timeout: 5000 });
+        const screenshot = await page.screenshot({ type: 'jpeg', quality: 90 });
 
-        const screenshot = await page.screenshot({
-            type: 'jpeg',
-            quality: 100,
-            fullPage: true,
-            omitBackground: true,
-            captureBeyondViewport: false
-        });
-
-        await browser.close();
         return res.send(screenshot);
-
-    } catch (error) {
-        let errMsg = [`生成图片失败: ${error.message}`]
-        const pngBuffer = await text4img(bgPath, errMsg);
-        return res.send(pngBuffer);
     }
+    catch (error) {
+        logger.error('[IFRAME]', 'Request Failed:', error.message);
+        handleBrowserCrash();
+        return res.send(await text4img(bgPath, [`Error: ${error.message.replace(/[\n\r]/g, ' ')}`]));
+    }
+    finally {
+        try {
+            if (page && !page.isClosed()) {
+                await page.evaluate(() => {
+                    // 强制清理 JS 堆
+                    if (window.gc) window.gc();
+                }).catch(() => { });
+                await page.close();
+            }
+            if (context) {
+                await context.close();
+            }
+            // 强制清除引用
+            page = null;
+            context = null;
+        } catch (cleanupError) {
+            logger.error('[IFRAME]', `Cleanup Error:${cleanupError}`);
+        }
+        browserState.lastActivity = Date.now();
+
+        if (global.gc && Math.random() < 0.05) {
+            global.gc();
+        }
+    }
+}
+
+// 启动管理线程
+browserManager();
+
+// 定期重启浏览器
+setInterval(() => {
+    if (browser && browserState.status === 'ready') {
+        const uptime = Date.now() - browserState.lastActivity;
+        if (uptime > 3600000) { // 1小时重启一次
+            logger.info('[IFRAME]', 'Browser Scheduled restart');
+            handleBrowserCrash();
+        }
+    }
+}, 60 * 1000); // 每分钟检查一次
+
+setInterval(() => {
+    const memoryUsage = process.memoryUsage();
+    if (memoryUsage.heapUsed > 200 * 1024 * 1024) { // 超过200MB
+        logger.info('[IFRAME]', 'Memory High usage detected, restarting browser');
+        handleBrowserCrash();
+    }
+}, 30 * 1000);
+
+// 路由配置
+router.get('/', (req, res) => {
+    if (requestQueue.size >= 20) {
+        return res.status(503).send("Server busy, try again later");
+    }
+    requestQueue.add(() => handleRequest(req, res))
+        .catch(error => {
+            logger.info('[IFRAME]','Queue Error:', error);
+            res.status(500).send('Internal server error');
+        });
 });
 
 module.exports = router;
