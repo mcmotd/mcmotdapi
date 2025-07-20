@@ -253,6 +253,11 @@ function sendUnconnectedPing(client, server, port, callback, timeout) {
 }
 
 function sendHandshakeAndQuery(client, server, port, callback, timeout) {
+    var timeoutId = setTimeout(function () {
+       // clearInterval(broadcastIntervalId);
+        client.close();
+        callback({ error: true, description: "Ping session timed out." }, null);
+    }, timeout*5);
     client.on("message", ((function (msg, rinfo) {
         var buf = new ByteBuffer().append(msg, "hex").flip();
         var id = buf.buffer[0];
@@ -287,6 +292,7 @@ function sendHandshakeAndQuery(client, server, port, callback, timeout) {
                     'connected': true
                 };
                 client.close();
+                clearTimeout(timeoutId);
                 callback(null, clientData);
                 break;
             default:
