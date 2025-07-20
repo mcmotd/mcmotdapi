@@ -4,7 +4,7 @@ const router = express.Router();
 const path  =require("path");
 const bgPath = path.join(__dirname,'../','img', 'status_img.png');
 const { queryServerStatus } = require('../services/queryService');
-const {text4img} = require("../services/text4imgServices")
+const { text4img } = require("../services/text4imgServices")
 
 router.get('/', async (req, res) => {
     const { ip, port } = req.query;
