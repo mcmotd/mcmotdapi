@@ -1,262 +1,82 @@
-// // add7SourceHan.js
-// const fs = require('fs');
-// const path = require('path');
-// const sharp = require('sharp');
-
-// const W = 640;
-// const H = 320;
-// const LEFT_MARGIN = 60;
-// const FONT_FILE = path.join(`C:\\Users\\lition\\Downloads\\Press_Start_2P`, 'PressStart2P-Regular.otf'); // ← 方正字体
-
-// // 每行文字「上边距」数组（行顶部到画布顶部距离）
-// const rowTopMargins = [30, 80, 120, 160, 200, 240, 280];
-
-// /**
-//  * 背景图 + 7 行文字（第一行大字号，其余小字号，使用方正字体）
-//  * @param {string} bgPath   背景图
-//  * @param {string} outPath  输出图
-//  * @param {string[]} lines  7 行文字
-//  */
-// async function add7SourceHan(
-//     bgPath,
-//     outPath,
-//     lines
-// ) {
-//     if (lines.length !== 7) throw new Error('必须 7 行文字');
-
-//     // 背景图 → base64
-//     const bgBuffer = fs.readFileSync(bgPath);
-//     const ext = path.extname(bgPath).slice(1);
-//     const bgBase64 = `data:image/${ext};base64,${bgBuffer.toString('base64')}`;
-
-//     // 构造 SVG
-//     let svg = `
-//   <svg width="${W}" height="${H}">
-//     <image href="${bgBase64}" width="${W}" height="${H}" />
-//     <text font-family="${FONT_FILE}" 
-//           fill="#ffffff" 
-//           shape-rendering="crispEdges"   <!-- 关闭抗锯齿 -->
-//           text-rendering="optimizeSpeed">`;
-
-//     lines.forEach((txt, idx) => {
-//         const fs = idx === 0 ? 20 : 28; // 第一行 28px，其余 14px
-//         // svg += `<tspan x="${LEFT_MARGIN}" y="${rowTopMargins[idx]}" font-size="${fs}" fill="${idx === 0 ? '#000000' : '#ffffff'}">${txt}</tspan>`;
-//         svg += `<tspan x="${LEFT_MARGIN}" y="${rowTopMargins[idx]}" font-size="${fs}" fill="${idx === 0 ? '#000000' : '#ffffff'}">${txt}</tspan>`;
-//         // svg += `<tspan x="${LEFT_MARGIN}" y="${rowTopMargins[idx]}" font-size="${fs}">${txt}</tspan>`;
-//     });
-
-//     svg += '</text></svg>';
-
-//     await sharp(Buffer.from(svg)).png().toFile(outPath);
-// }
-
-// /* ===== CLI 测试 ===== */
-// (async () => {
-//     const bgPath = path.join(__dirname, 'bg.png');
-//     const outPath = path.join(__dirname, 'out.png');
-
-//     await add7SourceHan(bgPath, outPath, [
-//         'MOTD : EaseCation EC BLOCK PARTY EC',
-//         'IP: mc.example.com',
-//         '版本 1.20.1',
-//         '在线 42/100',
-//         '延迟 23 ms',
-//         'Powered by Node.js',
-//         'Enjoy!'
-//     ]);
-
-//     console.log('✅ 已生成 out.png（方正字体）');
-// })();
-
-
-// add7Pixel.js
 const fs = require('fs');
 const path = require('path');
-const sharp = require('sharp');
-const puppeteer = require('puppeteer');
+// 1. 引入 node-canvas 的主要功能
+const { createCanvas, loadImage, registerFont } = require('canvas');
 
 const W = 640;
 const H = 360;
-const LEFT_MARGIN = 30;                          // 文字左起点
-const FONT_FILE = path.join(__dirname, '../../', 'Assets/Fonts', 'font.ttf'); // 像素字体
-console.log(FONT_FILE)
+const LEFT_MARGIN = 30; // 文字左側邊距
+// 2. 將字體檔案路徑改為相對路徑（建議）
+const FONT_FILE = path.join(__dirname,"../", 'HYPixel.ttf');
+// 3. 給您的字體起一個在程式碼中使用的名字
+const FONT_NAME = 'HYPixel';
 
-// 每行文字「上边距」数组（行顶部到画布顶部）
+// 每行文字「上邊距」數組（文字頂部到畫布頂部的距離）
+// 注意：在 canvas 中，這個 y 座標是文字的基線(baseline)，所以我們可能需要微調
 const rowTopMargins = [35, 90, 135, 185, 235, 285, 335];
 
 /**
- * 背景图 + 像素文字
- * @param {string} bgPath   背景图
- * @param {string[]} lines  文字
+ * [Canvas 版本] 使用背景圖和 7 行像素文字產生圖片
+ * @param {string} bgPath 背景圖路徑
+ * @param {string[]} lines 7 行文字
+ * @returns {Buffer} PNG 圖片的 Buffer
  */
-async function text4imgFont(bgPath, lines) {
-    if (!fs.existsSync(FONT_FILE)) {
-        throw new Error('Font file not found');
-    }
+async function text4img(bgPath, lines) {
+  if (lines.length !== 7) throw new Error('必須是 7 行文字');
 
-    // 背景图 → base64
-    const bgBuffer = fs.readFileSync(bgPath);
-    const ext = path.extname(bgPath).slice(1);
-    const bgBase64 = `data:image/${ext};base64,${bgBuffer.toString('base64')}`;
+  // 4. 註冊您的自訂字體檔案
+  // 這一步告訴 node-canvas：「當我說要用 'HYPixel' 這個字體時，請到這個檔案去找」
+  registerFont(FONT_FILE, { family: FONT_NAME });
 
-    // 构造 SVG
-    let svg = `
-    <svg width="${W}" height="${H}">
-      <defs>
-        <style type="text/css">
-          @font-face {
-            font-family: 'CustomFont';
-            src: url(data:application/x-font-ttf;charset=utf-8;base64,${fs.readFileSync(FONT_FILE).toString('base64')}) format('ttf');
-          }
-        </style>
-      </defs>
-      <image href="${bgBase64}" width="${W}" height="${H}" />
-      <text font-family="CustomFont"
-            shape-rendering="crispEdges"
-            text-rendering="optimizeSpeed">`;
+  // 5. 載入背景圖片
+  const background = await loadImage(bgPath);
 
-    lines.forEach((txt, idx) => {
-        const fs = idx === 0 ? 24 : 35;               // 字号
-        const fill = idx === 0 ? '#000000' : '#ffffff'; // 颜色
-        svg += `<tspan x="${LEFT_MARGIN}" y="${rowTopMargins[idx]}" font-size="${fs}" fill="${fill}">${txt}</tspan>`;
-    });
+  // 6. 建立一個和背景圖一樣大的畫布
+  const canvas = createCanvas(background.width, background.height);
+  const ctx = canvas.getContext('2d');
 
-    svg += '</text></svg>';
+  // 7. 將背景圖繪製到畫布上
+  ctx.drawImage(background, 0, 0, background.width, background.height);
 
-    //console.log('Generated SVG:', svg);
+  // 8. 逐行繪製文字
+  lines.forEach((txt, idx) => {
+    const fontSize = idx === 0 ? 24 : 35; // 字號
+    const fillColor = idx === 0 ? '#000000' : '#ffffff'; // 顏色
 
-    const browser = await puppeteer.launch({
-        headless: "new",
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--single-process',
-            '--no-zygote',
-            '--disable-gpu',
-            '--max-old-space-size=128'
-        ]
-    });
-    const page = await browser.newPage();
+    // 設定這一行的文字樣式
+    ctx.font = `${fontSize}px "${FONT_NAME}"`;
+    ctx.fillStyle = fillColor;
 
-    await page.setContent(`
-        <html>
-            <body style="margin: 0; padding: 0;">
-                <div id="svg-container" style="width: ${W}px; height: ${H}px;">${svg}</div>
-            </body>
-        </html>
-    `);
+    // 消除文字鋸齒，讓像素字體更清晰
+    ctx.imageSmoothingEnabled = false;
 
-    const fontBase64 = fs.readFileSync(FONT_FILE).toString('base64')
+    // 在指定位置繪製文字
+    // ctx.fillText(文字, x座標, y座標)
+    ctx.fillText(txt, LEFT_MARGIN, rowTopMargins[idx]);
+  });
 
-    
-    await page.evaluate(async (fontBase64) => {
-        const font = new FontFace('CustomFont', `url(data:application/x-font-ttf;charset=utf-8;base64,${fontBase64})`);
-        try {
-            await font.load();
-            document.fonts.add(font);
-            console.log('字体 CustomFont 已加载完成');
-            window.puppeteerReadyState = 'complete';
-        } catch (error) {
-            console.error('字体加载失败', error);
-            window.puppeteerReadyState = 'error'; // 标记为错误状态
-        }
-    },fontBase64);
-    
-
-    try {
-        await page.waitForFunction(() => window.puppeteerReadyState === 'complete', { timeout: 30000 });
-    } catch (error) {
-        console.error('等待字体加载超时或失败', error);
-        await browser.close();
-        throw error;
-    }
-
-    const pngBuffer = await page.screenshot({
-        clip: {
-            x: 0,
-            y: 0,
-            width: W,
-            height: H
-        }
-    });
-
-    await browser.close();
-    return pngBuffer;
+  // 9. 將畫布內容轉換為 PNG 格式的 Buffer 並返回
+  return canvas.toBuffer('image/png');
 }
 
-/**
- * 背景图 + 文字
- * @param {string} bgPath   背景图
- * @param {string[]} lines  文字
- */
-async function text4imgSharp(bgPath, lines) {
-    // 背景图 → base64
-    const bgBuffer = fs.readFileSync(bgPath);
-    const ext = path.extname(bgPath).slice(1);
-    const bgBase64 = `data:image/${ext};base64,${bgBuffer.toString('base64')}`;
+module.exports = { text4img }
 
-    // 构造 SVG
-    let svg = `
-    <svg width="${W}" height="${H}">
-      <image href="${bgBase64}" width="${W}" height="${H}" />
-      <text font-family="${FONT_FILE}"
-            shape-rendering="crispEdges"
-            text-rendering="optimizeSpeed">`;
-
-    lines.forEach((txt, idx) => {
-        const fs = idx === 0 ? 24 : 35;               // 字号
-        const fill = idx === 0 ? '#000000' : '#ffffff'; // 颜色
-        svg += `<tspan x="${LEFT_MARGIN}" y="${rowTopMargins[idx]}" font-size="${fs}" fill="${fill}">${txt}</tspan>`;
-    });
-
-    svg += '</text></svg>';
-
-    return await sharp(Buffer.from(svg)).png().toBuffer();
-}
-
-/**
- * 背景图 + 文字
- * @param {string} bgPath   背景图
- * @param {string[]} lines  文字
- */
-async function text4img(bgPath,lines){
-    let pngBuffer;
-    try{
-        pngBuffer = await text4imgFont(bgPath, lines);
-    }
-    catch(_){
-        pngBuffer = await text4imgSharp(bgPath, lines);
-    }
-    return pngBuffer;
-}
-
-/**
- * 背景图 + 7 行像素文字
- * @param {string} bgPath   背景图
- * @param {string[]} lines  7 行文字
- */
-async function GenerateStatusImg(bgPath, lines){
-    if (lines.length !== 7) throw new Error('必须 7 行文字');
-    return await text4img(bgPath, lines);
-}
-
-module.exports = { text4img, GenerateStatusImg }
-
-/* ===== CLI 测试 ===== */
+/* ===== CLI 測試 ===== */
+// 您可以取消註解這段程式碼來直接執行測試
 // (async () => {
 //     const bgPath = path.join(__dirname, 'bg.png');
-//     const outPath = path.join(__dirname, 'out.png');
+//     const outPath = path.join(__dirname, 'out_canvas.png'); // 輸出為新檔名以便比較
 
-//     await add7Pixel(bgPath, outPath, [
+//     const buffer = await text4img(bgPath, [
 //         'MOTD：EaseCation EC BLOCK PARTY EC',
-//         '服务器地址：mc.example.com',
-//         '服务器版本： 1.20.1',
-//         '在线玩家：42/100',
-//         '延迟：23ms',
-//         '游戏模式：Survial',
-//         '存档名称：The World'
+//         '伺服器地址：mc.example.com',
+//         '伺服器版本： 1.20.1',
+//         '線上玩家：42/100',
+//         '延遲：23ms',
+//         '遊戲模式：Survial',
+//         '存檔名稱：The World'
 //     ]);
 
-//     console.log('✅ 已生成像素风 out.png');
+//     fs.writeFileSync(outPath, buffer);
+//     console.log('✅ 已使用 node-canvas 產生 out_canvas.png');
 // })();
