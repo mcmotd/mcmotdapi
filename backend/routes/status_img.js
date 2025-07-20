@@ -4,7 +4,7 @@ const router = express.Router();
 const path  =require("path");
 const bgPath = path.join(__dirname,'../','img', 'status_img.png');
 const { queryServerStatus } = require('../services/queryService');
-const { GenerateStatusImg } = require("../services/text4imgServices")
+const { text4img } = require("../services/text4imgServices")
 
 router.get('/', async (req, res) => {
     const { ip, port } = req.query;
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
         ];
 
         // 5. 调用您的函数生成 SVG buffer
-        const pngBuffer = await GenerateStatusImg(bgPath, lines);
+        const pngBuffer = await text4img(bgPath, lines);
 
         // 7. 发送最终的 PNG 图片
         

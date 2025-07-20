@@ -429,6 +429,7 @@ onUnmounted(() => {
     cursor: pointer;
     text-align: left;
     font-size: inherit;
+    font-family: 'Noto Sans SC', sans-serif;
 }
 
 .info-button:hover {

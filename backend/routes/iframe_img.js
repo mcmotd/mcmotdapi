@@ -138,9 +138,6 @@ async function handleRequest(req, res) {
         await page.setDefaultNavigationTimeout(15000);
         await page.setDefaultTimeout(10000);
 
-
-        // 增强的截图流程
-        await page.setViewportSize({ width: 700, height: 365 });
         const url = `http://127.0.0.1:${PORT}/iframe?${new URLSearchParams(queryParams).toString()}`;
 
         const response = await page.goto(url, {
@@ -152,8 +149,34 @@ async function handleRequest(req, res) {
             }
         });
 
+
         await page.waitForSelector('#app', { timeout: 5000 });
-        const screenshot = await page.screenshot({ type: 'jpeg', quality: 90 });
+
+        // 获取页面实际高度
+        const actualHeight = await page.evaluate(() => {
+            return Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.offsetHeight,
+                document.body.clientHeight,
+                document.documentElement.clientHeight
+            );
+        });
+
+        // 增强的截图流程
+        await page.setViewportSize({
+            width: 700,
+            height: actualHeight,
+            deviceScaleFactor: 1
+        });
+
+        const screenshot = await page.screenshot({ 
+            type: 'png',
+            fullPage: true,
+            omitBackground: false,
+            captureBeyondViewport: false
+        });
 
         return res.send(screenshot);
     }
