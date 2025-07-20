@@ -24,8 +24,8 @@ const isOffline = computed(() => {
 
 const isModalVisible = ref(false);
 
-const infoLabels = { host: '服务器地址', version: '版本', protocol: '协议版本', gamemode: '游戏模式', delay: '延迟', mod_info: 'Mod 列表', players: '在线列表' };
-const displayKeys = ['host', 'version', 'protocol', 'gamemode', 'delay', 'mod_info', 'players'];
+const infoLabels = { host: '服务器地址', version: '版本', protocol: '协议版本', gamemode: '游戏模式', delay: '延迟', mod_info: 'Mod 列表', players: '在线列表' , levelname: '地图名称'};
+const displayKeys = ['host', 'version', 'protocol', 'gamemode', 'delay', 'mod_info', 'players', 'levelname'];
 
 const filteredInfoKeys = computed(() => {
     if (isOffline.value || !props.serverData) return [];
