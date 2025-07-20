@@ -103,7 +103,7 @@ async function queryServerStatus(ip, port) {
             status: 'online',
             host: `${ip}:${javaPort}`,
             motd: data.description,
-            pureMotd: motdToPlainText(data.description),
+            pureMotd: motdToPlainText(data.description).trim(),
             version: data.version.name,
             protocol: data.version.protocol,
             players: { online: data.players.online, max: data.players.max, sample: playersSample },
