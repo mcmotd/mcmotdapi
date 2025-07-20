@@ -1,6 +1,6 @@
 const config = require('../config.json');
 const PingMCServer = require("../utils/java").fetch;
-const pingBedrock = require('mcpe-ping');
+const pingBedrock = require('../utils/bedrock');
 const Logger = require('../utils/logger');
 
 
@@ -9,7 +9,6 @@ function pingBedrockPromise(ip, port) {
     return new Promise((resolve, reject) => {
         pingBedrock(ip, port, (err, res) => {
             if (err) {
-                Logger.debug("[QUERY]",'get pe result error',ip)
                 return reject(err);
             }
             resolve(res);
@@ -82,9 +81,7 @@ async function queryServerStatus(ip, port) {
 
     // 创建两个并行的查询Promise
     const javaPromise = PingMCServer(ip, javaPort,config.queryTimeout)
-        .then(response => ({ type: 'Java', data: response })).catch(()=>{
-            Logger.debug("get java result error",ip);
-        });
+        .then(response => ({ type: 'Java', data: response }));
 
 
     const bedrockPromise = pingBedrockPromise(ip, bedrockPort)

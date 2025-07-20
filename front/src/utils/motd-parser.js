@@ -20,16 +20,25 @@ const nameColorMap = {
  * @returns {string} - 转换后的HTML字符串
  */
 function parseStringMotd(str) {
-    const parts = str.split('§');
-    let html = '';
-    // ... (内部逻辑与之前的版本相同，这里为了简洁省略，在完整代码中会包含)
-    // ... (The internal logic is the same as the previous version) ...
     if (!str) return '';
+
+    let html = '';
+    const parts = str.split('§');
     let currentStyles = { color: null, fontWeight: null, fontStyle: null, textDecorations: new Set(), isObfuscated: false };
     const createNewStyles = () => ({ color: null, fontWeight: null, fontStyle: null, textDecorations: new Set(), isObfuscated: false });
 
-    for (const part of parts) {
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
         if (!part) continue;
+
+        if (i === 0) {
+            // 第一个部分没有格式代码，直接显示为纯文本
+            if (part.length > 0) {
+                html += `<span>${part}</span>`;
+            }
+            continue;
+        }
+
         const code = part[0];
         const text = part.substring(1);
 
@@ -45,7 +54,9 @@ function parseStringMotd(str) {
             currentStyles.textDecorations.add('line-through');
         } else if (code === 'k') {
             currentStyles.isObfuscated = true;
-        } else if (code === 'r') { currentStyles = createNewStyles(); }
+        } else if (code === 'r') {
+            currentStyles = createNewStyles();
+        }
 
         if (text) {
             const inlineStyles = [];
@@ -67,6 +78,7 @@ function parseStringMotd(str) {
             }
         }
     }
+
     return html;
 }
 
@@ -135,4 +147,4 @@ export function parseMotdToHtml(motd) {
     }
 
     return '';
-  }
+}
