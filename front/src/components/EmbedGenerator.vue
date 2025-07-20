@@ -24,7 +24,20 @@ const embedUrl = computed(() => {
         return '';
     }
 
-    const [ip, port] = props.serverData.host.split(':');
+    const host = props.serverData.host;
+    let ip, port;
+
+    // 匹配 IPv6 格式：[::1]:19132
+    const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
+    if (ipv6Match) {
+        ip = ipv6Match[1];
+        port = ipv6Match[2];
+    } else {
+        // IPv4 或简单端口分割
+        const parts = host.split(':');
+        ip = parts.slice(0, -1).join(':'); // 兼容 IPv6 没有端口的情况（不常见）
+        port = parts[parts.length - 1];
+    }
     const fullBaseUrl = window.location.origin + defaultConfig.embed.baseUrl;
     return `${fullBaseUrl}?ip=${ip}&port=${port || ''}&dark=${darkMode.value}&source=mc-status-${ip}`;
 });

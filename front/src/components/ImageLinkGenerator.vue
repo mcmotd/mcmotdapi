@@ -24,7 +24,20 @@ watch(() => props.serverData, (newServerData) => {
         imageUrl.value = '';
         return;
     }
-    const [ip, port] = newServerData.host.split(':');
+    const host = props.serverData.host;
+    let ip, port;
+
+    // 匹配 IPv6 格式：[::1]:19132
+    const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
+    if (ipv6Match) {
+        ip = ipv6Match[1];
+        port = ipv6Match[2];
+    } else {
+        // IPv4 或简单端口分割
+        const parts = host.split(':');
+        ip = parts.slice(0, -1).join(':'); // 兼容 IPv6 没有端口的情况（不常见）
+        port = parts[parts.length - 1];
+    }
     const apiUrl = `/api/status_img?ip=${ip}&port=${port || ''}`;
     imageUrl.value = apiUrl;
 }, { immediate: true }); // immediate: true 确保组件初始加载时也能执行一次

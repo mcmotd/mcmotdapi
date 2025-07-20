@@ -98,9 +98,59 @@ function handleBrowserCrash() {
 
 // 增强的请求处理器
 async function handleRequest(req, res) {
+    // 获取客户端IP，并进行标准化处理
+    const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
+
+    const { ip, port, host } = req.query;
     const queryParams = req.query;
-    if (!queryParams.ip) {
-        return res.status(400).send('Missing IP parameter');
+
+    let targetAddress = null;
+    let targetPort = null;
+
+    // --- 步骤 1: 统一解析输入 ---
+    if (host) {
+        // 处理 IPv6 地址：如 [::1]:19132
+        const ipv6Regex = /^\[([a-fA-F0-9:]+)\]:(\d+)$/;
+        const match = host.match(ipv6Regex);
+        if (match) {
+            targetAddress = match[1]; // IPv6 地址部分
+            targetPort = match[2];    // 端口部分
+        } else {
+            // 退回到 IPv4 的处理逻辑
+            const parts = host.split(':');
+            if (parts.length === 2 && parts[0] && parts[1]) {
+                targetAddress = parts[0];
+                targetPort = parts[1];
+            } else {
+                targetAddress = host;
+                targetPort = '19132'; // 默认端口（可选）
+            }
+        }
+    }
+    else if (ip) {
+        targetAddress = ip;
+        targetPort = port;
+    }
+
+    // --- 步骤 2: 集中验证 ---
+    // 验证 2.1: 确保地址和端口参数都存在
+    if (!targetAddress || !targetPort) {
+        return res.status(400).json({
+            error: '请求格式不正确。请使用 ?host=example.com:12345 或 ?ip=1.2.3.4&port=12345 的格式提供服务器地址。'
+        });
+    }
+
+    // 验证 2.2: 校验端口号的有效性（核心改动）
+    const numericPort = parseInt(targetPort, 10); // 基数为10，将字符串转换为整数
+
+    // 依次判断：
+    // 1. 是否为非数字 (Not-a-Number)，处理 "abc" 等情况。
+    // 2. 转换后的数字是否在有效范围内 (1-65535)。
+    // 3. 转换回字符串后是否与原始值相等，这能巧妙地处理 "123xyz" 或 "123.45" 等无效情况。
+    if (Number.isNaN(numericPort) || numericPort < 1 || numericPort > 65535 || String(numericPort) !== targetPort.trim()) {
+        return res.status(400).json({
+            error: '端口无效。端口必须是 1 到 65535 之间的纯数字。'
+        });
     }
 
     requestCount++;

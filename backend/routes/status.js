@@ -14,10 +14,22 @@ router.get('/', async (req, res) => {
 
     // --- 步骤 1: 统一解析输入 ---
     if (host) {
-        const parts = host.split(':');
-        if (parts.length === 2 && parts[0] && parts[1]) {
-            targetAddress = parts[0];
-            targetPort = parts[1];
+        // 处理 IPv6 地址：如 [::1]:19132
+        const ipv6Regex = /^\[([a-fA-F0-9:]+)\]:(\d+)$/;
+        const match = host.match(ipv6Regex);
+        if (match) {
+            targetAddress = match[1]; // IPv6 地址部分
+            targetPort = match[2];    // 端口部分
+        } else {
+            // 退回到 IPv4 的处理逻辑
+            const parts = host.split(':');
+            if (parts.length === 2 && parts[0] && parts[1]) {
+                targetAddress = parts[0];
+                targetPort = parts[1];
+            } else {
+                targetAddress = host;
+                targetPort = '19132'; // 默认端口（可选）
+            }
         }
     }
     else if (ip) {
@@ -65,3 +77,5 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
+
+//Get-AppXPackage -AllUsers | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register "C:\Program Files\WindowsApps\Microsoft.Winget.Source_2024.1201.1001.43_neutral__8wekyb3d8bbwe\AppxManifest.xml"}
