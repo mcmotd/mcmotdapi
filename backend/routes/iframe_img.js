@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
-const { text4img } = require("../services/text4imgServices");
+const { error4img } = require("../services/text4imgServices");
 const { chromium } = require('playwright');
 const PQueue = require('p-queue').default;
 const logger = require('../utils/logger');
@@ -160,14 +160,16 @@ async function handleRequest(req, res) {
     catch (error) {
         logger.error('[IFRAME]', 'Request Failed:', error.message);
         handleBrowserCrash();
-        return res.send(await text4img(bgPath, [`Error: ${error.message.replace(/[\n\r]/g, ' ')}`]));
+        return res.send(await error4img(bgPath, [`Error: ${error.message.replace(/[\n\r]/g, ' ')}`]));
     }
     finally {
         try {
             if (page && !page.isClosed()) {
                 await page.evaluate(() => {
                     // 强制清理 JS 堆
-                    if (window.gc) window.gc();
+                    if (window.gc){
+                        window.gc();
+                    } 
                 }).catch(() => { });
                 await page.close();
             }
@@ -217,7 +219,7 @@ router.get('/', (req, res) => {
     }
     requestQueue.add(() => handleRequest(req, res))
         .catch(error => {
-            logger.info('[IFRAME]','Queue Error:', error);
+            logger.info('[IFRAME]', 'Queue Error:', error);
             res.status(500).send('Internal server error');
         });
 });
