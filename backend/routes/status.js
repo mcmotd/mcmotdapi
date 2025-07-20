@@ -12,48 +12,55 @@ router.get('/', async (req, res) => {
     let targetAddress = null;
     let targetPort = null;
 
-    // --- 步骤 1: 统一解析输入 ---
+    // --- 步骤 1: 统一解析输入 (逻辑不变) ---
+    // host 中可能包含端口，也可能不包含
     if (host) {
         const parts = host.split(':');
-        if (parts.length === 2 && parts[0] && parts[1]) {
-            targetAddress = parts[0];
+        targetAddress = parts[0];
+        // 如果切分后有第二部分，则将其视为端口
+        if (parts.length > 1 && parts[1]) {
             targetPort = parts[1];
         }
     }
     else if (ip) {
         targetAddress = ip;
-        targetPort = port;
+        targetPort = port; // port 可能是 undefined
     }
 
-    // --- 步骤 2: 集中验证 ---
-    // 验证 2.1: 确保地址和端口参数都存在
-    if (!targetAddress || !targetPort) {
+    // --- 步骤 2: 集中验证 (逻辑调整) ---
+    // 验证 2.1: 只验证地址是否存在，因为端口现在是可选的
+    if (!targetAddress) {
         return res.status(400).json({
-            status:"error",
-            error: '请求格式不正确。请使用 ?host=example.com:12345 或 ?ip=1.2.3.4&port=12345 的格式提供服务器地址。'
+            status: "error",
+            error: '请求格式不正确。必须提供 host 或 ip 参数。'
         });
     }
 
-    // 验证 2.2: 校验端口号的有效性（核心改动）
-    const numericPort = parseInt(targetPort, 10); // 基数为10，将字符串转换为整数
+    let numericPort = undefined; // 初始化最终的数字端口为 undefined
 
-    // 依次判断：
-    // 1. 是否为非数字 (Not-a-Number)，处理 "abc" 等情况。
-    // 2. 转换后的数字是否在有效范围内 (1-65535)。
-    // 3. 转换回字符串后是否与原始值相等，这能巧妙地处理 "123xyz" 或 "123.45" 等无效情况。
-    if (Number.isNaN(numericPort) || numericPort < 1 || numericPort > 65535 || String(numericPort) !== targetPort.trim()) {
-        return res.status(400).json({
-            error: '端口无效。端口必须是 1 到 65535 之间的纯数字。'
-        });
+    // 验证 2.2: [核心改动] 仅在用户提供了端口时，才对其进行校验
+    if (targetPort) {
+        const parsedPort = parseInt(targetPort, 10);
+
+        if (Number.isNaN(parsedPort) || parsedPort < 1 || parsedPort > 65535 || String(parsedPort) !== targetPort.trim()) {
+            return res.status(400).json({
+                status: "error",
+                error: '端口无效。如果提供，端口必须是 1 到 65535 之间的纯数字。'
+            });
+        }
+        // 只有在端口有效时，才赋值
+        numericPort = parsedPort;
     }
 
     // --- 步骤 3: 执行与响应 ---
-    const fullAddress = `${targetAddress}:${numericPort}`; // 使用验证过的数字端口
+    // 根据是否存在有效端口，动态构建用于日志的完整地址
+    const fullAddress = numericPort ? `${targetAddress}:${numericPort}` : targetAddress;
     logger.debug('[QUERY]', `${clientIP} 查询 ${fullAddress}`);
 
     try {
-        // 使用解析和验证后的标准变量调用核心服务
-        const serverData = await queryServerStatus(targetAddress, numericPort); // 传递数字端口
+        // [核心改动] 调用核心服务。
+        // 如果 numericPort 是 undefined，JavaScript 会视其为未传递该参数。
+        const serverData = await queryServerStatus(targetAddress, numericPort);
         return res.json(serverData);
     } catch (error) {
         logger.info('[QUERY]', `查询失败: ${fullAddress}`);
