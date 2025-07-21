@@ -18,6 +18,7 @@ const port = ref(defaultConfig.port);
 const loading = ref(true);
 const error = ref(null);
 const data = ref(null);
+const icon = ref(null);
 
 const openJoinModal = () => {
     // 只有在查询成功后才打开弹窗
@@ -29,6 +30,7 @@ const openJoinModal = () => {
 const handleFetchData = async (payload) => {
     serverAddress.value = payload.address;
     port.value = payload.port;
+    icon.value = payload.icon
 
     loading.value = true;
     error.value = null;
@@ -38,7 +40,8 @@ const handleFetchData = async (payload) => {
         const response = await axios.get(apiUrl, {
             params: {
                 ip: serverAddress.value,
-                port: port.value || undefined
+                port: port.value || undefined,
+                icon: icon.value
             }
         });
         data.value = response.data;

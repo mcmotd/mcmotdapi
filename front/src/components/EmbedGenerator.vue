@@ -26,6 +26,8 @@ const embedUrl = computed(() => {
 
     // const [ip, port] = props.serverData.host.split(':');
     const host = props.serverData.host;
+    const icon = props.serverData.icon;
+
     let ip, port;
 
     // 匹配 IPv6 格式：[::1]:19132
@@ -40,8 +42,11 @@ const embedUrl = computed(() => {
         port = parts[parts.length - 1];
     }
 
+    const isHttpUrl = (url) => /^https?:\/\/.+\..+/.test(url);
+    const iconParam = isHttpUrl(icon) ? `&icon=${encodeURIComponent(icon)}` : '';
+
     const fullBaseUrl = window.location.origin + defaultConfig.embed.baseUrl;
-    return `${fullBaseUrl}?ip=${ip}&port=${port || ''}&dark=${darkMode.value}&source=mc-status-${ip}`;
+    return `${fullBaseUrl}?ip=${ip}&port=${port || ''}&dark=${darkMode.value}&source=mc-status-${ip}${iconParam}`;
 });
 // ==============================================================================
 

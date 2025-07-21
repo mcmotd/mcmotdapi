@@ -37,6 +37,8 @@ onUnmounted(() => {
 const fetchData = async () => {
     const serverIp = route.query.ip;
     const serverPort = route.query.port;
+    const icon = route.query.icon;
+
 
     if (!serverIp) {
         error.value = "URL中必须提供服务器IP参数。";
@@ -46,7 +48,7 @@ const fetchData = async () => {
     try {
         const apiUrl = `${defaultConfig.api.baseUrl}/status`;
         const response = await axios.get(apiUrl, {
-            params: { ip: serverIp, port: serverPort }
+            params: { ip: serverIp, port: serverPort, icon }
         });
         data.value = response.data;
     } catch (err) {
