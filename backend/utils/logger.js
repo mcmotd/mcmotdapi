@@ -1,6 +1,10 @@
 // logger.js
 const { inspect } = require('util');
-const { log_level } = require("../config.json");
+var log_level = 5;
+try{
+    log_level  = require("../config.json").log_level;
+}catch{}
+
 
 function getSystemTime() {
     const now = new Date();

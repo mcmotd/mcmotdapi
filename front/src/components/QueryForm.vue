@@ -4,7 +4,6 @@ import { ref } from 'vue';
 const props = defineProps({
     initialAddress: String,
     initialPort: String,
-    initialIcon: String,
     loading: Boolean,
 });
 
@@ -12,10 +11,9 @@ const emit = defineEmits(['start-query']);
 
 const address = ref(props.initialAddress);
 const port = ref(props.initialPort);
-const icon = ref(props.initialIcon);
 
 const submitQuery = () => {
-    emit('start-query', { address: address.value, port: port.value, icon: icon.value });
+    emit('start-query', { address: address.value, port: port.value });
 };
 </script>
 
@@ -29,10 +27,6 @@ const submitQuery = () => {
         <div class="form-group">
             <label for="port_field">端口 (可选)</label>
             <input type="text" id="port_field" class="form-input" v-model="port" placeholder="例如: 19132">
-        </div>
-        <div class="form-group">
-            <label for="icon_field">图标 (可选)</label>
-            <input type="text" id="icon_field" class="form-input" v-model="icon" placeholder="https://example.com/icon.png">
         </div>
         <button type="button" class="btn btn-primary" :disabled="loading" @click="submitQuery">
             {{ loading ? '查询中...' : '查询服务器状态' }}

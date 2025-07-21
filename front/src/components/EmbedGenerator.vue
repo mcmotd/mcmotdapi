@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { defaultConfig } from '../config/app.config.js';
 
 const props = defineProps({
@@ -15,44 +15,50 @@ const darkMode = ref(false);
 const copyButtonText = ref('复制');
 const previewIframe = ref(null);
 
-// ==================== [核心修复] embedUrl 逻辑恢复为简单直接 ====================
+// [核心改动 1] 新增 ref 用于绑定图标URL输入框
+const iconUrl = ref('');
+
+// [核心改动 2] 使用 watch 侦听器，当服务器数据变化时，自动填充图标URL
+watch(() => props.serverData.icon, (newIcon) => {
+    // 只填充有效的 http/https URL，忽略 base64 或其他无效值
+    if (newIcon && /^https?:\/\/.+/.test(newIcon)) {
+        iconUrl.value = newIcon;
+    } else {
+        iconUrl.value = ''; // 如果服务器数据没有有效的URL图标，则清空输入框
+    }
+}, { immediate: true }); // immediate: true 确保组件加载时立即执行一次
+
+// [核心改动 3] embedUrl 计算属性现在使用我们自己的 iconUrl ref
 const embedUrl = computed(() => {
-    // 这个组件不关心查询是否成功。
-    // 它只负责根据接收到的 host (IP:Port) 生成URL。
-    // 如果 host 不存在，则返回空，这是为了防止初始渲染时出错。
     if (!props.serverData?.host) {
         return '';
     }
 
-    // const [ip, port] = props.serverData.host.split(':');
     const host = props.serverData.host;
-    const icon = props.serverData.icon;
-
     let ip, port;
 
-    // 匹配 IPv6 格式：[::1]:19132
     const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
     if (ipv6Match) {
         ip = ipv6Match[1];
         port = ipv6Match[2];
     } else {
-        // IPv4 或简单端口分割
         const parts = host.split(':');
-        ip = parts.slice(0, -1).join(':'); // 兼容 IPv6 没有端口的情况（不常见）
-        port = parts[parts.length - 1];
+        ip = parts[0];
+        port = parts.length > 1 ? parts[parts.length - 1] : '';
     }
 
-    const isHttpUrl = (url) => /^https?:\/\/.+\..+/.test(url);
+    // 使用来自输入框的 iconUrl.value
+    const icon = iconUrl.value;
+    const isHttpUrl = (url) => url && /^https?:\/\/.+\..+/.test(url);
     const iconParam = isHttpUrl(icon) ? `&icon=${encodeURIComponent(icon)}` : '';
 
     const fullBaseUrl = window.location.origin + defaultConfig.embed.baseUrl;
     return `${fullBaseUrl}?ip=${ip}&port=${port || ''}&dark=${darkMode.value}&source=mc-status-${ip}${iconParam}`;
 });
-// ==============================================================================
 
 const iframeCode = computed(() => {
     if (!embedUrl.value) return '';
-    const iframeId = `mc-status-${props.serverData.host.replace(':', '-')}`;
+    const iframeId = `mc-status-${props.serverData.host.replace(/[:.]/g, '-')}`;
     const iframeTag = `<iframe id="${iframeId}" class="responsive-iframe" frameborder="0" width="${width.value}" height="${height.value}" scrolling="no" src="${embedUrl.value}"></iframe>`;
     const scriptTag = `
 <script>
@@ -67,6 +73,7 @@ const iframeCode = computed(() => {
 });
 
 const copyToClipboard = () => {
+    // ... (复制逻辑保持不变)
     if (!iframeCode.value) return;
     const copyText = (text) => {
         if (navigator.clipboard && window.isSecureContext) {
@@ -131,8 +138,13 @@ onUnmounted(() => {
                 <input type="number" id="embed-width" class="form-input" v-model="width">
             </div>
             <div class="form-group">
-                <label for="embed-height">高度 (px) - <span style="font-style: italic; color: #999;">自动调整</span></label>
+                <label for="embed-height">高度 (px) - <span class="label-hint">自动调整</span></label>
                 <input type="number" id="embed-height" class="form-input" v-model="height">
+            </div>
+            <div class="form-group icon-group">
+                <label for="embed-icon">图标 URL (可选)</label>
+                <input type="text" id="embed-icon" class="form-input" v-model="iconUrl"
+                    placeholder="https://example.com/icon.png">
             </div>
             <div class="form-group checkbox-group">
                 <input type="checkbox" id="dark-mode" class="form-checkbox" v-model="darkMode">
@@ -158,6 +170,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* ... (样式部分保持不变，仅为网格布局和标签提示稍作调整) ... */
 .card.generator-card {
     font-family: 'Noto Sans SC', sans-serif;
     background-color: var(--card-background);
@@ -188,7 +201,8 @@ h4 {
 
 .options-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    /* 调整网格以更好地适应新项目 */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     align-items: flex-end;
     margin-bottom: 1.5rem;
@@ -202,6 +216,11 @@ label {
     display: block;
     font-weight: 500;
     margin-bottom: 0.5rem;
+}
+
+.label-hint {
+    font-style: italic;
+    color: #999;
 }
 
 .form-input {
@@ -229,17 +248,13 @@ label {
     width: 100%;
 }
 
-/* EmbedGenerator.vue */
 .iframe-container {
     border: 1px dashed var(--border-color);
     border-radius: 8px;
     background-color: var(--background-color);
     margin: 1rem auto;
-    /* [核心修复] 只对高度应用过渡动画，宽度调整保持即时响应 */
     transition: height 0.3s ease;
     box-sizing: border-box;
-    /* [核心修复] 移除 max-width，让内联样式的 width 完全生效 */
-    /* max-width: 700px; */
     overflow: hidden;
     max-width: 100%;
 }
@@ -287,5 +302,13 @@ label {
 
 .btn-copy:hover {
     background-color: var(--primary-color-hover);
+}
+
+/* 确保图标输入框能很好地融入网格 */
+@media (min-width: 680px) {
+    .icon-group {
+        grid-column: 1 / -1;
+        /* 在较宽屏幕上，让图标输入框占据整行 */
+    }
 }
 </style>

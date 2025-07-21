@@ -47,7 +47,7 @@ RUN \
 COPY backend/ .
 
 # 从 frontend-builder 阶段复制已经构建好的前端文件
-COPY --from=frontend-builder /app/dist ./public
+COPY --from=frontend-builder /app/dist ./dist
 
 EXPOSE $PORT
 CMD [ "npm", "run", "start" ]
