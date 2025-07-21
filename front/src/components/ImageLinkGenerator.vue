@@ -45,16 +45,38 @@ watch(() => props.serverData, (newServerData) => {
 }, { immediate: true }); // immediate: true 确保组件初始加载时也能执行一次
 
 const copyToClipboard = () => {
+    // ... (复制逻辑保持不变)
     if (!imageUrl.value) return;
-    navigator.clipboard.writeText(window.location.origin + imageUrl.value).then(() => {
-        copyButtonText.value = '已复制!';
-        setTimeout(() => {
-            copyButtonText.value = '复制';
-        }, 2000);
-    }).catch(err => {
-        copyButtonText.value = '复制失败';
-        console.error('Could not copy text: ', err);
-    });
+    const copyText = (text) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        }
+        return new Promise((resolve, reject) => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                ok ? resolve() : reject(new Error('execCommand failed'));
+            } catch (e) {
+                document.body.removeChild(ta);
+                reject(e);
+            }
+        });
+    };
+    copyText(window.location.origin + imageUrl.value)
+        .then(() => {
+            copyButtonText.value = '已复制!';
+            setTimeout(() => (copyButtonText.value = '复制'), 2000);
+        })
+        .catch((err) => {
+            copyButtonText.value = '复制失败';
+            console.error('Could not copy text:', err);
+        });
 };
 </script>
 
