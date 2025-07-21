@@ -84,5 +84,3 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
-
-//Get-AppXPackage -AllUsers | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register "C:\Program Files\WindowsApps\Microsoft.Winget.Source_2024.1201.1001.43_neutral__8wekyb3d8bbwe\AppxManifest.xml"}
