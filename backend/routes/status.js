@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
     // 获取客户端IP，并进行标准化处理
     const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
 
-    const { ip, port, host } = req.query;
+    const { ip, port, host, icon } = req.query;
 
     let targetAddress = null;
     let targetPort = null;
@@ -71,7 +71,7 @@ router.get('/', async (req, res) => {
     try {
         // [核心改动] 调用核心服务。
         // 如果 numericPort 是 undefined，JavaScript 会视其为未传递该参数。
-        const serverData = await queryServerStatus(targetAddress, numericPort);
+        const serverData = await queryServerStatus(targetAddress, numericPort,icon);
         return res.json(serverData);
     } catch (error) {
         logger.info('[QUERY]', `查询失败: ${fullAddress}`);

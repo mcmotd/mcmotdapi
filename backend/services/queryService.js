@@ -78,7 +78,7 @@ function motdToPlainText(motd) {
  * @param {string|number} port 端口号 (可选)
  * @returns {Promise<object>} 返回包含服务器状态的Promise对象
  */
-async function queryServerStatus(ip, port) {
+async function queryServerStatus(ip, port, iconUrl) {
     const now = Date.now();
     const javaPort = port ? parseInt(port, 10) : config.javaDefaultPort;
     const bedrockPort = port ? parseInt(port, 10) : config.bedrockDefaultPort;
@@ -103,12 +103,12 @@ async function queryServerStatus(ip, port) {
             status: 'online',
             host: `${ip}:${javaPort}`,
             motd: data.description,
-            pureMotd: motdToPlainText(data.description),
+            pureMotd: motdToPlainText(data.description).trim(),
             version: data.version.name,
             protocol: data.version.protocol,
             players: { online: data.players.online, max: data.players.max, sample: playersSample },
             mod_info: data.modinfo,
-            icon: data.favicon,
+            icon: data.favicon ? data.favicon : iconUrl,
             delay: Date.now() - now,
         };
     } else { // result.type === 'Bedrock'
@@ -138,6 +138,7 @@ async function queryServerStatus(ip, port) {
             delay: Date.now() - now,
             protocol: advertiseData.protocol,
             levelname: advertiseData.levelname,
+            icon: iconUrl,
         };
     }
 }

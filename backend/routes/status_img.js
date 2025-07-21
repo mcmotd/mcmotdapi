@@ -18,6 +18,8 @@ router.get('/', async (req, res) => {
     try {
         // 同样调用核心查询服务来获取数据
         const serverData = await queryServerStatus(ip, port);
+
+        console.log(serverData.pureMotd)
         
         const lines = [
             `状态: ${serverData.type} - 在线`,
