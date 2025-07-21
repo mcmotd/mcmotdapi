@@ -12,7 +12,8 @@ const props = defineProps({
 const width = ref(700);
 const height = ref(389);
 const darkMode = ref(false);
-const copyButtonText = ref('复制');
+const copyButtonText_iframeCode = ref('复制');
+const copyButtonText_iframeUrl = ref('复制');
 const previewIframe = ref(null);
 
 // [核心改动 1] 新增 ref 用于绑定图标URL输入框
@@ -102,9 +103,8 @@ watch(() => props.serverData, (newServerData) => {
     iframeUrl.value = apiUrl;
 }, { immediate: true }); // immediate: true 确保组件初始加载时也能执行一次
 
-const copyToClipboard = (textInput) => {
-    // ... (复制逻辑保持不变)
-    if (!textInput.value) return;
+const copyToClipboard = (textInputValue,copyButtonText) => {
+    if (!textInputValue) return;
     const copyText = (text) => {
         if (navigator.clipboard && window.isSecureContext) {
             return navigator.clipboard.writeText(text);
@@ -126,7 +126,7 @@ const copyToClipboard = (textInput) => {
             }
         });
     };
-    copyText(textInput.value)
+    copyText(textInputValue)
         .then(() => {
             copyButtonText.value = '已复制!';
             setTimeout(() => (copyButtonText.value = '复制'), 2000);
@@ -147,6 +147,14 @@ const handleIframeMessage = (event) => {
         const requiredHeight = event.data.height;
         height.value = Math.round(requiredHeight);
     }
+};
+
+const copyToClipboard_iframeCode = () => { 
+    copyToClipboard(iframeCode.value,copyButtonText_iframeCode);
+};
+
+const copyToClipboard_iframeUrl = () => { 
+    copyToClipboard(window.location.origin + iframeUrl.value,copyButtonText_iframeUrl);
 };
 
 onMounted(() => {
@@ -194,13 +202,13 @@ onUnmounted(() => {
         <div class="code-area">
             <h4>复制代码</h4>
             <textarea readonly class="form-input code-display" :value="iframeCode"></textarea>
-            <button class="btn btn-copy" @click="() => copyToClipboard(iframeCode)">{{ copyButtonText }}</button>
+            <button class="btn btn-copy" @click="copyToClipboard_iframeCode">{{ copyButtonText_iframeCode }}</button>
         </div>
 
         <div class="code-area">
             <h4>复制图片链接</h4>
             <input type="text" class="form-input-url" v-model="iframeUrl">
-            <button class="btn btn-copy" @click="() => copyToClipboard(iframeUrl)">{{ copyButtonText }}</button>
+            <button class="btn btn-copy" @click="copyToClipboard_iframeUrl">{{ copyButtonText_iframeUrl }}</button>
         </div>
     </div>
 </template>
