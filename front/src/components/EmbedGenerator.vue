@@ -72,9 +72,39 @@ const iframeCode = computed(() => {
     return iframeTag + scriptTag;
 });
 
-const copyToClipboard = () => {
+const iframeUrl = ref('');
+// [核心修复] 2. 使用 watch 监听 serverData 的变化，来自动更新 imageUrl 的值
+// 这样既保留了自动生成的功能，也允许用户手动修改
+watch(() => props.serverData, (newServerData) => {
+    if (!props.serverData?.host) {
+        return '';
+    }
+
+    const host = props.serverData.host;
+    let ip, port;
+
+    const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
+    if (ipv6Match) {
+        ip = ipv6Match[1];
+        port = ipv6Match[2];
+    } else {
+        const parts = host.split(':');
+        ip = parts[0];
+        port = parts.length > 1 ? parts[parts.length - 1] : '';
+    }
+
+    // 使用来自输入框的 iconUrl.value
+    const icon = iconUrl.value;
+    const isHttpUrl = (url) => url && /^https?:\/\/.+\..+/.test(url);
+    const iconParam = isHttpUrl(icon) ? `&icon=${encodeURIComponent(icon)}` : '';
+
+    const apiUrl = `/api/iframe_img?ip=${ip}&port=${port || ''}&dark=${darkMode.value}&source=mc-status-${ip}${iconParam}`;
+    iframeUrl.value = apiUrl;
+}, { immediate: true }); // immediate: true 确保组件初始加载时也能执行一次
+
+const copyToClipboard = (textInput) => {
     // ... (复制逻辑保持不变)
-    if (!iframeCode.value) return;
+    if (!textInput.value) return;
     const copyText = (text) => {
         if (navigator.clipboard && window.isSecureContext) {
             return navigator.clipboard.writeText(text);
@@ -96,7 +126,7 @@ const copyToClipboard = () => {
             }
         });
     };
-    copyText(iframeCode.value)
+    copyText(textInput.value)
         .then(() => {
             copyButtonText.value = '已复制!';
             setTimeout(() => (copyButtonText.value = '复制'), 2000);
@@ -164,7 +194,13 @@ onUnmounted(() => {
         <div class="code-area">
             <h4>复制代码</h4>
             <textarea readonly class="form-input code-display" :value="iframeCode"></textarea>
-            <button class="btn btn-copy" @click="copyToClipboard">{{ copyButtonText }}</button>
+            <button class="btn btn-copy" @click="() => copyToClipboard(iframeCode)">{{ copyButtonText }}</button>
+        </div>
+
+        <div class="code-area">
+            <h4>复制图片链接</h4>
+            <input type="text" class="form-input-url" v-model="iframeUrl">
+            <button class="btn btn-copy" @click="() => copyToClipboard(iframeUrl)">{{ copyButtonText }}</button>
         </div>
     </div>
 </template>
@@ -230,6 +266,16 @@ label {
     border-radius: 8px;
     font-size: 1rem;
     font-family: inherit;
+}
+
+.form-input-url {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Courier New', Courier, monospace;
+    flex-grow: 1;
 }
 
 .checkbox-group {
