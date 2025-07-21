@@ -1,4 +1,10 @@
 # 🚀 MC-MOTD-API  
+<center>
+
+![](https://s21.ax1x.com/2025/07/21/pV8WvaF.png)
+
+</center>
+
 > 基于 Node.js 的 Minecraft 服务器 MOTD 实时查询与展示服务  
 > 前后端分离，前端 Vite + Vue3，后端 Express + JavaScript
 
