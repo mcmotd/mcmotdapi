@@ -94,15 +94,15 @@ async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV =
         serverType = 'je'; // 强制 serverType 为 'je'
         const srvAddress = `_minecraft._tcp.${ip}`;
         try {
-            console.log(`[SRV] 解析: ${srvAddress}`);
+            Logger.info('[SRV]',`解析: ${srvAddress}`);
             const records = await dns.resolveSrv(srvAddress);
             if (records.length > 0) {
                 targetHost = records[0].name;
                 targetPort = records[0].port;
-                console.log(`[SRV] 解析成功: ${targetHost}:${targetPort}`);
+                Logger.info('[SRV]',`解析成功: ${targetHost}:${targetPort}`);
             }
         } catch (err) {
-            console.warn(`[SRV] 解析失败: ${srvAddress}, 将使用默认端口进行查询。`, err.code);
+            Logger.warn('[SRV]',`解析失败: ${srvAddress}, 将使用默认端口进行查询。`, err.code);
             // 如果 SRV 解析失败，则继续使用原始 ip 和指定的或默认的 Java 端口
         }
     }

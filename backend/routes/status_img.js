@@ -4,22 +4,34 @@ const router = express.Router();
 const path  =require("path");
 const bgPath = path.join(__dirname,'../','img', 'status_img.png');
 const { queryServerStatus } = require('../services/queryService');
-const {text4img} = require("../services/text4imgServices")
+const {text4img} = require("../services/text4imgServices");
+const { default: parseHost } = require('../utils/parsehost');
+const Logger = require('../utils/logger');
 
 router.get('/', async (req, res) => {
-    const { ip, port } = req.query;
+    const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
 
-    if (!ip) {
-        // 您可以在这里发送一张表示“缺少参数”的错误图片
-        return res.status(400).send('Missing IP parameter');
+    const { ip, port, host, stype, srv } = req.query;
+
+    let pre_host = parseHost(ip, port, host);
+
+    if (!pre_host.success) {
+        res.status(400).json({
+            status: 'error',
+            message: pre_host.message
+        });
+        return;
     }
-    res.setHeader('Content-Type', 'image/png');
+
+    // --- 步骤 3: 执行与响应 ---
+    // 根据是否存在有效端口，动态构建用于日志的完整地址
+    const fullAddress = pre_host.port ? `${pre_host.ip}:${pre_host.port}` : pre_host.ip;
+    Logger.debug('[QUERY_IMG]', `${clientIP} 查询 ${fullAddress}`);
 
     try {
         // 同样调用核心查询服务来获取数据
-        const serverData = await queryServerStatus(ip, port);
+        const serverData = await queryServerStatus(pre_host.ip, pre_host.port,'',stype,srv);
 
-        
         const lines = [
             `状态: ${serverData.type} - 在线`,
             `协议: ${serverData.protocol}`,
@@ -31,13 +43,13 @@ router.get('/', async (req, res) => {
         ];
 
         // 5. 调用您的函数生成 SVG buffer
-        const pngBuffer = await text4img(bgPath, lines);
+        const pngBuffer =await text4img(bgPath, lines);
 
         // 7. 发送最终的 PNG 图片
+
+        res.setHeader('Content-Type', 'image/png');
         
         return res.send(pngBuffer);
-
-        
 
     } catch (error) {
         console.log(error)
