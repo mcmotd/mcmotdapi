@@ -21,7 +21,13 @@
   "main": "./backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "build:docker":"cd front && npm run build:docker",
-    "build:publish": "cd front && npm run build:dev"
+    "build:docker": "cd front && npm run build:docker",
+    "build:publish": "cd front && npm run build:publish",
+    "dev": "concurrently \"npm:dev:front\" \"npm:start:backend\"",
+    "dev:front": "npm run dev --prefix front",
+    "start:backend": "npm run start --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
   }
 }

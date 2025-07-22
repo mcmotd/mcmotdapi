@@ -4,5 +4,5 @@
   "queryTimeout": 1000,
   "serverPort": 3123,
   "log_level": 5,
-  "customsFont":"./backend/HYPixel.ttf"
+  "customsFont":"./HYPixel.ttf"
 }

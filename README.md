@@ -126,7 +126,7 @@ export const defaultConfig = {
 
 | 步骤 | 命令 | 说明 |
 |------|------|------|
-| ① 编译静态文件 | `npm run build` | 如果出现报错升级Nodejs版本到最新版 |
+| ① 编译静态文件 | `npm run build:publish` | 如果出现报错升级Nodejs版本到最新版 |
 | ② 启动前端 | `npm run start`   | 默认监听 `http://localhost:3123` |
 
 > 浏览器打开 `http://localhost:3123` 即可查看效果。
@@ -140,7 +140,7 @@ export const defaultConfig = {
 **start.sh**
 ```bash
 #!/usr/bin/env bash
-npm run build
+npm run build:publish
 npm run start
 wait
 ```
@@ -148,7 +148,7 @@ wait
 **start.bat**
 ```bat
 @echo off
-npm run build
+npm run build:publish
 npm run start
 ```
 

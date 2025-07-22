@@ -1,7 +1,7 @@
 {
   "scripts": {
     "dev": "vite",
-    "build:dev": "vite build --emptyOutDir --outDir ../backend/dist",
+    "build:publish": "vite build --emptyOutDir --outDir ../backend/dist",
     "build:docker":"vite build --outDir dist",
     "preview": "vite preview"
   },
