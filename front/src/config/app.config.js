@@ -43,7 +43,7 @@ export const defaultConfig = {
     },
 
     failureState: {
-        sloganApi: 'https://v1.hitokoto.cn/?encode=text', 
+        sloganApi: 'https://international.v1.hitokoto.cn?encode=text', 
         defaultSlogan: '山高路远，后会有期。', 
         subtext: '服务器未响应或不存在', 
     },

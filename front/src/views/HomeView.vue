@@ -21,7 +21,7 @@ const serverAddress = ref(defaultConfig.serverAddress);
 const port = ref(defaultConfig.port);
 const loading = ref(true);
 const error = ref(null);
-const data = ref(null);
+const data = ref({});
 const icon = ref(null);
 
 const openJoinModal = () => {
@@ -86,11 +86,15 @@ onMounted(() => {
         <div class="app-content">
             <AppHeader />
             <div class="main-content-area">
-                <div class="top-content-block">
+                <!-- <div class="top-content-block">
                     <div v-if="loading" class="card status-box">
                         <p>{{$t('view.home.connectingMsg')}}</p>
                     </div>
                     <ServerStatusDisplay v-else :server-data="data" @card-click="openJoinModal" />
+                </div> -->
+
+                <div class="top-content-block">
+                    <ServerStatusDisplay :server-data="data" :loading="loading" @card-click="openJoinModal" />
                 </div>
 
                 <div class="bottom-content-block">
@@ -101,7 +105,7 @@ onMounted(() => {
                 <div v-if="!loading" class="generators-section">
                     <EmbedGenerator :server-data="data" />
                     <ImageLinkGenerator :server-data="data" />
-                </div>        
+                </div>
                 <Contributors />
             </div>
 
