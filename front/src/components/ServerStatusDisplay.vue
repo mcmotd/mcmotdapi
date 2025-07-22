@@ -91,6 +91,8 @@ const fetchLatestMotd = async () => {
     }
     const apiUrl = `/api/status`;
     const response = await axios.get(apiUrl, { params: { ip, port: port || undefined } });
+    //暴露Data给SyncIframeImg
+    window.serverData = props.serverData;
     dynamicMotd.value = { motd: response.data.motd, motd_html: response.data.motd_html };
   } catch (error) {
     console.error("后台MOTD刷新失败:", error.message);

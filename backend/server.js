@@ -30,11 +30,16 @@ if (!fs.existsSync(configPath)) {
 }
 const config = require('./config.json');
 
+const { startBrowserManager } = require('./utils/browserManager');
+// 启动浏览器管理器
+startBrowserManager();
+
 
 // 导入所有路由模块
 const statusRoute = require('./routes/status');
 const statusImageRoute = require('./routes/status_img'); // 导入新的图片路由
 const iframeImageRoute = require('./routes/iframe_img');
+const syncIframeImageRoute = require('./routes/sync_iframe_img');
 
 const app = express();
 const PORT = config.serverPort || 3000;
@@ -45,6 +50,8 @@ app.use(cors());
 app.use('/api/status', statusRoute);
 app.use('/api/status_img', statusImageRoute); // 挂载新的图片路由
 app.use('/api/iframe_img',iframeImageRoute)
+app.use('/api/sync_iframe_img',syncIframeImageRoute);
+app.use('/api/screenshot', express.static(path.join(__dirname, '../','screenshots'))); // 静态文件托管
 
 // --- 静态文件托管与Vue Router支持 ---
 app.use(express.static(path.join(__dirname, 'dist')));

@@ -6,12 +6,13 @@ const logger = require('../utils/logger');
 const bgPath = path.join(__dirname, '../', 'img', 'status_img.png');
 
 const { getContext, addRequestToQueue, handleBrowserCrash } = require('../utils/browserManager');
+const { setScreenshot } = require('../utils/screenshotManager');
 const config = require('../config.json');
 const PORT = config.serverPort || 3000;
 
 // 路由处理器
 async function handleRequest(req, res) {
-    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Type', 'application/json');
 
     try {
         const page = await (await getContext()).newPage();
@@ -23,6 +24,7 @@ async function handleRequest(req, res) {
         await page.goto(url, { waitUntil: 'networkidle', timeout: 15000 });
         await page.waitForSelector('#app', { timeout: 5000 });
 
+        // 获取页面实际高度
         const actualHeight = await page.evaluate(() => {
             return Math.max(
                 document.body.scrollHeight,
@@ -34,23 +36,42 @@ async function handleRequest(req, res) {
             );
         });
 
+        // 增强的截图流程
         await page.setViewportSize({
             width: 700,
             height: actualHeight,
             deviceScaleFactor: 1
         });
 
+        const filename = `${Math.random().toString(36).substring(2, 15)}.png`;
+        const filePath = path.join(__dirname, '../../', 'screenshots', filename);
+
+
         const screenshot = await page.screenshot({
             type: 'png',
             fullPage: true,
             omitBackground: false,
-            captureBeyondViewport: false
+            captureBeyondViewport: false,
+            path: filePath
         });
 
-        await page.close();
-        return res.send(screenshot);
+        // 等待 Vue 组件挂载完成
+        await page.waitForFunction('window.serverData !== undefined');
+        const serverData = await page.evaluate(() => window.serverData);
+
+        // 设置截图并返回 URL
+        const { filename: savedFilename, expireAt } = setScreenshot(filename, screenshot);
+
+        //打包Json和图片链接
+        const protocol = req.protocol; // http 或 https
+        const host = req.get('host');  // 域名 + 端口（如果有）
+        const screenshotUrl = `${protocol}://${host}/screenshots/${savedFilename}`;
+        const dataPackage = { serverData, screenshotUrl, expireAt }
+
+        await page.close()
+        return res.send(JSON.stringify(dataPackage));
     } catch (error) {
-        logger.error('[IFRAME]', 'Request Failed:', error.message);
+        logger.error('[SYNC IFRAME]', 'Request Failed:', error.message);
         handleBrowserCrash();
         return res.send(await error4img(bgPath, [`Error: ${error.message.replace(/[\n\r]/g, ' ')}`]));
     }
@@ -59,7 +80,7 @@ async function handleRequest(req, res) {
 // 启动浏览器管理器
 router.get('/', (req, res) => {
     addRequestToQueue(() => handleRequest(req, res)).catch(error => {
-        logger.error('[IFRAME]', 'Queue Error:', error.message);
+        logger.error('[SYNC IFRAME]', 'Queue Error:', error.message);
         res.status(500).send('Internal server error');
     });
 });
