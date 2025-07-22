@@ -6,7 +6,9 @@
         },
         "embed": {
             "noServerIpMsg": "The server IP parameter must be provided in the URL.",
-            "unableConnectMsg": "Unable to connect to query backend."
+            "unableConnectMsg": "Unable to connect to query backend.",
+            "offlineMsg":"The server is unresponsive or non-existent",
+            "loadingMsg": "Loading..."
         }
     },
     "comp": {

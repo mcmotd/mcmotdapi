@@ -87,7 +87,7 @@ onMounted(() => {
     if (route.query.status === 'offline') {
         data.value = {
             status: 'offline',
-            error: '服务器未响应或不存在'
+            error: t("view.embed.offlineMsg")
         };
         loading.value = false;
     } else {
@@ -114,12 +114,13 @@ watch(data, () => {
     <teleport to="head">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </teleport>
+        <div class="embed-wrapper" :class="{ 'dark-theme': isDarkMode }" ref="embedWrapperRef">
+            <div v-if="loading" class="message-box">{{ $t('view.embed.loadingMsg') }}</div>
+            <div v-else-if="error" class="message-box error-box">{{ error }}</div>
+            <ServerStatusDisplay v-else-if="data" :server-data="data" />
+        </div>
 
-    <div class="embed-wrapper" :class="{ 'dark-theme': isDarkMode }" ref="embedWrapperRef">
-        <div v-if="loading" class="message-box">查询中...</div>
-        <div v-else-if="error" class="message-box error-box">{{ error }}</div>
-        <ServerStatusDisplay v-else-if="data" :server-data="data" />
-    </div>
+
 </template>
 
 <style scoped>

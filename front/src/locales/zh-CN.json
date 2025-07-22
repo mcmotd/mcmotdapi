@@ -6,7 +6,9 @@
         },
         "embed": {
             "noServerIpMsg": "必须在 URL 中提供服务器 IP 参数。",
-            "unableConnectMsg": "无法连接到查询后端。"
+            "unableConnectMsg": "无法连接到查询后端。",
+            "offlineMsg": "服务器未响应或不存在",
+            "loadingMsg":"正在查询..."
         }
     },
     "comp": {
