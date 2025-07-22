@@ -35,6 +35,9 @@ function setScreenshot(filename, buffer) {
 function startCleanupTask() {
     setInterval(() => {
         const now = Date.now();
+        if(!fs.existsSync(SCREENSHOT_DIR)){
+            fs.mkdirSync(SCREENSHOT_DIR);
+        }
         const files = fs.readdirSync(SCREENSHOT_DIR);
 
         files.forEach(file => {
@@ -50,10 +53,24 @@ function startCleanupTask() {
     }, 30 * 1000); // 每30秒检查一次
 }
 
-// 启动时清空目录
-clearScreenshotDir();
-startCleanupTask();
+//直接删除对应截图
+function deleteScreenshot(filename) {
+    const filePath = path.join(SCREENSHOT_DIR, filename);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        //logger.info(`[ScreenshotManager] Deleted screenshot: ${filename}`);
+    }
+}
+
+function startManager(){
+    // 启动时清空目录
+    clearScreenshotDir();
+    startCleanupTask();
+}
+
 
 module.exports = {
-    setScreenshot
+    setScreenshot,
+    startManager,
+    deleteScreenshot
 };

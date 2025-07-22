@@ -41,6 +41,7 @@ const fetchData = async () => {
     const serverIp = route.query.ip;
     const serverPort = route.query.port;
     const icon = route.query.icon;
+    const stype = route.query.stype;
 
 
     if (!serverIp) {
@@ -51,7 +52,7 @@ const fetchData = async () => {
     try {
         const apiUrl = `${defaultConfig.api.baseUrl}/status`;
         const response = await axios.get(apiUrl, {
-            params: { ip: serverIp, port: serverPort, icon }
+            params: { ip: serverIp, port: serverPort, icon, stype }
         });
         data.value = response.data;
     } catch (err) {

@@ -58,9 +58,9 @@ async function handleRequest(req, res) {
 
 // 启动浏览器管理器
 router.get('/', (req, res) => {
-    addRequestToQueue(() => handleRequest(req, res)).catch(error => {
+    addRequestToQueue(() => handleRequest(req, res)).catch(async error => {
         logger.error('[IFRAME]', 'Queue Error:', error.message);
-        res.status(500).send('Internal server error');
+        res.status(500).send(await error4img(bgPath, [`Error: ${error.message.replace(/[\n\r]/g, ' ')}`]));
     });
 });
 

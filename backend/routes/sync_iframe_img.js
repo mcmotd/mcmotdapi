@@ -6,9 +6,12 @@ const logger = require('../utils/logger');
 const bgPath = path.join(__dirname, '../', 'img', 'status_img.png');
 
 const { getContext, addRequestToQueue, handleBrowserCrash } = require('../utils/browserManager');
-const { setScreenshot } = require('../utils/screenshotManager');
+const { setScreenshot,startManager } = require('../utils/screenshotManager');
 const config = require('../config.json');
 const PORT = config.serverPort || 3000;
+
+//启动截图管理器
+startManager();
 
 // 路由处理器
 async function handleRequest(req, res) {
@@ -65,12 +68,18 @@ async function handleRequest(req, res) {
         //打包Json和图片链接
         const protocol = req.protocol; // http 或 https
         const host = req.get('host');  // 域名 + 端口（如果有）
-        const screenshotUrl = `${protocol}://${host}/screenshots/${savedFilename}`;
+        const screenshotUrl = `${protocol}://${host}/api/screenshot?file=${savedFilename}`;
         const dataPackage = { serverData, screenshotUrl, expireAt }
 
         await page.close()
         return res.send(JSON.stringify(dataPackage));
-    } catch (error) {
+    } 
+    catch (error) {
+        if('TimeoutError' === error.name) {
+            logger.error('[SYNC IFRAME]', 'Request Failed:22222');
+            const errorPackage = {serverData:{status: 'offline'}}
+            return res.send(JSON.stringify(errorPackage))
+        }
         logger.error('[SYNC IFRAME]', 'Request Failed:', error.message);
         handleBrowserCrash();
         return res.send(await error4img(bgPath, [`Error: ${error.message.replace(/[\n\r]/g, ' ')}`]));
@@ -81,7 +90,8 @@ async function handleRequest(req, res) {
 router.get('/', (req, res) => {
     addRequestToQueue(() => handleRequest(req, res)).catch(error => {
         logger.error('[SYNC IFRAME]', 'Queue Error:', error.message);
-        res.status(500).send('Internal server error');
+        const errorPackage = { serverData: { status: 'offline' } }
+        res.status(500).send(JSON.stringify(errorPackage));
     });
 });
 

@@ -79,6 +79,7 @@ const fetchLatestMotd = async () => {
   if (isOffline.value || !props.serverData?.host) return;
   try {
     const host = props.serverData.host;
+    const stype = props.serverData.stype ? props.serverData.stype : 'auto';
     let ip, port;
     const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
     if (ipv6Match) {
@@ -90,7 +91,7 @@ const fetchLatestMotd = async () => {
       port = parts.length > 1 ? parts[parts.length - 1] : '';
     }
     const apiUrl = `/api/status`;
-    const response = await axios.get(apiUrl, { params: { ip, port: port || undefined } });
+    const response = await axios.get(apiUrl, { params: { ip, port: port || undefined ,stype} });
     //暴露Data给SyncIframeImg
     window.serverData = props.serverData;
     dynamicMotd.value = { motd: response.data.motd, motd_html: response.data.motd_html };
