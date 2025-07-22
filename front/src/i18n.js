@@ -1,5 +1,5 @@
 import { createI18n } from 'vue-i18n';
-
+import { defaultConfig } from './config/app.config';
 // 导入我们创建的语言文件
 import en from './locales/en.json';
 import zhCN   from './locales/zh-CN.json';
@@ -10,7 +10,7 @@ const i18n = createI18n({
     legacy: false,
 
     // 默认语言环境
-    locale: 'zh-CN',
+    locale: defaultConfig.i18n.default,
 
     // 当在默认语言环境中找不到翻译时，回退到该语言环境
     fallbackLocale: 'en',

@@ -60,5 +60,18 @@ export const defaultConfig = {
             // 头像可以直接使用 GitHub 的，格式为 https://github.com/用户名.png
             avatar: 'https://s21.ax1x.com/2025/07/19/pV3bX2F.jpg'
         }
-    ]
+    ],
+    "i18n":{
+        default: 'zh-CN',
+        languages: [
+            {
+                name: '简体中文',
+                code: 'zh-CN'
+            },
+            {
+                name: 'English',
+                code: 'en-US'
+            }
+        ]
+    }
 };
