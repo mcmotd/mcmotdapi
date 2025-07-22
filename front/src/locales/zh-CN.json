@@ -1,0 +1,78 @@
+{
+    "view": {
+        "home": {
+            "errorMsg": "无法连接到查询后端或发生未知错误。",
+            "connectingMsg": "正在连接服务器..."
+        },
+        "embed": {
+            "noServerIpMsg": "必须在 URL 中提供服务器 IP 参数。",
+            "unableConnectMsg": "无法连接到查询后端。",
+            "offlineMsg": "服务器未响应或不存在",
+            "loadingMsg":"正在查询..."
+        }
+    },
+    "comp": {
+        "footer": {
+            "developedBy": "由 {name} 开发",
+            "poweredBy": "由 {name} 驱动",
+            "rightsReserved": "版权所有"
+        },
+        "contr": {
+            "title": "项目贡献者"
+        },
+        "embedG": {
+            "copy": "复制",
+            "copyed": "已复制！",
+            "copyFailed": "复制失败",
+            "title": "嵌入到你的网页",
+            "description": "调整下方选项以实时预览效果，然后复制生成的代码。",
+            "width": "宽度",
+            "height": "高度",
+            "autoAdjust": "自动调整",
+            "iconUrl": "图标 URL (可选)",
+            "darkMode": "暗色模式",
+            "preview": "实时预览",
+            "copyCode": "复制代码"
+        },
+        "imgG": {
+            "copy": "复制",
+            "copyed": "已复制！",
+            "copyFailed": "复制失败",
+            "title": "生成状态图片链接",
+            "description": "复制下方链接，你可以将其用于论坛签名档或 Markdown 文档中。",
+            "preview": "图片预览"
+        },
+        "joinM": {
+            "title": "即将加入服务器",
+            "body1": "我们将唤起本地的 MinecraftBE 客户端并自动添加服务器信息。",
+            "warning1": "如果你同时安装了国际版MC和网易版MC，",
+            "warning2": "请选择国际版MC打开",
+            "warning3": "，否则链接将会失效！",
+            "body2": "若没有下载联机客户端可点击下方按钮下载。若无法唤起请检查浏览器权限或更换浏览器。",
+            "cancel": "取消",
+            "download": "下载",
+            "join": "加入服务器"
+        },
+        "queryF": {
+            "ip": "服务器地址",
+            "port": "端口 (可选)",
+            "portPlaceholder": "例如：19132",
+            "querying": "查询中...",
+            "query": "查询服务器状态"
+        },
+        "serverDis": {
+            "host": "地址",
+            "version": "版本",
+            "protocol": "协议",
+            "modList": "Mod 列表",
+            "gamemode": "游戏模式",
+            "levelname": "存档名称",
+            "onlineList": "在线列表",
+            "delay": "延迟",
+            "clickToView": "(点击查看)",
+            "players": "玩家",
+            "modVersion": "版本",
+            "modCount": "Mod 列表 (共 {count} 个)"
+        }
+    }
+}

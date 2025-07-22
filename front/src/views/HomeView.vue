@@ -2,6 +2,10 @@
 import { ref, computed, onMounted } from 'vue';
 import { defaultConfig } from '../config/app.config.js';
 import axios from 'axios';
+import { useI18n } from 'vue-i18n';
+
+// 获取 t 函数和当前的 locale
+const { t, locale } = useI18n();
 
 import AppHeader from '../components/AppHeader.vue';
 import QueryForm from '../components/QueryForm.vue';
@@ -17,7 +21,7 @@ const serverAddress = ref(defaultConfig.serverAddress);
 const port = ref(defaultConfig.port);
 const loading = ref(true);
 const error = ref(null);
-const data = ref(null);
+const data = ref({});
 const icon = ref(null);
 
 const openJoinModal = () => {
@@ -46,7 +50,7 @@ const handleFetchData = async (payload) => {
         });
         data.value = response.data;
     } catch (err) {
-        const errorMessage = '无法连接到查询后端或发生未知错误。';
+        const errorMessage = t("view.home.errorMsg");
         if (err.response && err.response.data && err.response.data.error) {
             error.value = err.response.data.error;
         } else {
@@ -60,7 +64,9 @@ const handleFetchData = async (payload) => {
             status: 'offline',
             error: error.value,
             // 构造 host 字段
-            host: `${payload.address}${payload.port ? ':' + payload.port : ''}`
+            host: `${payload.address}${payload.port ? ':' + payload.port : ''}`,
+            port: payload.port,
+            address: payload.address
         };
         // =======================================================================
 
@@ -80,11 +86,15 @@ onMounted(() => {
         <div class="app-content">
             <AppHeader />
             <div class="main-content-area">
-                <div class="top-content-block">
+                <!-- <div class="top-content-block">
                     <div v-if="loading" class="card status-box">
-                        <p>正在连接服务器...</p>
+                        <p>{{$t('view.home.connectingMsg')}}</p>
                     </div>
                     <ServerStatusDisplay v-else :server-data="data" @card-click="openJoinModal" />
+                </div> -->
+
+                <div class="top-content-block">
+                    <ServerStatusDisplay :server-data="data" :loading="loading" @card-click="openJoinModal" />
                 </div>
 
                 <div class="bottom-content-block">
@@ -95,7 +105,7 @@ onMounted(() => {
                 <div v-if="!loading" class="generators-section">
                     <EmbedGenerator :server-data="data" />
                     <ImageLinkGenerator :server-data="data" />
-                </div>        
+                </div>
                 <Contributors />
             </div>
 

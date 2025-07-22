@@ -11,19 +11,25 @@ const currentYear = new Date().getFullYear();
 <template>
     <footer class="app-footer">
         <div class="credits">
-            <span>
-                由 <a :href="developer.url" target="_blank" rel="noopener noreferrer">{{ developer.name }}</a> 开发
-            </span>
+            <i18n-t keypath="comp.footer.developedBy" tag="span">
+                <template #name>
+                    <a :href="developer.url" target="_blank" rel="noopener noreferrer">{{ developer.name }}</a>
+                </template>
+            </i18n-t>
+
             <span class="separator">|</span>
-            <span>
-                由 <a :href="poweredBy.url" target="_blank" rel="noopener noreferrer">{{ poweredBy.name }}</a> 驱动
-            </span>
+
+            <i18n-t keypath="comp.footer.poweredBy" tag="span">
+                <template #name>
+                    <a :href="poweredBy.url" target="_blank" rel="noopener noreferrer">{{ poweredBy.name }}</a>
+                </template>
+            </i18n-t>
         </div>
 
         <p class="copyright">
             Copyright © {{ currentYear }}
             <a :href="company.url" target="_blank" rel="noopener noreferrer">{{ company.name }}</a>.
-            All Rights Reserved.
+            {{ $t('comp.footer.rightsReserved') }}
         </p>
     </footer>
 </template>

@@ -1,4 +1,10 @@
 # 🚀 MC-MOTD-API  
+<center>
+
+![](https://s21.ax1x.com/2025/07/21/pV8WvaF.png)
+
+</center>
+
 > 基于 Node.js 的 Minecraft 服务器 MOTD 实时查询与展示服务  
 > 前后端分离，前端 Vite + Vue3，后端 Express + JavaScript
 
@@ -10,7 +16,9 @@
 |-----------|----------|----------|
 | Node.js   | >= 24.4    | 24.4.0   |
 | pnpm / npm / yarn | 任意 | pnpm 8+ |
+|python| 3.0| 3.10+|
 
+> 注意，本项目虽然用不到python，但是您在编译node-canvas的时候会使用本地python环境
 ---
 
 ## 2. 📥 安装步骤
@@ -118,7 +126,7 @@ export const defaultConfig = {
 
 | 步骤 | 命令 | 说明 |
 |------|------|------|
-| ① 编译静态文件 | `npm run build` | 如果出现报错升级Nodejs版本到最新版 |
+| ① 编译静态文件 | `npm run build:publish` | 如果出现报错升级Nodejs版本到最新版 |
 | ② 启动前端 | `npm run start`   | 默认监听 `http://localhost:3123` |
 
 > 浏览器打开 `http://localhost:3123` 即可查看效果。
@@ -132,7 +140,7 @@ export const defaultConfig = {
 **start.sh**
 ```bash
 #!/usr/bin/env bash
-npm run build
+npm run build:publish
 npm run start
 wait
 ```
@@ -140,7 +148,7 @@ wait
 **start.bat**
 ```bat
 @echo off
-npm run build
+npm run build:publish
 npm run start
 ```
 
@@ -150,11 +158,26 @@ npm run start
 
 ## 6. 🐳 Docker部署（可选）
 
+1) 拉取项目
+
+``` bash
+git clone https://github.com/sbaoor-fly/mcmotdapi
+```
+
+2) 修改前端配置文件
+
+编辑`front/src/config/app.config.json`
+
+3) 进行构建
+
 ```bash
 docker build -t mc-status-app .
 ```
+4) 修改配置文件
 
-打包完成后，后端静态目录 `backend/dist` 即包含前端资源，可直接部署。
+这时候的app文件夹里面只有后端配置文件了，前端已经编译完成
+
+修改`config.json`
 
 ---
 

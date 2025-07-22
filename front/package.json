@@ -1,8 +1,8 @@
 {
   "scripts": {
     "dev": "vite",
-    "build:dev": "vite build --emptyOutDir --outDir ../backend/dist",
-    "build:docker":"vite build --outDir dist",
+    "build:publish": "vite build --emptyOutDir --outDir ../backend/dist",
+    "build:docker": "vite build --outDir dist",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -11,6 +11,7 @@
     "element-plus": "^2.10.4",
     "pinia": "^3.0.3",
     "vue": "^3.5.17",
+    "vue-i18n": "^11.1.10",
     "vue-router": "^4.5.1"
   },
   "devDependencies": {

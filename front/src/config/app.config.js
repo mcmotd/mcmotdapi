@@ -29,8 +29,8 @@ export const defaultConfig = {
 
     footer: {
         developer: {
-            name: 'Your Name', // 替换为你的名字或ID
-            url: 'https://github.com/your-repo', // 你的链接
+            name: 'Sbaoor', // 替换为你的名字或ID
+            url: 'https://github.com/Sbaoor-fly', // 你的链接
         },
         poweredBy: {
             name: 'Gemini', // 驱动方名称
@@ -43,7 +43,7 @@ export const defaultConfig = {
     },
 
     failureState: {
-        sloganApi: 'https://v1.hitokoto.cn/?encode=text', 
+        sloganApi: 'https://international.v1.hitokoto.cn?encode=text', 
         defaultSlogan: '山高路远，后会有期。', 
         subtext: '服务器未响应或不存在', 
     },
@@ -60,5 +60,18 @@ export const defaultConfig = {
             // 头像可以直接使用 GitHub 的，格式为 https://github.com/用户名.png
             avatar: 'https://s21.ax1x.com/2025/07/19/pV3bX2F.jpg'
         }
-    ]
+    ],
+    "i18n":{
+        default: 'zh-CN',
+        languages: [
+            {
+                name: '简体中文',
+                code: 'zh-CN'
+            },
+            {
+                name: 'English',
+                code: 'en-US'
+            }
+        ]
+    }
 };

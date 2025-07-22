@@ -1,219 +1,200 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
+import { computed, ref, onUnmounted, watch } from 'vue';
 import { parseMotdToHtml } from '../utils/motd-parser.js';
 import defaultIcon from '/mc.png';
 import InfoModal from './InfoModal.vue';
 import axios from 'axios';
 import { defaultConfig } from '../config/app.config.js';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
+const props = defineProps({
+  serverData: {
+    type: Object,
+    required: true,
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const emit = defineEmits(['card-click']);
 
-const props = defineProps({
-    serverData: {
-        type: Object,
-        required: true,
-    },
-});
-
-// [核心改动] 新增计算属性，用于判断服务器是否为离线/失败状态
-const isOffline = computed(() => {
-    // 我们假设查询失败时，会传递一个带有 status: 'offline' 的对象
-    // 或者缺少像版本号这样的关键数据
-    return props.serverData?.status === 'offline' || !props.serverData?.version;
-});
-
 const isModalVisible = ref(false);
+const isOffline = computed(() => props.serverData?.status === 'offline' || !props.serverData?.version);
 
-const infoLabels = { host: '服务器地址', version: '版本', protocol: '协议版本', gamemode: '游戏模式', delay: '延迟', mod_info: 'Mod 列表', players: '在线列表' , levelname: '地图名称'};
+// --- MOD 弹窗标题国际化 ---
+const modCount = computed(() => props.serverData?.mod_info?.modList?.length ?? 0);
+const modalTitle = computed(() => t('comp.serverDis.modCount', modCount.value, { count: modCount.value }));
+
+// --- 其他计算属性 ---
+const infoLabels = computed(() => ({
+  host: t('comp.serverDis.host'),
+  version: t('comp.serverDis.version'),
+  protocol: t('comp.serverDis.protocol'),
+  gamemode: t('comp.serverDis.gamemode'),
+  delay: t('comp.serverDis.delay'),
+  mod_info: t('comp.serverDis.modList'),
+  players: t('comp.serverDis.onlineList'),
+  levelname: t('comp.serverDis.levelname')
+}));
 const displayKeys = ['host', 'version', 'protocol', 'gamemode', 'delay', 'mod_info', 'players', 'levelname'];
-
 const filteredInfoKeys = computed(() => {
-    if (isOffline.value || !props.serverData) return [];
-    if (props.serverData.players && props.serverData.players.sample) {
-        return displayKeys.filter(key => props.serverData[key] !== undefined && props.serverData[key] !== null);
-    }
-    return displayKeys.filter(key => key !== 'players' && props.serverData[key] !== undefined && props.serverData[key] !== null);
+  if (isOffline.value || !props.serverData) return [];
+  if (props.serverData.players && props.serverData.players.sample) {
+    return displayKeys.filter(key => props.serverData[key] !== undefined && props.serverData[key] !== null);
+  }
+  return displayKeys.filter(key => key !== 'players' && props.serverData[key] !== undefined && props.serverData[key] !== null);
 });
-
-const iconUrl = computed(() => {
-    // 离线时也显示默认图标
-    if (!isOffline.value && props.serverData && props.serverData.icon) {
-        return props.serverData.icon;
-    }
-    return defaultIcon;
-});
-
-const dynamicMotd = ref(null);
-const motdHtml = computed(() => {
-    if (isOffline.value || !dynamicMotd.value) return '';
-    if (dynamicMotd.value.motd_html) { return dynamicMotd.value.motd_html; }
-    return dynamicMotd.value.motd ? parseMotdToHtml(dynamicMotd.value.motd) : '';
-});
-
+const iconUrl = computed(() => (props.serverData?.icon) ? props.serverData.icon : defaultIcon);
 const playerPercentage = computed(() => {
-    if (isOffline.value || !props.serverData.players) return 0;
-    if (props.serverData.players.max > 0) {
-        return (props.serverData.players.online / props.serverData.players.max) * 100;
-    }
-    return 0;
+  if (isOffline.value || !props.serverData.players) return 0;
+  return props.serverData.players.max > 0 ? (props.serverData.players.online / props.serverData.players.max) * 100 : 0;
 });
 
-// ==================== [新增] 处理失败标语的逻辑 ====================
-// 3. 新增一个 ref，用于存储从 API 获取或默认的标语
 const offlineSlogan = ref(defaultConfig.failureState.defaultSlogan);
-
-// 4. 新增一个函数，用于从 API 获取标语
-const fetchSlogan = async () => {
-    try {
-        const response = await axios.get(defaultConfig.failureState.sloganApi);
-        if (response.data && response.data.slogan) {
-            offlineSlogan.value = response.data;
-        }
-    } catch (error) {
-        console.error("获取离线标语失败:", error);
-        // 如果 API 失败，则使用配置文件中的默认标语
-        offlineSlogan.value = defaultConfig.failureState.defaultSlogan;
-    }
-};
-
-// 5. 使用 watch 监听状态变化。当服务器状态变为'offline'时，自动调用 fetchSlogan
-watch(() => props.serverData.status, (newStatus) => {
-    if (newStatus === 'offline') {
-        fetchSlogan();
-    }
-}, { immediate: true }); // immediate: true 确保组件首次加载时也能根据初始状态执行
-// ====================================================================
-
+const dynamicMotd = ref(null);
 let motdUpdateInterval = null;
 
+
+const fetchSlogan = async () => {
+  try {
+    const response = await axios.get(defaultConfig.failureState.sloganApi);
+
+    // API 返回纯文本，直接赋值
+    offlineSlogan.value = response.data;
+    console.log('Slogan fetched:', offlineSlogan.value);
+
+  } catch (error) {
+    // 这里会立刻捕获到 CORS 错误
+    console.error("获取离线标语失败 (CORS Error):", error);
+    offlineSlogan.value = defaultConfig.failureState.defaultSlogan;
+  }
+};
+fetchSlogan();
+
 const fetchLatestMotd = async () => {
-    if (isOffline.value || !props.serverData?.host) return;
-    try {
-        // const [ip, port] = props.serverData.host.split(':');
-        const host = props.serverData.host;
-        let ip, port;
-
-        // 匹配 IPv6 格式：[::1]:19132
-        const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
-        if (ipv6Match) {
-            ip = ipv6Match[1];
-            port = ipv6Match[2];
-        } else {
-            // IPv4 或简单端口分割
-            const parts = host.split(':');
-            ip = parts.slice(0, -1).join(':'); // 兼容 IPv6 没有端口的情况（不常见）
-            port = parts[parts.length - 1];
-        }
-
-        const apiUrl = `${defaultConfig.api.baseUrl}/status`;
-        const response = await axios.get(apiUrl, { params: { ip, port: port || undefined } });
-        dynamicMotd.value = { motd: response.data.motd, motd_html: response.data.motd_html };
-    } catch (error) {
-        console.error("后台MOTD刷新失败:", error.message);
+  if (isOffline.value || !props.serverData?.host) return;
+  try {
+    const host = props.serverData.host;
+    let ip, port;
+    const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
+    if (ipv6Match) {
+      ip = ipv6Match[1];
+      port = ipv6Match[2];
+    } else {
+      const parts = host.split(':');
+      ip = parts[0];
+      port = parts.length > 1 ? parts[parts.length - 1] : '';
     }
+    const apiUrl = `/api/status`;
+    const response = await axios.get(apiUrl, { params: { ip, port: port || undefined } });
+    dynamicMotd.value = { motd: response.data.motd, motd_html: response.data.motd_html };
+  } catch (error) {
+    console.error("后台MOTD刷新失败:", error.message);
+  }
 };
 
-onMounted(() => {
-    // [核心改动] 仅在服务器在线时执行刷新逻辑
-    if (!isOffline.value) {
-        dynamicMotd.value = { motd: props.serverData.motd, motd_html: props.serverData.motd_html };
-        motdUpdateInterval = setInterval(fetchLatestMotd, 5000);
-    }
+// 现在，可以安全地创建 watch 侦听器了
+watch(() => isOffline.value, (currentlyOffline) => {
+  if (motdUpdateInterval) {
+    clearInterval(motdUpdateInterval);
+    motdUpdateInterval = null;
+  }
+
+  if (currentlyOffline) {
+    dynamicMotd.value = null;
+    // fetchSlogan(); // 调用现在是安全的
+  } else {
+    dynamicMotd.value = { motd: props.serverData.motd, motd_html: props.serverData.motd_html };
+    motdUpdateInterval = setInterval(fetchLatestMotd, 5000); // 调用现在是安全的
+  }
+}, { immediate: true });
+
+const motdHtml = computed(() => {
+  if (!dynamicMotd.value) return '';
+  if (dynamicMotd.value.motd_html) return dynamicMotd.value.motd_html;
+  return dynamicMotd.value.motd ? parseMotdToHtml(dynamicMotd.value.motd) : '';
 });
 
 onUnmounted(() => {
-    if (motdUpdateInterval) {
-        clearInterval(motdUpdateInterval);
-    }
+  if (motdUpdateInterval) {
+    clearInterval(motdUpdateInterval);
+  }
 });
 </script>
 
 <template>
   <div>
-    <div
-      class="card status-card"
-      :class="{ 'is-offline': isOffline }"
-      @click="$emit('card-click')"
-    >
-      <div v-if="isOffline" class="offline-container">
-        <span class="offline-slogan">{{ offlineSlogan }}</span>
-        <span class="offline-subtext">{{
-          defaultConfig.failureState.subtext
-        }}</span>
+    <div class="card status-card" :class="{ 'is-clickable': !isOffline && !loading }">
+
+      <div v-if="loading" class="loading-container">
+        <p class="loading-text">{{ $t('view.home.connectingMsg') }}</p>
+        <div class="loading-bar-container">
+          <div class="loading-bar"></div>
+        </div>
       </div>
 
       <template v-else>
-        <div class="icon-container">
-          <img :src="iconUrl" alt="Server Icon" class="server-icon" />
+        <div v-if="isOffline" class="offline-container" @click="$emit('card-click')">
+          <span class="offline-slogan">{{ offlineSlogan }}</span>
+          <span class="offline-subtext">{{ defaultConfig.failureState.subtext }}</span>
         </div>
-        <div class="main-content">
-          <div class="card-header">
-            <div class="motd-display">
-              <span v-html="motdHtml"></span>
+
+        <template v-else>
+          <div class="online-content-wrapper" @click="$emit('card-click')">
+            <div class="icon-container">
+              <img :src="iconUrl" alt="Server Icon" class="server-icon" />
             </div>
-            <div
-              class="status-indicator"
-              :class="serverData.type || serverData.status"
-            >
-              <span class="status-dot"></span>
-              {{ serverData.type }}
-            </div>
-          </div>
-          <div class="info-grid">
-            <div v-for="key in filteredInfoKeys" :key="key" class="info-item">
-              <span class="info-label">{{ infoLabels[key] }}</span>
-              <div v-if="key === 'mod_info'" class="info-value">
-                <button @click="isModalVisible = true" class="info-button">
-                  {{ serverData.mod_info.modList.length }} 个 (点击查看)
-                </button>
+            <div class="main-content">
+              <div class="card-header">
+                <div v-if="motdHtml" class="motd-display" v-html="motdHtml"></div>
+                <div class="status-indicator" :class="serverData.type || serverData.status">
+                  <span class="status-dot"></span>
+                  {{ serverData.type }}
+                </div>
               </div>
-              <div
-                v-else-if="key === 'players'"
-                class="info-value players-sample"
-              >
-                {{ serverData.players.sample }}
+              <div class="info-grid">
+                <div v-for="key in filteredInfoKeys" :key="key" class="info-item">
+                  <span class="info-label">{{ infoLabels[key] }}</span>
+                  <div v-if="key === 'mod_info'" class="info-value">
+                    <button @click.stop="isModalVisible = true" class="info-button">
+                      {{ serverData.mod_info.modList.length }} {{ $t('comp.serverDis.clickToView') }}
+                    </button>
+                  </div>
+                  <div v-else-if="key === 'players'" class="info-value players-sample">
+                    {{ serverData.players.sample }}
+                  </div>
+                  <span v-else-if="key === 'delay'" class="info-value">{{ serverData[key] }}ms</span>
+                  <span v-else class="info-value" :class="{ version: key === 'version' }">{{ serverData[key]
+                  }}</span>
+                </div>
               </div>
-              <span v-else-if="key === 'delay'" class="info-value"
-                >{{ serverData[key] }}ms</span
-              >
-              <span
-                v-else
-                class="info-value"
-                :class="{ version: key === 'version' }"
-                >{{ serverData[key] }}</span
-              >
+              <div class="players-info">
+                <div class="player-count">
+                  {{ $t('comp.serverDis.players') }}: <strong>{{ serverData.players?.online ?? 0 }}</strong> /
+                  {{ serverData.players?.max ?? 0 }}
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-bar-inner" :style="{ width: playerPercentage + '%' }"></div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="players-info">
-            <div class="player-count">
-              玩家: <strong>{{ serverData.players?.online ?? 0 }}</strong> /
-              {{ serverData.players?.max ?? 0 }}
-            </div>
-            <div class="progress-bar">
-              <div
-                class="progress-bar-inner"
-                :style="{ width: playerPercentage + '%' }"
-              ></div>
-            </div>
-          </div>
-        </div>
+        </template>
       </template>
+
     </div>
 
-    <teleport
-      to="body"
-      v-if="!isOffline && serverData.mod_info?.modList?.length"
-    >
-      <InfoModal
-        :show="isModalVisible"
-        :title="`Mod 列表 (共 ${serverData.mod_info?.modList?.length ?? 0} 个)`"
-        @close="isModalVisible = false"
-      >
+    <teleport to="body" v-if="!isOffline && serverData.mod_info?.modList?.length">
+      <InfoModal :show="isModalVisible" :title="modalTitle" @close="isModalVisible = false">
         <table class="mod-table">
           <thead>
             <tr>
               <th>Mod ID</th>
-              <th>版本</th>
+              <th>{{ $t('comp.serverDis.modVersion') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -227,11 +208,14 @@ onUnmounted(() => {
     </teleport>
   </div>
 </template>
+
+
 <style scoped>
-.card {
+/* --- 根元素与状态 --- */
+.card.status-card {
+  position: relative;
   background-color: var(--card-background);
   border-radius: 12px;
-  /* 不再需要 box-shadow，因为背景是透明的 */
   padding: 0;
   overflow: hidden;
   display: flex;
@@ -239,13 +223,102 @@ onUnmounted(() => {
   cursor: default;
   width: 100%;
   height: 100%;
+  min-height: 225px;
+  transition: all 0.3s ease;
 }
 
-.main-content {
-  flex-grow: 1;
-  min-width: 0;
+.status-card.is-clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.status-card.is-clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px var(--shadow-color);
+}
+
+
+/* --- 加载中状态 --- */
+.loading-container {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-color-light);
+  position: relative;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.loading-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding-bottom: 2rem;
+}
+
+.loading-bar-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.loading-bar {
+  width: 50%;
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: 2px;
+  animation: indeterminate-progress 1.5s ease-in-out infinite;
+}
+
+@keyframes indeterminate-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+
+/* --- 离线状态 --- */
+.offline-container {
+  width: 100%;
+  /* height: 100%; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-color-light, #f8f9fa);
+  color: var(--text-color-light);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.offline-slogan {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.offline-subtext {
+  font-size: 0.9rem;
+}
+
+
+/* --- 在线状态 --- */
+.online-content-wrapper {
+  display: flex;
+  width: 100%;
+  height: 100%;
 }
 
 .icon-container {
@@ -256,7 +329,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
 }
 
 .server-icon {
@@ -264,7 +336,13 @@ onUnmounted(() => {
   max-width: 96px;
   aspect-ratio: 1 / 1;
   border-radius: 8px;
-  transition: max-width 0.3s ease;
+}
+
+.main-content {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-header {
@@ -286,6 +364,24 @@ onUnmounted(() => {
   word-wrap: break-word;
   flex-grow: 1;
   min-width: 0;
+}
+
+:deep(.obfuscated) {
+  display: inline-block;
+  color: transparent;
+  position: relative;
+  width: 1ch;
+  margin-right: 0.2em;
+}
+
+:deep(.obfuscated)::before {
+  content: "█";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #aaa;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+  animation: obfuscate-char-anim 0.2s steps(1, end) infinite;
 }
 
 @keyframes obfuscate-char-anim {
@@ -334,24 +430,6 @@ onUnmounted(() => {
   }
 }
 
-:deep(.obfuscated) {
-  display: inline-block;
-  color: transparent;
-  position: relative;
-  width: 1ch;
-  margin-right: 0.2em;
-}
-
-:deep(.obfuscated)::before {
-  content: "█";
-  position: absolute;
-  left: 0;
-  top: 0;
-  color: #aaa;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
-  animation: obfuscate-char-anim 0.2s steps(1, end) infinite;
-}
-
 .status-indicator {
   display: flex;
   align-items: center;
@@ -370,11 +448,6 @@ onUnmounted(() => {
   color: var(--success-color);
 }
 
-/* .status-indicator.offline {
-    background-color: #fbebee;
-    color: var(--error-color);
-} */
-
 .status-dot {
   width: 8px;
   height: 8px;
@@ -386,40 +459,6 @@ onUnmounted(() => {
 .status-indicator.Java .status-dot,
 .status-indicator.Bedrock .status-dot {
   background-color: var(--success-color);
-}
-
-.status-indicator.offline .status-dot {
-  background-color: var(--error-color);
-}
-
-.status-card.is-offline {
-  /* 设置一个最小高度，以确保在显示标语时组件不会“塌陷” */
-  min-height: 225px;
-  /* 使用 flex 布局来垂直和水平居中标语 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* 可以给离线状态一个不同的背景色以作区分 */
-  background-color: var(--background-color-light, #f8f9fa);
-  color: var(--text-color-light);
-  transition: all 0.3s ease;
-}
-
-.offline-container {
-  padding: 2rem;
-  text-align: center;
-}
-
-.offline-slogan {
-  display: block;
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: var(--text-color);
-  margin-bottom: 0.5rem;
-}
-
-.offline-subtext {
-  font-size: 0.9rem;
 }
 
 .info-grid {
@@ -444,10 +483,10 @@ onUnmounted(() => {
 .info-value {
   font-weight: 700;
   color: var(--text-color);
-  /* <-- 新增此行，明确指定颜色 */
   word-wrap: break-word;
   word-break: break-all;
 }
+
 .info-value.version {
   color: var(--primary-color);
 }
@@ -501,6 +540,8 @@ onUnmounted(() => {
   transition: width 0.5s ease;
 }
 
+
+/* --- MOD 弹窗表格 --- */
 .mod-table {
   width: 100%;
   border-collapse: collapse;
@@ -526,18 +567,10 @@ onUnmounted(() => {
   word-break: break-all;
 }
 
-.status-card.is-clickable {
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
 
-.status-card.is-clickable:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 30px var(--shadow-color);
-}
-
+/* --- 响应式布局 --- */
 @media (max-width: 550px) {
-  .card {
+  .online-content-wrapper {
     flex-direction: column;
   }
 
@@ -553,11 +586,8 @@ onUnmounted(() => {
     max-width: 64px;
   }
 
-  /* [核心改动] 移除 main-content 的 overflow 属性 */
   .main-content {
-    /* overflow-y: auto; */
     padding: 0;
-    /* 在column布局下，让子元素自己控制padding */
   }
 
   .card-header,

@@ -4,7 +4,10 @@ import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { defaultConfig } from '../config/app.config.js';
 import ServerStatusDisplay from '../components/ServerStatusDisplay.vue';
+import { useI18n } from 'vue-i18n';
 
+// 获取 t 函数和当前的 locale
+const { t, locale } = useI18n();
 const route = useRoute();
 const loading = ref(true);
 const error = ref(null);
@@ -41,7 +44,7 @@ const fetchData = async () => {
 
 
     if (!serverIp) {
-        error.value = "URL中必须提供服务器IP参数。";
+        error.value = t("view.embed.noServerIpMsg");
         loading.value = false;
         return;
     }
@@ -55,7 +58,7 @@ const fetchData = async () => {
         if (err.response?.data?.error) {
             error.value = err.response.data.error;
         } else {
-            error.value = '无法连接到查询后端。';
+            error.value = t('view.embed.unableConnectMsg');
         }
         data.value = {
             status: 'offline',
@@ -84,7 +87,7 @@ onMounted(() => {
     if (route.query.status === 'offline') {
         data.value = {
             status: 'offline',
-            error: '服务器未响应或不存在'
+            error: t("view.embed.offlineMsg")
         };
         loading.value = false;
     } else {
@@ -111,12 +114,13 @@ watch(data, () => {
     <teleport to="head">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </teleport>
+        <div class="embed-wrapper" :class="{ 'dark-theme': isDarkMode }" ref="embedWrapperRef">
+            <div v-if="loading" class="message-box">{{ $t('view.embed.loadingMsg') }}</div>
+            <div v-else-if="error" class="message-box error-box">{{ error }}</div>
+            <ServerStatusDisplay v-else-if="data" :server-data="data" />
+        </div>
 
-    <div class="embed-wrapper" :class="{ 'dark-theme': isDarkMode }" ref="embedWrapperRef">
-        <div v-if="loading" class="message-box">查询中...</div>
-        <div v-else-if="error" class="message-box error-box">{{ error }}</div>
-        <ServerStatusDisplay v-else-if="data" :server-data="data" />
-    </div>
+
 </template>
 
 <style scoped>
