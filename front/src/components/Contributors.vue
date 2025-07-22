@@ -6,7 +6,7 @@ const contributors = defaultConfig.contributors;
 
 <template>
     <div class="contributors-section">
-        <h2 class="section-title">项目贡献者</h2>
+        <h2 class="section-title">{{ $t("comp.contr.title") }}</h2>
         <div class="contributors-grid">
             <div v-for="contributor in contributors" :key="contributor.name" class="contributor-card">
                 <a :href="contributor.github" target="_blank" rel="noopener noreferrer" class="card-link">

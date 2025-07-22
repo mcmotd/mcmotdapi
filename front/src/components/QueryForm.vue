@@ -1,6 +1,9 @@
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+// 获取 t 函数和当前的 locale
+const { t, locale } = useI18n();
 const props = defineProps({
     initialAddress: String,
     initialPort: String,
@@ -20,16 +23,17 @@ const submitQuery = () => {
 <template>
     <div class="card query-card">
         <div class="form-group">
-            <label for="server_field">服务器地址</label>
+            <label for="server_field">{{ $t('comp.queryF.ip') }}</label>
             <input type="text" id="server_field" class="form-input" v-model="address"
                 placeholder="例如: play.hypixel.net">
         </div>
         <div class="form-group">
-            <label for="port_field">端口 (可选)</label>
-            <input type="text" id="port_field" class="form-input" v-model="port" placeholder="例如: 19132">
+            <label for="port_field">{{ $t('comp.queryF.port') }}</label>
+            <input type="text" id="port_field" class="form-input" v-model="port"
+                :placeholder="$t('comp.queryF.portPlaceholder')">
         </div>
         <button type="button" class="btn btn-primary" :disabled="loading" @click="submitQuery">
-            {{ loading ? '查询中...' : '查询服务器状态' }}
+            {{ loading ? t('comp.queryF.querying') : t('comp.queryF.query') }}
         </button>
     </div>
 </template>

@@ -1,7 +1,10 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { defaultConfig } from '../config/app.config.js';
+import { useI18n } from 'vue-i18n';
 
+// 获取 t 函数和当前的 locale
+const { t, locale } = useI18n();
 const props = defineProps({
     serverData: {
         type: Object,
@@ -12,7 +15,7 @@ const props = defineProps({
 const width = ref(700);
 const height = ref(389);
 const darkMode = ref(false);
-const copyButtonText = ref('复制');
+const copyButtonText = ref(t("comp.embedG.copy"));
 const previewIframe = ref(null);
 
 // [核心改动 1] 新增 ref 用于绑定图标URL输入框
@@ -98,12 +101,12 @@ const copyToClipboard = () => {
     };
     copyText(iframeCode.value)
         .then(() => {
-            copyButtonText.value = '已复制!';
-            setTimeout(() => (copyButtonText.value = '复制'), 2000);
+            copyButtonText.value = t('comp.embedG.copyed');
+            setTimeout(() => (copyButtonText.value = t("comp.embedG.copy")), 2000);
         })
         .catch((err) => {
-            copyButtonText.value = '复制失败';
-            console.error('Could not copy text:', err);
+            copyButtonText.value = t("comp.embedG.copyFailed");
+            // console.error('Could not copy text:', err);
         });
 };
 
@@ -129,31 +132,31 @@ onUnmounted(() => {
 
 <template>
     <div class="card generator-card">
-        <h3>嵌入到你的网页</h3>
-        <p class="description">调整下方选项以实时预览效果，然后复制生成的代码。</p>
+        <h3>{{ $t("comp.embedG.title") }}</h3>
+        <p class="description">{{ $t("comp.embedG.description") }}</p>
 
         <div class="options-grid">
             <div class="form-group">
-                <label for="embed-width">宽度 (px)</label>
+                <label for="embed-width">{{ $t("comp.embedG.width") }} (px)</label>
                 <input type="number" id="embed-width" class="form-input" v-model="width">
             </div>
             <div class="form-group">
-                <label for="embed-height">高度 (px) - <span class="label-hint">自动调整</span></label>
+                <label for="embed-height">{{ $t("comp.embedG.height") }} (px) - <span class="label-hint">{{ $t("comp.embedG.autoAdjust") }}</span></label>
                 <input type="number" id="embed-height" class="form-input" v-model="height">
             </div>
             <div class="form-group icon-group">
-                <label for="embed-icon">图标 URL (可选)</label>
+                <label for="embed-icon">{{ $t("comp.embedG.iconUrl") }}</label>
                 <input type="text" id="embed-icon" class="form-input" v-model="iconUrl"
                     placeholder="https://example.com/icon.png">
             </div>
             <div class="form-group checkbox-group">
                 <input type="checkbox" id="dark-mode" class="form-checkbox" v-model="darkMode">
-                <label for="dark-mode">暗色模式</label>
+                <label for="dark-mode">{{ $t("comp.embedG.darkMode") }}</label>
             </div>
         </div>
 
         <div class="preview-area">
-            <h4>实时预览</h4>
+            <h4>{{ $t("comp.embedG.preview") }}</h4>
             <div class="iframe-container" :style="{ height: height + 'px' }">
                 <iframe ref="previewIframe" :key="embedUrl" :src="embedUrl" width="100%" :height="height"
                     frameborder="0" scrolling="no" style="display: block;">
@@ -162,7 +165,7 @@ onUnmounted(() => {
         </div>
 
         <div class="code-area">
-            <h4>复制代码</h4>
+            <h4>{{ $t("comp.embedG.copyCode") }}</h4>
             <textarea readonly class="form-input code-display" :value="iframeCode"></textarea>
             <button class="btn btn-copy" @click="copyToClipboard">{{ copyButtonText }}</button>
         </div>

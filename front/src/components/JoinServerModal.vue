@@ -1,5 +1,9 @@
 <script setup>
 import { defaultConfig } from '../config/app.config.js';
+import { useI18n } from 'vue-i18n';
+
+// 获取 t 函数和当前的 locale
+const { t, locale } = useI18n();
 
 const props = defineProps({
     show: Boolean,
@@ -45,16 +49,24 @@ const handleDownload = () => {
     <transition name="modal-fade">
         <div v-if="show" class="modal-overlay" @click.self="emit('close')">
             <div class="modal-content">
-                <h3 class="modal-title">即将加入服务器</h3>
+                <h3 class="modal-title">{{ $t('comp.joinM.title') }}</h3>
+
                 <div class="modal-body">
-                    <p>我们将唤起本地的 MinecraftBE 客户端并自动添加服务器信息。</p>
-                    <p class="warning-text">如果你同时安装了国际版MC和网易版MC，<strong>请选择国际版MC打开</strong>，否则链接将会失效！</p>
-                    <p>若没有下载联机客户端可点击下方按钮下载。若无法唤起请检查浏览器权限或更换浏览器。</p>
+                    <p>{{ $t('comp.joinM.body1') }}</p>
+
+                    <p class="warning-text">
+                        {{ $t('comp.joinM.warning1') }}
+                        <strong>{{ $t('comp.joinM.warning2') }}</strong>
+                        {{ $t('comp.joinM.warning3') }}
+                    </p>
+
+                    <p>{{ $t('comp.joinM.body2') }}</p>
                 </div>
+
                 <div class="modal-actions">
-                    <button class="btn btn-secondary" @click="emit('close')">取消</button>
-                    <button class="btn btn-download" @click="handleDownload">下载</button>
-                    <button class="btn btn-primary" @click="handleJoin">加入服务器</button>
+                    <button class="btn btn-secondary" @click="emit('close')">{{ $t('comp.joinM.cancel') }}</button>
+                    <button class="btn btn-download" @click="handleDownload">{{ $t('comp.joinM.download') }}</button>
+                    <button class="btn btn-primary" @click="handleJoin">{{ $t('comp.joinM.join') }}</button>
                 </div>
             </div>
         </div>

@@ -29,8 +29,8 @@ export const defaultConfig = {
 
     footer: {
         developer: {
-            name: 'Your Name', // 替换为你的名字或ID
-            url: 'https://github.com/your-repo', // 你的链接
+            name: 'Sbaoor', // 替换为你的名字或ID
+            url: 'https://github.com/Sbaoor-fly', // 你的链接
         },
         poweredBy: {
             name: 'Gemini', // 驱动方名称

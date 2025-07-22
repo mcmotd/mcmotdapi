@@ -5,57 +5,79 @@ import defaultIcon from '/mc.png';
 import InfoModal from './InfoModal.vue';
 import axios from 'axios';
 import { defaultConfig } from '../config/app.config.js';
+import { useI18n } from 'vue-i18n';
+
+// 获取 t 函数和当前的 locale
+const { t, locale } = useI18n();
+
+// 1. 创建一个计算属性来获取 mod 的数量，处理不存在的情况
+const modCount = computed(() => props.serverData?.mod_info?.modList?.length ?? 0);
+
+// 2. 创建一个计算属性来生成最终的国际化标题
+const modalTitle = computed(() => {
+  // 调用 $t 函数，并传入数量作为第二个参数以启用复数规则
+  return t('comp.serverDis.modCount', modCount.value, { count: modCount.value });
+});
 
 const emit = defineEmits(['card-click']);
 
 const props = defineProps({
-    serverData: {
-        type: Object,
-        required: true,
-    },
+  serverData: {
+    type: Object,
+    required: true,
+  },
 });
 
 // [核心改动] 新增计算属性，用于判断服务器是否为离线/失败状态
 const isOffline = computed(() => {
-    // 我们假设查询失败时，会传递一个带有 status: 'offline' 的对象
-    // 或者缺少像版本号这样的关键数据
-    return props.serverData?.status === 'offline' || !props.serverData?.version;
+  // 我们假设查询失败时，会传递一个带有 status: 'offline' 的对象
+  // 或者缺少像版本号这样的关键数据
+  return props.serverData?.status === 'offline' || !props.serverData?.version;
 });
 
 const isModalVisible = ref(false);
 
-const infoLabels = { host: '服务器地址', version: '版本', protocol: '协议版本', gamemode: '游戏模式', delay: '延迟', mod_info: 'Mod 列表', players: '在线列表' , levelname: '地图名称'};
+const infoLabels = {
+  host: t('comp.serverDis.host'),
+  version: t('comp.serverDis.version'),
+  protocol: t('comp.serverDis.protocol'),
+  gamemode: t('comp.serverDis.gamemode'),
+  delay: t('comp.serverDis.delay'),
+  mod_info: t('comp.serverDis.modList'),
+  players: t('comp.serverDis.onlineList'),
+  levelname: t('comp.serverDis.levelname')
+};
 const displayKeys = ['host', 'version', 'protocol', 'gamemode', 'delay', 'mod_info', 'players', 'levelname'];
 
 const filteredInfoKeys = computed(() => {
-    if (isOffline.value || !props.serverData) return [];
-    if (props.serverData.players && props.serverData.players.sample) {
-        return displayKeys.filter(key => props.serverData[key] !== undefined && props.serverData[key] !== null);
-    }
-    return displayKeys.filter(key => key !== 'players' && props.serverData[key] !== undefined && props.serverData[key] !== null);
+  if (isOffline.value || !props.serverData) return [];
+  if (props.serverData.players && props.serverData.players.sample) {
+    return displayKeys.filter(key => props.serverData[key] !== undefined && props.serverData[key] !== null);
+  }
+  return displayKeys.filter(key => key !== 'players' && props.serverData[key] !== undefined && props.serverData[key] !== null);
 });
 
 const iconUrl = computed(() => {
-    // 离线时也显示默认图标
-    if (!isOffline.value && props.serverData && props.serverData.icon) {
-        return props.serverData.icon;
-    }
-    return defaultIcon;
+  // 离线时也显示默认图标
+  if (!isOffline.value && props.serverData && props.serverData.icon) {
+    return props.serverData.icon;
+  }
+  return defaultIcon;
 });
 
 const dynamicMotd = ref(null);
 const motdHtml = computed(() => {
-    if (isOffline.value || !dynamicMotd.value) return '';
-    if (dynamicMotd.value.motd_html) { return dynamicMotd.value.motd_html; }
-    return dynamicMotd.value.motd ? parseMotdToHtml(dynamicMotd.value.motd) : '';
+  if (isOffline.value || !dynamicMotd.value) return '';
+  if (dynamicMotd.value.motd_html) { return dynamicMotd.value.motd_html; }
+  return dynamicMotd.value.motd ? parseMotdToHtml(dynamicMotd.value.motd) : '';
 });
 
 const playerPercentage = computed(() => {
-    if (isOffline.value || !props.serverData.players) return 0;
-    if (props.serverData.players.max > 0) {
-        return (props.serverData.players.online / props.serverData.players.max) * 100;
-    }
-    return 0;
+  if (isOffline.value || !props.serverData.players) return 0;
+  if (props.serverData.players.max > 0) {
+    return (props.serverData.players.online / props.serverData.players.max) * 100;
+  }
+  return 0;
 });
 
 // ==================== [新增] 处理失败标语的逻辑 ====================
@@ -64,82 +86,78 @@ const offlineSlogan = ref(defaultConfig.failureState.defaultSlogan);
 
 // 4. 新增一个函数，用于从 API 获取标语
 const fetchSlogan = async () => {
-    try {
-        const response = await axios.get(defaultConfig.failureState.sloganApi);
-        if (response.data && response.data.slogan) {
-            offlineSlogan.value = response.data;
-        }
-    } catch (error) {
-        console.error("获取离线标语失败:", error);
-        // 如果 API 失败，则使用配置文件中的默认标语
-        offlineSlogan.value = defaultConfig.failureState.defaultSlogan;
+  try {
+    const response = await axios.get(defaultConfig.failureState.sloganApi);
+    if (response.data && response.data.slogan) {
+      offlineSlogan.value = response.data;
     }
+  } catch (error) {
+    console.error("获取离线标语失败:", error);
+    // 如果 API 失败，则使用配置文件中的默认标语
+    offlineSlogan.value = defaultConfig.failureState.defaultSlogan;
+  }
 };
 
 // 5. 使用 watch 监听状态变化。当服务器状态变为'offline'时，自动调用 fetchSlogan
 watch(() => props.serverData.status, (newStatus) => {
-    if (newStatus === 'offline') {
-        fetchSlogan();
-    }
+  if (newStatus === 'offline') {
+    fetchSlogan();
+  }
 }, { immediate: true }); // immediate: true 确保组件首次加载时也能根据初始状态执行
 // ====================================================================
 
 let motdUpdateInterval = null;
 
 const fetchLatestMotd = async () => {
-    if (isOffline.value || !props.serverData?.host) return;
-    try {
-        // const [ip, port] = props.serverData.host.split(':');
-        const host = props.serverData.host;
-        let ip, port;
+  if (isOffline.value || !props.serverData?.host) return;
+  try {
+    // const [ip, port] = props.serverData.host.split(':');
+    const host = props.serverData.host;
+    let ip, port;
 
-        // 匹配 IPv6 格式：[::1]:19132
-        const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
-        if (ipv6Match) {
-            ip = ipv6Match[1];
-            port = ipv6Match[2];
-        } else {
-            // IPv4 或简单端口分割
-            const parts = host.split(':');
-            ip = parts.slice(0, -1).join(':'); // 兼容 IPv6 没有端口的情况（不常见）
-            port = parts[parts.length - 1];
-        }
-
-        const apiUrl = `${defaultConfig.api.baseUrl}/status`;
-        const response = await axios.get(apiUrl, { params: { ip, port: port || undefined } });
-        dynamicMotd.value = { motd: response.data.motd, motd_html: response.data.motd_html };
-    } catch (error) {
-        console.error("后台MOTD刷新失败:", error.message);
+    // 匹配 IPv6 格式：[::1]:19132
+    const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
+    if (ipv6Match) {
+      ip = ipv6Match[1];
+      port = ipv6Match[2];
+    } else {
+      // IPv4 或简单端口分割
+      const parts = host.split(':');
+      ip = parts.slice(0, -1).join(':'); // 兼容 IPv6 没有端口的情况（不常见）
+      port = parts[parts.length - 1];
     }
+
+    const apiUrl = `${defaultConfig.api.baseUrl}/status`;
+    const response = await axios.get(apiUrl, { params: { ip, port: port || undefined } });
+    dynamicMotd.value = { motd: response.data.motd, motd_html: response.data.motd_html };
+  } catch (error) {
+    console.error("后台MOTD刷新失败:", error.message);
+  }
 };
 
 onMounted(() => {
-    // [核心改动] 仅在服务器在线时执行刷新逻辑
-    if (!isOffline.value) {
-        dynamicMotd.value = { motd: props.serverData.motd, motd_html: props.serverData.motd_html };
-        motdUpdateInterval = setInterval(fetchLatestMotd, 5000);
-    }
+  // [核心改动] 仅在服务器在线时执行刷新逻辑
+  if (!isOffline.value) {
+    dynamicMotd.value = { motd: props.serverData.motd, motd_html: props.serverData.motd_html };
+    motdUpdateInterval = setInterval(fetchLatestMotd, 5000);
+  }
 });
 
 onUnmounted(() => {
-    if (motdUpdateInterval) {
-        clearInterval(motdUpdateInterval);
-    }
+  if (motdUpdateInterval) {
+    clearInterval(motdUpdateInterval);
+  }
 });
 </script>
 
 <template>
   <div>
-    <div
-      class="card status-card"
-      :class="{ 'is-offline': isOffline }"
-      @click="$emit('card-click')"
-    >
+    <div class="card status-card" :class="{ 'is-offline': isOffline }" @click="$emit('card-click')">
       <div v-if="isOffline" class="offline-container">
         <span class="offline-slogan">{{ offlineSlogan }}</span>
         <span class="offline-subtext">{{
           defaultConfig.failureState.subtext
-        }}</span>
+          }}</span>
       </div>
 
       <template v-else>
@@ -151,10 +169,7 @@ onUnmounted(() => {
             <div class="motd-display">
               <span v-html="motdHtml"></span>
             </div>
-            <div
-              class="status-indicator"
-              :class="serverData.type || serverData.status"
-            >
+            <div class="status-indicator" :class="serverData.type || serverData.status">
               <span class="status-dot"></span>
               {{ serverData.type }}
             </div>
@@ -163,66 +178,48 @@ onUnmounted(() => {
             <div v-for="key in filteredInfoKeys" :key="key" class="info-item">
               <span class="info-label">{{ infoLabels[key] }}</span>
               <div v-if="key === 'mod_info'" class="info-value">
-                <button @click="isModalVisible = true" class="info-button">
-                  {{ serverData.mod_info.modList.length }} 个 (点击查看)
+                <button @click.stop="isModalVisible = true" class="info-button">
+                  {{ serverData.mod_info.modList.length }} {{ $t('comp.serverDis.clickToView') }}
                 </button>
               </div>
-              <div
-                v-else-if="key === 'players'"
-                class="info-value players-sample"
-              >
+              <div v-else-if="key === 'players'" class="info-value players-sample">
                 {{ serverData.players.sample }}
               </div>
-              <span v-else-if="key === 'delay'" class="info-value"
-                >{{ serverData[key] }}ms</span
-              >
-              <span
-                v-else
-                class="info-value"
-                :class="{ version: key === 'version' }"
-                >{{ serverData[key] }}</span
-              >
+              <span v-else-if="key === 'delay'" class="info-value">{{ serverData[key] }}ms</span>
+              <span v-else class="info-value" :class="{ version: key === 'version' }">{{ serverData[key] }}</span>
             </div>
           </div>
           <div class="players-info">
             <div class="player-count">
-              玩家: <strong>{{ serverData.players?.online ?? 0 }}</strong> /
+              {{ $t('comp.serverDis.players') }}: <strong>{{ serverData.players?.online ?? 0 }}</strong> /
               {{ serverData.players?.max ?? 0 }}
             </div>
             <div class="progress-bar">
-              <div
-                class="progress-bar-inner"
-                :style="{ width: playerPercentage + '%' }"
-              ></div>
+              <div class="progress-bar-inner" :style="{ width: playerPercentage + '%' }"></div>
             </div>
           </div>
         </div>
       </template>
     </div>
 
-    <teleport
-      to="body"
-      v-if="!isOffline && serverData.mod_info?.modList?.length"
-    >
-      <InfoModal
-        :show="isModalVisible"
-        :title="`Mod 列表 (共 ${serverData.mod_info?.modList?.length ?? 0} 个)`"
-        @close="isModalVisible = false"
-      >
-        <table class="mod-table">
-          <thead>
-            <tr>
-              <th>Mod ID</th>
-              <th>版本</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="mod in serverData.mod_info?.modList" :key="mod.modid">
-              <td>{{ mod.modid }}</td>
-              <td>{{ mod.version }}</td>
-            </tr>
-          </tbody>
-        </table>
+    <teleport to="body" v-if="!isOffline && serverData.mod_info?.modList?.length">
+      <!-- <InfoModal :show="isModalVisible" :title="`Mod 列表 (共 ${serverData.mod_info?.modList?.length ?? 0} 个)`"
+        @close="isModalVisible = false"> -->
+      <InfoModal :show="isModalVisible" :title="modalTitle" @close="isModalVisible = false">
+      <table class="mod-table">
+        <thead>
+          <tr>
+            <th>Mod ID</th>
+            <th>{{ $t('comp.serverDis.modVersion') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="mod in serverData.mod_info?.modList" :key="mod.modid">
+            <td>{{ mod.modid }}</td>
+            <td>{{ mod.version }}</td>
+          </tr>
+        </tbody>
+      </table>
       </InfoModal>
     </teleport>
   </div>
@@ -448,6 +445,7 @@ onUnmounted(() => {
   word-wrap: break-word;
   word-break: break-all;
 }
+
 .info-value.version {
   color: var(--primary-color);
 }

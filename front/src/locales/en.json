@@ -1,0 +1,76 @@
+{
+    "view": {
+        "home": {
+            "errorMsg": "Unable to connect to the query backend or an unknown error occurred.",
+            "connectingMsg": "Connecting to server..."
+        },
+        "embed": {
+            "noServerIpMsg": "The server IP parameter must be provided in the URL.",
+            "unableConnectMsg": "Unable to connect to query backend."
+        }
+    },
+    "comp": {
+        "footer": {
+            "developedBy": "Developed by {name}",
+            "poweredBy": "Powered by {name}",
+            "rightsReserved": "All Rights Reserved."
+        },
+        "contr": {
+            "title": "Project Contributors"
+        },
+        "embedG": {
+            "copy": "copy",
+            "copyed": "copyed!",
+            "copyFailed": "Replication failed",
+            "title": "Embedded in your web page",
+            "description": "Adjust the options below to preview the effect in real time, then copy the generated code.",
+            "width": "width",
+            "height": "height",
+            "autoAdjust": "Automatic adjustment",
+            "iconUrl": "Icon URL (optional)",
+            "darkMode": "dark Mode",
+            "preview": "Real-time preview",
+            "copyCode": "copy the code"
+        },
+        "imgG": {
+            "copy": "copy",
+            "copyed": "copyed!",
+            "copyFailed": "Replication failed",
+            "title": "Generate a link to the status image",
+            "description": "Copy the link below and you can use it in your forum signature file or Markdown document.",
+            "preview": "Image preview"
+        },
+        "joinM": {
+            "title": "Joining Server",
+            "body1": "We will launch your local MinecraftBE client and automatically add the server information.",
+            "warning1": "If you have both the International and NetEase versions of MC installed, ",
+            "warning2": "please select the International version to open",
+            "warning3": ", or the link will not work!",
+            "body2": "If you haven't downloaded the client, click the button below. If it fails to launch, check your browser permissions or switch browsers.",
+            "cancel": "Cancel",
+            "download": "Download",
+            "join": "Join Server"
+        },
+        "queryF":{
+            "ip":"Server address",
+            "port":"port (optional)",
+            "portPlaceholder":"For example: 19132",
+            "querying":"Inquiring...",
+            "query":"Query server status"
+        },
+        "serverDis":{
+            "host":"address",
+            "version":"version",
+            "protocol":"protocol",
+            "modList":"mod list",
+            "gamemode":"gamemode",
+            "levelname":"levelname",
+            "onlineList":" online list",
+            "delay":"delay",
+            "clickToView":"(Click to view)",
+            "players":"players",
+            "modVersion":"version",
+            "modCount": "Mod List ({count} mod) | Mod List ({count} mods)"
+        }
+    }
+}

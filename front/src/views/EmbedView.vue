@@ -4,7 +4,10 @@ import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { defaultConfig } from '../config/app.config.js';
 import ServerStatusDisplay from '../components/ServerStatusDisplay.vue';
+import { useI18n } from 'vue-i18n';
 
+// 获取 t 函数和当前的 locale
+const { t, locale } = useI18n();
 const route = useRoute();
 const loading = ref(true);
 const error = ref(null);
@@ -41,7 +44,7 @@ const fetchData = async () => {
 
 
     if (!serverIp) {
-        error.value = "URL中必须提供服务器IP参数。";
+        error.value = t("view.embed.noServerIpMsg");
         loading.value = false;
         return;
     }
@@ -55,7 +58,7 @@ const fetchData = async () => {
         if (err.response?.data?.error) {
             error.value = err.response.data.error;
         } else {
-            error.value = '无法连接到查询后端。';
+            error.value = t('view.embed.unableConnectMsg');
         }
         data.value = {
             status: 'offline',

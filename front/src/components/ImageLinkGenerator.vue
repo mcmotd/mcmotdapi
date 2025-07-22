@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+// 获取 t 函数和当前的 locale
+const { t, locale } = useI18n();
 const props = defineProps({
     serverData: {
         type: Object,
@@ -12,7 +15,7 @@ const props = defineProps({
     },
 });
 
-const copyButtonText = ref('复制');
+const copyButtonText = ref(t('comp.imgG.copy'));
 
 // [核心修复] 1. 将 imageUrl 从 computed 改为 ref，使其可以被 v-model 修改
 const imageUrl = ref('');
@@ -70,20 +73,20 @@ const copyToClipboard = () => {
     };
     copyText(window.location.origin + imageUrl.value)
         .then(() => {
-            copyButtonText.value = '已复制!';
-            setTimeout(() => (copyButtonText.value = '复制'), 2000);
+            copyButtonText.value = t('comp.imgG.copyed');
+            setTimeout(() => (copyButtonText.value = t('comp.imgG.copy')), 2000);
         })
         .catch((err) => {
-            copyButtonText.value = '复制失败';
-            console.error('Could not copy text:', err);
+            copyButtonText.value = t('comp.imgG.copyFailed');
+            // console.error('Could not copy text:', err);
         });
 };
 </script>
 
 <template>
     <div class="card generator-card">
-        <h3>生成状态图片链接</h3>
-        <p class="description">复制下方链接，你可以将其用于论坛签名档或 Markdown 文档中。</p>
+        <h3>{{ $t('comp.imgG.title') }}</h3>
+        <p class="description">{{ $t('comp.imgG.description') }}</p>
 
         <div class="input-with-button">
             <input type="text" class="form-input" v-model="imageUrl">
@@ -91,7 +94,7 @@ const copyToClipboard = () => {
         </div>
 
         <div class="preview-area">
-            <h4>图片预览</h4>
+            <h4>{{ $t('comp.imgG.preview') }}</h4>
             <div class="image-container" :class="{ 'is-loading': loading }">
                 <img v-if="imageUrl" :src="imageUrl" alt="Server Status Image" class="status-image">
             </div>
