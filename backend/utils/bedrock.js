@@ -48,16 +48,27 @@ var UNCONNECTED_PING = function (pingId) {
     this.bb.offset = 1;
     this.pingId = pingId;
 };
+// UNCONNECTED_PING.prototype.encode = function () {
+//     //console.log(this.pingId);
+//     this.bb
+//         .writeLong(this.pingId)
+//         .append(RAKNET.MAGIC, "hex")
+//         .writeLong(0)
+//         .flip()
+//         .compact();
+// };
 UNCONNECTED_PING.prototype.encode = function () {
-    //console.log(this.pingId);
+    // ClientID 是一个固定的 5 字节值
+    const clientIDHex = "1234567800";
+
     this.bb
-        .writeLong(this.pingId)
-        .append(RAKNET.MAGIC, "hex")
-        .writeLong(0)
+        .writeLong(this.pingId)             // 写入 8 字节时间戳
+        .append(RAKNET.MAGIC, "hex")        // 写入 16 字节 Magic
+        .append(clientIDHex, "hex")         // 补充写入 5 字节的 ClientID
+        .writeLong(0)                       // 写入 8 字节 ClientGUID
         .flip()
         .compact();
 };
-
 
 var UNCONNECTED_PONG = function (buf) {
     this.bb = buf;
