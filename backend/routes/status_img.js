@@ -23,6 +23,9 @@ router.get('/', async (req, res) => {
         return;
     }
 
+    res.setHeader('Content-Type', 'image/png');
+
+
     // --- 步骤 3: 执行与响应 ---
     // 根据是否存在有效端口，动态构建用于日志的完整地址
     const fullAddress = pre_host.port ? `${pre_host.ip}:${pre_host.port}` : pre_host.ip;
@@ -30,7 +33,7 @@ router.get('/', async (req, res) => {
 
     try {
         // 同样调用核心查询服务来获取数据
-        const serverData = await queryServerStatus(pre_host.ip, pre_host.port,'',stype,srv);
+        const serverData = await queryServerStatus(pre_host.ip, pre_host.port,'', stype, Boolean(srv == 'true'));
 
         const lines = [
             `状态: ${serverData.type} - 在线`,
@@ -47,8 +50,7 @@ router.get('/', async (req, res) => {
 
         // 7. 发送最终的 PNG 图片
 
-        res.setHeader('Content-Type', 'image/png');
-        
+
         return res.send(pngBuffer);
 
     } catch (error) {

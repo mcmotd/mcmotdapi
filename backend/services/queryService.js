@@ -90,7 +90,9 @@ async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV =
 
     // --- 步骤 1: SRV 记录解析 (如果 isSRV 为 true) ---
     // SRV 记录强制只查询 Java 服务器
-    if (isSRV) {
+
+    if (isSRV === true) {
+        // console.log('is srv','checking',targetHost)
         serverType = 'je'; // 强制 serverType 为 'je'
         const srvAddress = `_minecraft._tcp.${ip}`;
         try {

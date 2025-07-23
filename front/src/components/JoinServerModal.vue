@@ -43,6 +43,7 @@ const handleDownload = () => {
     window.open(defaultConfig.client.downloadUrl, '_blank');
     emit('close'); // 点击后关闭弹窗
 };
+
 </script>
 
 <template>

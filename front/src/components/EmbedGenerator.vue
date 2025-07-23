@@ -1,15 +1,19 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { defaultConfig } from '../config/app.config.js';
-import { useI18n } from 'vue-i18n';
+    import {ref, computed, onMounted, onUnmounted, watch} from 'vue';
+    import {defaultConfig} from '../config/app.config.js';
+    import {useI18n} from 'vue-i18n';
+    const {t} = useI18n();
 
-// 获取 t 函数和当前的 locale
-const { t, locale } = useI18n();
-const props = defineProps({
-    serverData: {
+    // [核心修正 1] 接收从 HomeView 传来的所有原始查询参数
+    const props = defineProps({
+        serverData: {
         type: Object,
-        required: true
-    }
+    required: true
+    },
+    address: String,
+    port: String,
+    serverType: String,
+    isSrv: Boolean,
 });
 
 const width = ref(700);
@@ -22,87 +26,77 @@ const previewIframe = ref(null);
 // [核心改动 1] 新增 ref 用于绑定图标URL输入框
 const iconUrl = ref('');
 
-// [核心改动 2] 使用 watch 侦听器，当服务器数据变化时，自动填充图标URL
+// watch 侦听器现在只负责同步来自服务器的 iconUrl
 watch(() => props.serverData.icon, (newIcon) => {
-    // 只填充有效的 http/https URL，忽略 base64 或其他无效值
     if (newIcon && /^https?:\/\/.+/.test(newIcon)) {
         iconUrl.value = newIcon;
     } else {
-        iconUrl.value = ''; // 如果服务器数据没有有效的URL图标，则清空输入框
+        iconUrl.value = '';
     }
-}, { immediate: true }); // immediate: true 确保组件加载时立即执行一次
+}, {immediate: true });
 
-// [核心改动 3] embedUrl 计算属性现在使用我们自己的 iconUrl ref
+// [核心修正 2] 重构 embedUrl 计算属性，直接使用 props 中的原始查询参数
 const embedUrl = computed(() => {
-    if (!props.serverData?.host) {
+    if (!props.address) {
         return '';
     }
 
-    const host = props.serverData.host;
-    let ip, port;
+    // 使用 URLSearchParams 来干净、安全地构建查询字符串
+    const params = new URLSearchParams();
+    params.append('ip', props.address);
 
-    const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
-    if (ipv6Match) {
-        ip = ipv6Match[1];
-        port = ipv6Match[2];
-    } else {
-        const parts = host.split(':');
-        ip = parts[0];
-        port = parts.length > 1 ? parts[parts.length - 1] : '';
+    if (props.port) {
+        params.append('port', props.port);
+    }
+    if (props.serverType) {
+        params.append('stype', props.serverType);
+    }
+    // 布尔值需要显式转换为字符串
+    if (props.isSrv) {
+        params.append('srv', String(props.isSrv));
     }
 
-    // 使用来自输入框的 iconUrl.value
+    // 添加组件内部的选项
+    params.append('dark', String(darkMode.value));
+
     const icon = iconUrl.value;
     const isHttpUrl = (url) => url && /^https?:\/\/.+\..+/.test(url);
-    const iconParam = isHttpUrl(icon) ? `&icon=${encodeURIComponent(icon)}` : '';
+    if (isHttpUrl(icon)) {
+        params.append('icon', icon);
+    }
+
+    params.append('source', `mc-status-${props.address}`);
 
     const fullBaseUrl = window.location.origin + defaultConfig.embed.baseUrl;
-    return `${fullBaseUrl}?ip=${ip}&port=${port || ''}&dark=${darkMode.value}&source=mc-status-${ip}${iconParam}`;
+    console.log(`${fullBaseUrl}?${params.toString()}`);
+    return `${fullBaseUrl}?${params.toString()}`;
 });
 
+
+// [核心修正 3] iframeCode 也需要使用原始的 address 和 port
 const iframeCode = computed(() => {
     if (!embedUrl.value) return '';
-    const iframeId = `mc-status-${props.serverData.host.replace(/[:.]/g, '-')}`;
+    const uniqueId = `${props.address}-${props.port || ''}`.replace(/[:.]/g, '-');
+    const iframeId = `mc-status-${uniqueId}`;
+
     const iframeTag = `<iframe id="${iframeId}" class="responsive-iframe" frameborder="0" width="${width.value}" height="${height.value}" scrolling="no" src="${embedUrl.value}"></iframe>`;
     const scriptTag = `
-<script>
-  window.addEventListener('message', function(event) {
+    <script>
+        window.addEventListener('message', function(event) {
     var iframe = document.getElementById('${iframeId}');
-    if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
-      iframe.style.height = event.data.height + 'px';
+        if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
+            iframe.style.height = event.data.height + 'px';
     }
   });
-<\/script>`;
-    return iframeTag + scriptTag;
+        <\/script>`;
+        return iframeTag + scriptTag;
 });
 
 const iframeUrl = ref('');
 // [核心修复] 2. 使用 watch 监听 serverData 的变化，来自动更新 imageUrl 的值
 // 这样既保留了自动生成的功能，也允许用户手动修改
-watch(() => props.serverData, (newServerData) => {
-    if (!props.serverData?.host) {
-        return '';
-    }
-
-    const host = props.serverData.host;
-    let ip, port;
-
-    const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
-    if (ipv6Match) {
-        ip = ipv6Match[1];
-        port = ipv6Match[2];
-    } else {
-        const parts = host.split(':');
-        ip = parts[0];
-        port = parts.length > 1 ? parts[parts.length - 1] : '';
-    }
-
-    // 使用来自输入框的 iconUrl.value
-    const icon = iconUrl.value;
-    const isHttpUrl = (url) => url && /^https?:\/\/.+\..+/.test(url);
-    const iconParam = isHttpUrl(icon) ? `&icon=${encodeURIComponent(icon)}` : '';
-
-    const apiUrl = `/api/iframe_img?ip=${ip}&port=${port || ''}&dark=${darkMode.value}&source=mc-status-${ip}${iconParam}`;
+watch(() => embedUrl, (newServerData) => {
+    const apiUrl = embedUrl.value.replace("/iframe?","/api/iframe_img?");
     iframeUrl.value = apiUrl;
 }, { immediate: true }); // immediate: true 确保组件初始加载时也能执行一次
 
@@ -114,18 +108,18 @@ const copyToClipboard = (textInputValue,copyButtonText) => {
         }
         return new Promise((resolve, reject) => {
             const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.select();
-            try {
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
                 const ok = document.execCommand('copy');
-                document.body.removeChild(ta);
-                ok ? resolve() : reject(new Error('execCommand failed'));
+        document.body.removeChild(ta);
+        ok ? resolve() : reject(new Error('execCommand failed'));
             } catch (e) {
-                document.body.removeChild(ta);
-                reject(e);
+            document.body.removeChild(ta);
+        reject(e);
             }
         });
     };
@@ -136,17 +130,10 @@ const copyToClipboard = (textInputValue,copyButtonText) => {
         })
         .catch((err) => {
             copyButtonText.value = t("comp.embedG.copyFailed");
-            // console.error('Could not copy text:', err);
         });
 };
-
 const handleIframeMessage = (event) => {
-    if (
-        previewIframe.value &&
-        event.source === previewIframe.value.contentWindow &&
-        event.data &&
-        event.data.type === 'resize-iframe'
-    ) {
+    if (previewIframe.value && event.source === previewIframe.value.contentWindow && event.data && event.data.type === 'resize-iframe') {
         const requiredHeight = event.data.height;
         height.value = Math.round(requiredHeight);
     }
@@ -157,16 +144,17 @@ const copyToClipboard_iframeCode = () => {
 };
 
 const copyToClipboard_iframeUrl = () => { 
-    copyToClipboard(window.location.origin + iframeUrl.value,copyButtonText_iframeUrl);
+    copyToClipboard(iframeUrl.value,copyButtonText_iframeUrl);
 };
 
 onMounted(() => {
-    window.addEventListener('message', handleIframeMessage);
+            window.addEventListener('message', handleIframeMessage);
 });
 onUnmounted(() => {
-    window.removeEventListener('message', handleIframeMessage);
+            window.removeEventListener('message', handleIframeMessage);
 });
 </script>
+
 
 <template>
     <div class="card generator-card">

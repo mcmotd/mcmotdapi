@@ -131,7 +131,8 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <div class="card status-card" :class="{ 'is-clickable': !isOffline && !loading }">
+    <div class="card status-card" :class="{ 'is-clickable': !isOffline && !loading && serverData.type !== 'Java' }"
+      @click="!isOffline && !loading && $emit('card-click')">
 
       <div v-if="loading" class="loading-container">
         <p class="loading-text">{{ $t('view.home.connectingMsg') }}</p>
@@ -172,7 +173,7 @@ onUnmounted(() => {
                   </div>
                   <span v-else-if="key === 'delay'" class="info-value">{{ serverData[key] }}ms</span>
                   <span v-else class="info-value" :class="{ version: key === 'version' }">{{ serverData[key]
-                  }}</span>
+                    }}</span>
                 </div>
               </div>
               <div class="players-info">

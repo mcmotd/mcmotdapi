@@ -55,10 +55,16 @@
         },
         "queryF": {
             "ip": "服务器地址",
+            "ipPlaceholder": "例如: play.hypixel.net",
             "port": "端口 (可选)",
-            "portPlaceholder": "例如：19132",
+            "portPlaceholder": "例如: 19132",
             "querying": "查询中...",
-            "query": "查询服务器状态"
+            "query": "查询服务器状态",
+            "queryType": "查询类型", 
+            "typeAuto": "自动", 
+            "typeJava": "Java版",
+            "typeBedrock": "基岩版", 
+            "typeSrv": "SRV记录"
         },
         "serverDis": {
             "host": "地址",

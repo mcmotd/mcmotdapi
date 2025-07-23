@@ -53,12 +53,18 @@
             "download": "Download",
             "join": "Join Server"
         },
-        "queryF":{
-            "ip":"Server address",
-            "port":"port (optional)",
-            "portPlaceholder":"For example: 19132",
-            "querying":"Inquiring...",
-            "query":"Query server status"
+        "queryF": {
+            "ip": "Server Address",
+            "ipPlaceholder": "Example: play.hypixel.net",
+            "port": "Port (Optional)",
+            "portPlaceholder": "Example: 19132",
+            "querying": "Querying...",
+            "query": "Query Server Status",
+            "queryType": "Query Type",
+            "typeAuto": "Auto",
+            "typeJava": "Java Edition",
+            "typeBedrock": "Bedrock Edition",
+            "typeSrv": "SRV Record"
         },
         "serverDis":{
             "host":"address",

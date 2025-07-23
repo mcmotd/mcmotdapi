@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
     try {
         // [核心改动] 调用核心服务。
         // 如果 numericPort 是 undefined，JavaScript 会视其为未传递该参数。
-        const serverData = await queryServerStatus(pre_host.ip, pre_host.port,icon,stype,srv);
+        const serverData = await queryServerStatus(pre_host.ip, pre_host.port,icon,stype,Boolean(srv == 'true'));
         return res.json(serverData);
     } catch (error) {
         logger.info('[QUERY]', `查询失败: ${fullAddress}`);

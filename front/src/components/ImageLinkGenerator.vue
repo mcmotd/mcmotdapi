@@ -13,39 +13,39 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    address: String,
+    port: String,
+    serverType: String,
+    isSrv: Boolean,
 });
 
 const copyButtonText = ref(t('comp.imgG.copy'));
-
-// [核心修复] 1. 将 imageUrl 从 computed 改为 ref，使其可以被 v-model 修改
 const imageUrl = ref('');
 
-// [核心修复] 2. 使用 watch 监听 serverData 的变化，来自动更新 imageUrl 的值
-// 这样既保留了自动生成的功能，也允许用户手动修改
-watch(() => props.serverData, (newServerData) => {
-    if (!newServerData?.host) {
+// [核心改动 2] 侦听所有相关的 props，而不仅仅是 serverData
+watch(() => [props.address, props.port, props.serverType, props.isSrv], () => {
+    if (!props.address) {
         imageUrl.value = '';
         return;
     }
-    // const [ip, port] = newServerData.host.split(':');
-    const host = props.serverData.host;
-    let ip, port;
 
-    // 匹配 IPv6 格式：[::1]:19132
-    const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
-    if (ipv6Match) {
-        ip = ipv6Match[1];
-        port = ipv6Match[2];
-    } else {
-        // IPv4 或简单端口分割
-        const parts = host.split(':');
-        ip = parts.slice(0, -1).join(':'); // 兼容 IPv6 没有端口的情况（不常见）
-        port = parts[parts.length - 1];
+    // [核心改动 3] 使用 URLSearchParams 来构建包含所有参数的 URL
+    const params = new URLSearchParams();
+    params.append('ip', props.address);
+    if (props.port) {
+        params.append('port', props.port);
+    }
+    if (props.serverType) {
+        params.append('stype', props.serverType);
+    }
+    if (props.isSrv) {
+        params.append('srv', Boolean(props.isSrv == true));
     }
 
-    const apiUrl = `/api/status_img?ip=${ip}&port=${port || ''}`;
-    imageUrl.value = apiUrl;
-}, { immediate: true }); // immediate: true 确保组件初始加载时也能执行一次
+    imageUrl.value = `/api/status_img?${params.toString()}`;
+
+}, { immediate: true, deep: true });
+
 
 const copyToClipboard = () => {
     // ... (复制逻辑保持不变)
