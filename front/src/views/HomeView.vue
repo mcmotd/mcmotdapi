@@ -25,8 +25,8 @@ const data = ref({});
 const icon = ref(null);
 
 const openJoinModal = () => {
-    // 只有在查询成功后才打开弹窗
-    if (data.value && data.value.status !== 'offline') {
+    // 增加一个条件：服务器类型不能是 'Java'
+    if (data.value && data.value.status !== 'offline' && data.value.type !== 'Java') {
         isJoinModalVisible.value = true;
     }
 };
