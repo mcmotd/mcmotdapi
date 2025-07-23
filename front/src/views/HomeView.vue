@@ -23,7 +23,9 @@ const loading = ref(true);
 const error = ref(null);
 const data = ref({});
 const icon = ref(null);
-
+// [核心改动 1] 新增状态，用于保存当前的查询类型
+const serverType = ref('auto');
+const isSRV = ref(false);
 const openJoinModal = () => {
     // 增加一个条件：服务器类型不能是 'Java'
     if (data.value && data.value.status !== 'offline' && data.value.type !== 'Java') {
@@ -31,53 +33,55 @@ const openJoinModal = () => {
     }
 };
 
+// [核心改动 2] 更新 handleFetchData 函数以接收和处理所有新参数
 const handleFetchData = async (payload) => {
+    // 从 payload 中更新所有相关的状态
     serverAddress.value = payload.address;
     port.value = payload.port;
-    icon.value = payload.icon
+    serverType.value = payload.serverType;
+    isSRV.value = payload.isSRV;
 
     loading.value = true;
     error.value = null;
 
     try {
         const apiUrl = `/api/status`;
+        // [核心改动 3] 将所有参数都发送给后端
         const response = await axios.get(apiUrl, {
             params: {
                 ip: serverAddress.value,
                 port: port.value || undefined,
-                icon: icon.value
+                stype: serverType.value,
+                srv: isSRV.value
             }
         });
         data.value = response.data;
     } catch (err) {
         const errorMessage = t("view.home.errorMsg");
-        if (err.response && err.response.data && err.response.data.error) {
-            error.value = err.response.data.error;
-        } else {
-            error.value = errorMessage;
-        }
+        error.value = err.response?.data?.error || errorMessage;
 
-        // ==================== [核心修复] 失败对象必须包含 host ====================
-        // 我们需要把用户尝试查询的地址 (payload) 传递下去，
-        // 这样 EmbedGenerator 才能拿到 IP 和 Port 来生成 iframe。
+        // 在失败时，依然构造一个包含查询信息的对象，以便其他组件使用
         data.value = {
             status: 'offline',
             error: error.value,
-            // 构造 host 字段
             host: `${payload.address}${payload.port ? ':' + payload.port : ''}`,
             port: payload.port,
             address: payload.address
         };
-        // =======================================================================
-
         console.error(err);
     } finally {
         loading.value = false;
     }
 };
 
+// [核心改动 4] 更新 onMounted 中的初始调用，包含默认参数
 onMounted(() => {
-    handleFetchData({ address: serverAddress.value, port: port.value });
+    handleFetchData({
+        address: serverAddress.value,
+        port: port.value,
+        serverType: 'auto',
+        isSRV: false
+    });
 });
 </script>
 
@@ -103,8 +107,10 @@ onMounted(() => {
                 </div>
 
                 <div v-if="!loading" class="generators-section">
-                    <EmbedGenerator :server-data="data" />
-                    <ImageLinkGenerator :server-data="data" />
+                    <EmbedGenerator :server-data="data" :address="serverAddress" :port="port" :server-type="serverType"
+                        :is-srv="isSRV" />
+                    <ImageLinkGenerator :server-data="data" :loading="loading" :address="serverAddress" :port="port"
+                        :server-type="serverType" :is-srv="isSRV" />
                 </div>
                 <Contributors />
             </div>
