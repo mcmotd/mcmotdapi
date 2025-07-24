@@ -26,9 +26,6 @@ router.get('/', async (req, res) => {
 
     res.setHeader('Content-Type', 'image/png');
 
-
-    // --- 步骤 3: 执行与响应 ---
-    // 根据是否存在有效端口，动态构建用于日志的完整地址
     const fullAddress = pre_host.port ? `${pre_host.ip}:${pre_host.port}` : pre_host.ip;
     Logger.debug('[QUERY_IMG]', `${clientIP} 查询 ${fullAddress}`);
 
@@ -71,7 +68,6 @@ router.get('/', async (req, res) => {
         };
         const pngBuffer = await generateImage(template, simpleData);
 
-        console.log('pngBuffer');
 
         return res.send(pngBuffer);
 
