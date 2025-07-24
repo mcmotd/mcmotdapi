@@ -17,5 +17,20 @@ export default defineConfig({
         // 这正好符合我们后端API的路径，所以无需重写(rewrite)
       }
     }
+  },
+  build: {
+    emptyOutDir: true,
+    outDir: '../backend/dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 将大型依赖拆分为单独的块
+          'highlight-js': ['highlight.js'],
+          'marked': ['marked'],
+          'vue-libraries': ['vue', 'vue-router', '@vueuse/core']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000 // 将警告阈值提高到 1000kB
   }
 })

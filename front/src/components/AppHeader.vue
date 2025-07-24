@@ -1,12 +1,21 @@
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'; // [修改] 引入 computed 和 watch
-import { useConfig } from '../composables/useConfig'; // [新增] 引入 useConfig
+import { ref, computed, watch, onUnmounted } from 'vue';
+import { useConfig } from '../composables/useConfig';
+import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 const config = useConfig();
+const route = useRoute();
+const router = useRouter();
+const { t } = useI18n();
 
-// [修改] 使用 computed 创建一个安全的 header 配置对象
+// 导航菜单项
+const navItems = [
+  { name: 'home', path: '/', label: '首页' },
+  { name: 'docs', path: '/docs', label: '文档' }
+];
+
 const headerConfig = computed(() => {
-    // 当 config.value 未加载完成时，提供一个默认的结构，防止模板出错
     return config.value?.header || {
         title: '正在加载...',
         description: '',
@@ -14,32 +23,46 @@ const headerConfig = computed(() => {
     };
 });
 
-
-// 3. 创建一个响应式变量来追踪当前显示的图片索引
 const currentImageIndex = ref(0);
-let intervalId = null; // 用于存放定时器ID
+let intervalId = null;
 
-// [修改] 使用 watch 替代 onMounted 来启动轮播
 watch(() => headerConfig.value.carousel, (newCarousel) => {
-    // 先清除旧的定时器，以防配置动态变化
     clearInterval(intervalId);
 
-    // 当新的轮播配置存在，且图片数量大于1时，启动新的定时器
     if (newCarousel && newCarousel.images.length > 1) {
         intervalId = setInterval(() => {
             currentImageIndex.value = (currentImageIndex.value + 1) % newCarousel.images.length;
         }, newCarousel.duration);
     }
-}, { immediate: true }); // immediate: true 确保组件加载后能立即检查一次配置
+}, { immediate: true });
 
 onUnmounted(() => {
-    // 组件销毁时，清除定时器，防止内存泄漏
     clearInterval(intervalId);
 });
+
+// 导航函数
+const navigateTo = (path) => {
+  router.push(path);
+};
 </script>
 
 <template>
     <header class="app-header">
+        <!-- 导航栏 -->
+        <nav class="main-nav">
+            <ul class="nav-list">
+                <li 
+                    v-for="item in navItems" 
+                    :key="item.name"
+                    class="nav-item"
+                    :class="{ 'active': route.name === item.name }"
+                    @click="navigateTo(item.path)"
+                >
+                    {{ item.label }}
+                </li>
+            </ul>
+        </nav>
+
         <div class="carousel-images">
             <div v-for="(image, index) in headerConfig.carousel.images" :key="image" class="carousel-image"
                 :class="{ 'is-active': index === currentImageIndex }" :style="{ backgroundImage: `url(${image})` }">
@@ -48,31 +71,28 @@ onUnmounted(() => {
 
         <div class="overlay"></div>
 
-        <div class="text-container">
-            <h1>{{ headerConfig.title }}</h1>
-            <p>{{ headerConfig.description }}</p>
+        <div class="header-content">
+            <div class="text-container">
+                <h1>{{ headerConfig.title }}</h1>
+                <p>{{ headerConfig.description }}</p>
+            </div>
         </div>
     </header>
 </template>
 
 <style scoped>
 .app-header {
-    /* 移除固定的背景图，因为现在由内部的 div 处理 */
-    /* background-image: url('../assets/head.png'); */
     background-size: cover;
     background-position: center;
     position: relative;
-    /* 关键：作为内部绝对定位元素的锚点 */
     min-height: 45vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem 1rem;
     overflow: hidden;
-    /* 隐藏可能溢出的部分 */
 }
 
-/* [新增] 轮播图片相关的样式 */
 .carousel-images {
     position: absolute;
     top: 0;
@@ -80,7 +100,6 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     z-index: 1;
-    /* 图片在最底层 */
 }
 
 .carousel-image {
@@ -91,18 +110,14 @@ onUnmounted(() => {
     height: 100%;
     background-size: cover;
     background-position: center;
-    /* 默认透明 */
     opacity: 0;
-    /* [核心] 定义淡入淡出的过渡效果 */
     transition: opacity 1.5s ease-in-out;
 }
 
-/* 当前显示的图片，不透明 */
 .carousel-image.is-active {
     opacity: 1;
 }
 
-/* [修改] 将遮罩从 ::before 伪元素改为独立的 div，方便控制层级 */
 .overlay {
     content: '';
     position: absolute;
@@ -112,15 +127,23 @@ onUnmounted(() => {
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.4);
     z-index: 2;
-    /* 遮罩在图片之上 */
+}
+
+.header-content {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .text-container {
-    position: relative;
     text-align: center;
     color: #fff;
-    z-index: 3;
-    /* 文字在最上层 */
+    margin-bottom: 2rem;
 }
 
 h1 {
@@ -135,19 +158,69 @@ p {
     opacity: 0.9;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
+
+/* 导航栏样式 */
+.main-nav {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 4;
+}
+
+.nav-list {
+    display: flex;
+    list-style: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    padding: 10px 20px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-item.active {
+    background-color: rgba(255, 255, 255, 0.3);
+    font-weight: bold;
+}
+
 @media (max-width: 768px) {
     .app-header {
-        /* 在移动端，使用一个更紧凑的固定高度，而不是vh单位 */
         min-height: 280px;
     }
 
-    /* (可选) 也可以适当减小移动端的标题和描述文字大小，让版面更协调 */
     h1 {
         font-size: 2.2rem;
     }
 
     p {
         font-size: 1rem;
+    }
+    
+    .nav-list {
+        
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+    }
+    
+    .nav-item {
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-item:last-child {
+        border-bottom: none;
     }
 }
 </style>

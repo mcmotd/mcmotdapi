@@ -9,6 +9,8 @@
     "@element-plus/icons-vue": "^2.3.1",
     "axios": "^1.10.0",
     "element-plus": "^2.10.4",
+    "highlight.js": "^11.11.1",
+    "marked": "^16.1.1",
     "pinia": "^3.0.3",
     "vue": "^3.5.17",
     "vue-i18n": "^11.1.10",
