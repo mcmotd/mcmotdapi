@@ -1,8 +1,0 @@
-{
-  "javaDefaultPort": 25565,
-  "bedrockDefaultPort": 19132,
-  "queryTimeout": 3000,
-  "serverPort": 3123,
-  "log_level": 5,
-  "customsFont":"./HYPixel.ttf"
-}
