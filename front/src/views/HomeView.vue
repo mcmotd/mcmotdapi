@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted,watch } from 'vue';
 import { defaultConfig } from '../config/app.config.js';
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
@@ -15,10 +15,13 @@ import AppFooter from '../components/AppFooter.vue';
 import ImageLinkGenerator from '../components/ImageLinkGenerator.vue';
 import JoinServerModal from '../components/JoinServerModal.vue';
 import Contributors from '../components/Contributors.vue';
+import { useConfig } from '../composables/useConfig';
+
+const config = useConfig();
 
 const isJoinModalVisible = ref(false);
-const serverAddress = ref(defaultConfig.serverAddress);
-const port = ref(defaultConfig.port);
+const serverAddress = ref('');
+const port = ref('');
 const loading = ref(true);
 const error = ref(null);
 const data = ref({});
@@ -74,15 +77,29 @@ const handleFetchData = async (payload) => {
     }
 };
 
-// [核心改动 4] 更新 onMounted 中的初始调用，包含默认参数
-onMounted(() => {
-    handleFetchData({
-        address: serverAddress.value,
-        port: port.value,
-        serverType: 'auto',
-        isSRV: false
-    });
-});
+// 在 HomeView.vue 的 <script setup> 中
+watch(config, (newConfig) => {
+    // 在 watch 回调的最顶端，立刻打印收到的值！
+    console.log('[HomeView] watch 监听到 config 变化:', newConfig);
+
+    // [防御性编程] 在使用 newConfig 之前，先进行严格的检查
+    if (newConfig && newConfig.serverAddress && newConfig.port) {
+        console.log('配置有效，正在设置初始值并获取数据...');
+        serverAddress.value = newConfig.serverAddress;
+        port.value = newConfig.port;
+
+        handleFetchData({
+            address: serverAddress.value,
+            port: port.value,
+            serverType: 'auto',
+            isSRV: false
+        });
+    } else if (newConfig) {
+        // 如果 newConfig 存在但缺少必要属性
+        console.error('[HomeView] 收到的配置对象不完整:', newConfig);
+    }
+
+}, { immediate: true });
 </script>
 
 <template>

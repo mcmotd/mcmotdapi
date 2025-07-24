@@ -1,17 +1,17 @@
 const express = require('express');
 const fs = require("fs")
 const router = express.Router();
-const path  =require("path");
-const bgPath = path.join(__dirname,'../','img', 'status_img.png');
+const path = require("path");
+const bgPath = path.join(__dirname, '../', 'img', 'status_img.png');
 const { queryServerStatus } = require('../services/queryService');
-const {text4img} = require("../services/text4imgServices");
+const { text4img } = require("../services/text4imgServices");
 const { default: parseHost } = require('../utils/parsehost');
 const Logger = require('../utils/logger');
 
 router.get('/', async (req, res) => {
     const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
 
-    const { ip, port, host, stype, srv } = req.query;
+    const { ip, port, host, stype, icon, srv } = req.query;
 
     let pre_host = parseHost(ip, port, host);
 
@@ -33,12 +33,14 @@ router.get('/', async (req, res) => {
 
     try {
         // 同样调用核心查询服务来获取数据
-        const serverData = await queryServerStatus(pre_host.ip, pre_host.port,'', stype, Boolean(srv == 'true'));
+        const serverData = await queryServerStatus(pre_host.ip, pre_host.port, icon, stype, Boolean(srv == 'true'));
+
+        // console.log(serverData)
 
         const lines = [
             `状态: ${serverData.type} - 在线`,
             `协议: ${serverData.protocol}`,
-            `MOTD: ${serverData.pureMotd.length >= 13 ? serverData.pureMotd.substring(0, 13)+"..." : serverData.pureMotd }`, // 截断过长的MOTD
+            `MOTD: ${serverData.pureMotd.length >= 13 ? serverData.pureMotd.substring(0, 13) + "..." : serverData.pureMotd}`, // 截断过长的MOTD
             `玩家: ${serverData.players.online} / ${serverData.players.max}`,
             `版本: ${serverData.version}`,
             `延迟: ${serverData.delay}ms`,
@@ -46,7 +48,12 @@ router.get('/', async (req, res) => {
         ];
 
         // 5. 调用您的函数生成 SVG buffer
-        const pngBuffer =await text4img(bgPath, lines);
+        const pngBuffer = await text4img(bgPath, lines, {
+            base64Icon: serverData.icon,
+            x: 490,
+            y: 170,
+            size: 100
+        });
 
         // 7. 发送最终的 PNG 图片
 
