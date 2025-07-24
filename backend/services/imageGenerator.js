@@ -194,15 +194,13 @@ async function renderSimpleBackground(ctx, conf, data) {
     ctx.drawImage(bg, 0, 0, conf.width, conf.height);
 
     // 2. 绘制可选图标
-    if (iconOptions) {
+    if (iconOptions && iconOptions.base64Icon) {
         const icon = await loadImage(iconOptions.base64Icon);
         const x = iconOptions.x ?? conf.icon.default_x;
         const y = iconOptions.y ?? conf.icon.default_y;
         const size = iconOptions.size ?? conf.icon.default_size;
         ctx.drawImage(icon, x, y, size, size);
     }
-
-    // console.log(serverData);
 
     conf.text.lines_format.forEach((format, idx) => {
         // 使用辅助函数生成最终文本
