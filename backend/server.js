@@ -37,6 +37,7 @@ function cehckConfig(cfgPath,examplePath) {
 
 cehckConfig(configPath,exampleConfigPath);
 cehckConfig(frontPath,exampleFrontPath);
+cehckConfig(picPath,examplPicPath);
 
 
 const config = require('./config.json');

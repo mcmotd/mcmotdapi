@@ -86,8 +86,17 @@
         "simple": {
             "width": 640,
             "height": 360,
-            "default_background_path": "./bg.png",
+            "default_background_path": "./img/status_img.png",
             "text": {
+                "lines_format": [
+                    "MOTD: {motd}",
+                    "服务器地址: {serverAddress}",
+                    "游戏版本: {version}",
+                    "在线玩家: {currentPlayers} / {maxPlayers}",
+                    "网络延迟: {latency}ms",
+                    "游戏模式: {gamemode}",
+                    "当前地图: {worldName}"
+                ],
                 "left_margin": 30,
                 "row_top_margins": [
                     35,
@@ -97,15 +106,6 @@
                     235,
                     285,
                     335
-                ],
-                "lines_format": [
-                    "MOTD: {motd}",
-                    "服务器地址: {serverAddress}",
-                    "游戏版本: {version}",
-                    "在线玩家: {currentPlayers} / {maxPlayers}",
-                    "网络延迟: {latency}ms",
-                    "游戏模式: {gamemode}",
-                    "当前地图: {worldName}"
                 ],
                 "line_styles": [
                     {

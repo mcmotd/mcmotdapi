@@ -4,7 +4,7 @@ const path = require('path');
 // const {} = require("../pic.json")
 
 // 1. 加载并解析配置文件
-const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'));
+const config = JSON.parse(fs.readFileSync(path.join(__dirname,'../', 'pic.json'), 'utf8'));
 
 // 2. 注册全局字体
 try {
@@ -15,32 +15,91 @@ try {
 }
 
 /**
- * 根据模板和数据生成图片
- * @param {string} templateName - 'dark_tech' 或 'simple'
- * @param {object} data - 生成图片所需的数据
- * @returns {Promise<Buffer>} PNG 图片的 Buffer
+ * [新增] 辅助函数：根据路径字符串从对象中安全地取值
+ * @param {object} object - 数据源对象, e.g., { players: { online: 10 } }
+ * @param {string} path - 路径字符串, e.g., "players.online"
+ * @returns {*} 找到的值或 undefined
  */
+function resolvePath(object, path) {
+    return path.split('.').reduce((obj, key) => (obj && obj[key] !== undefined) ? obj[key] : undefined, object);
+}
+
+/**
+ * [升级] 替换字符串中的占位符，现在支持嵌套对象
+ * @param {string} format - 例如 "在线: {players.online}"
+ * @param {object} data - 数据源对象
+ * @returns {string}
+ */
+function interpolate(format, data) {
+    if (!format) return '';
+    // [修改] 更新正则表达式以匹配带点的路径
+    return format.replace(/\{([\w\.]+)\}/g, (match, key) => {
+        // 使用 resolvePath 来获取嵌套属性的值
+        const value = resolvePath(data, key);
+        return value !== undefined ? value : match;
+    });
+}
+
+
+
+/**
+ * [新增] 预处理数据，生成特殊字段
+ * @param {object} serverData - 原始服务器数据
+ * @returns {object} - 混合了特殊字段的新数据对象
+ */
+function processSpecialFields(serverData) {
+    const processedData = { ...serverData };
+    const specialConf = config.special_fields;
+
+    if (!specialConf) return processedData;
+
+    // 1. 处理 MOTD 截断
+    if (specialConf.motd_truncate) {
+        const conf = specialConf.motd_truncate;
+        const sourceText = processedData[conf.source_key] || '';
+        if (sourceText.length >= conf.max_length) {
+            processedData.motd_truncate = sourceText.substring(0, conf.max_length) + conf.ellipsis;
+        } else {
+            processedData.motd_truncate = sourceText;
+        }
+    }
+
+    // 2. 处理时间戳
+    if (specialConf.timestamp) {
+        const conf = specialConf.timestamp;
+        processedData.timestamp = new Date().toLocaleString(conf.locale, conf.options);
+    }
+
+    return processedData;
+}
+
+
 async function generateImage(templateName, data) {
     const templateConfig = config.templates[templateName];
-    if (!templateConfig) {
-        throw new Error(`模板 "${templateName}" 在配置文件中未找到。`);
-    }
+    if (!templateConfig) throw new Error(`模板 "${templateName}" 在配置文件中未找到。`);
+
+    // [修改] 在渲染前，调用处理函数
+    const processedData = processSpecialFields(data.serverData);
+
+    // 将处理后的数据与其他数据合并
+    const finalData = { ...data, serverData: processedData };
 
     const canvas = createCanvas(templateConfig.width, templateConfig.height);
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    // 根据模板名称调用不同的渲染函数
     switch (templateName) {
         case 'dark_tech':
-            await renderDarkTech(ctx, templateConfig, data);
+            await renderDarkTech(ctx, templateConfig, finalData.serverData);
             break;
         case 'simple':
-            await renderSimpleBackground(ctx, templateConfig, data);
+            await renderSimpleBackground(ctx, templateConfig, finalData);
             break;
         default:
             throw new Error(`不支持的模板: ${templateName}`);
     }
+
+    console.log('开始生成图片...');
 
     return canvas.toBuffer('image/png');
 }
@@ -126,8 +185,9 @@ async function renderDarkTech(ctx, conf, serverData) {
  * 渲染 'simple_background' 模板
  */
 async function renderSimpleBackground(ctx, conf, data) {
-    const { lines, backgroundPath, iconOptions } = data;
-    if (lines.length !== 7) throw new Error('必须是 7 行文字');
+    const {serverData, backgroundPath, iconOptions } = data;
+    
+    // if (lines.length !== 7) throw new Error('必须是 7 行文字');
 
     // 1. 绘制背景
     const bg = await loadImage(backgroundPath || conf.default_background_path);
@@ -141,6 +201,8 @@ async function renderSimpleBackground(ctx, conf, data) {
         const size = iconOptions.size ?? conf.icon.default_size;
         ctx.drawImage(icon, x, y, size, size);
     }
+
+    // console.log(serverData);
 
     conf.text.lines_format.forEach((format, idx) => {
         // 使用辅助函数生成最终文本
