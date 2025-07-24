@@ -8,9 +8,11 @@ const fs = require('fs');
 // --- [核心改动] 配置文件自动创建逻辑 ---
 const configPath = path.join(__dirname, 'config.json');
 const frontPath = path.join(__dirname, 'front.json');
+const picPath = path.join(__dirname, 'pic.json');
 
 const exampleConfigPath = path.join(__dirname,'config' ,'config.example.json');
 const exampleFrontPath = path.join(__dirname, 'config', 'front.example.json');
+const examplPicPath = path.join(__dirname, 'config', 'pic.example.json');
 
 function cehckConfig(cfgPath,examplePath) { 
   if (!fs.existsSync(cfgPath)) {

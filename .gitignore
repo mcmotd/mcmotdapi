@@ -1,6 +1,7 @@
 # CFG
 backend/config.json
 backend/front.json
+backend/pic.json
 # Logs
 logs
 *.log

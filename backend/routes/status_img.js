@@ -4,14 +4,14 @@ const router = express.Router();
 const path = require("path");
 const bgPath = path.join(__dirname, '../', 'img', 'status_img.png');
 const { queryServerStatus } = require('../services/queryService');
-const { text4img } = require("../services/text4imgServices");
+const { generateImage } = require('../services/imageGenerator');
 const { default: parseHost } = require('../utils/parsehost');
 const Logger = require('../utils/logger');
 
 router.get('/', async (req, res) => {
     const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
 
-    const { ip, port, host, stype, icon, srv } = req.query;
+    const { ip, port, host, stype, icon, srv,template } = req.query;
 
     let pre_host = parseHost(ip, port, host);
 
