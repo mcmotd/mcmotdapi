@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, provide, readonly } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ConfigKey } from '../composables/useConfig';
+
+const { locale } = useI18n();
 
 // [重要] 请在这里替换为您自己的图片路径！
 // 建议将图片放在项目根目录下的 `public` 文件夹中，这样路径就是以 `/` 开头的。
@@ -23,6 +26,11 @@ onMounted(() => {
         })
         .then(data => {
             config.value = data;
+
+            if (data?.i18n?.default) {
+                locale.value = data.i18n.default;
+                console.log(`[ConfigProvider] 全局语言已设置为: ${locale.value}`);
+            }
         })
         .catch(err => {
             error.value = err.message;
@@ -144,12 +152,34 @@ provide(ConfigKey, readonly(config));
 
 .progress-bar-fill {
     height: 100%;
-    background-color: #00ff88;
-    /* 使用更亮的绿色 */
-    transition: width 0.3s ease-out;
-    border-radius: 4px;
+    /* 基础颜色保持不变 */
+    background-color: #4caf50;
+    transition: width 0.2s ease-out;
+
+    /* [新增] 使用 repeating-linear-gradient 创建斜向条纹 */
+    background-image: repeating-linear-gradient(-45deg,
+            rgba(255, 255, 255, 0.2) 0,
+            rgba(255, 255, 255, 0.2) 10px,
+            transparent 10px,
+            transparent 20px);
+
+    /* [新增] 设置背景大小，让条纹可以重复 */
+    background-size: 40px 40px;
+
+    /* [新增] 应用动画效果 */
+    animation: progress-bar-stripes 1s linear infinite;
 }
 
+/* --- [新增] 定义条纹滚动的动画 --- */
+@keyframes progress-bar-stripes {
+    from {
+        background-position: 40px 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
+}
 .loading-text {
     color: #a5d6a7;
     /* 稍暗的绿色文本 */

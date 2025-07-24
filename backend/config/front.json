@@ -51,7 +51,7 @@
         }
     ],
     "i18n": {
-        "default": "zh-CN",
+        "default": "en",
         "languages": [
             {
                 "name": "简体中文",

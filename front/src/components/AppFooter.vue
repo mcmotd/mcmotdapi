@@ -1,8 +1,12 @@
 <script setup>
-import { defaultConfig } from '../config/app.config.js';
+import { computed } from 'vue';
+import { useConfig } from '../composables/useConfig'; 
 
 // 从配置中解构出新的对象
-const { developer, poweredBy, company } = defaultConfig.footer;
+const config = useConfig();
+const developer = computed(() => config.value?.footer?.developer || { name: '', url: '#' });
+const poweredBy = computed(() => config.value?.footer?.poweredBy || { name: '', url: '#' });
+const company = computed(() => config.value?.footer?.company || { name: '', url: '#' });
 
 // 动态获取当前年份
 const currentYear = new Date().getFullYear();

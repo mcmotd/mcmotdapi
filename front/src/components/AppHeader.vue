@@ -1,24 +1,36 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'; // 1. 引入 Vue 功能
-import { defaultConfig } from '../config/app.config.js';
+import { ref, computed, watch, onUnmounted } from 'vue'; // [修改] 引入 computed 和 watch
+import { useConfig } from '../composables/useConfig'; // [新增] 引入 useConfig
 
-// 2. 从配置中获取标题、描述以及新增的轮播图配置
-const { title, description, carousel } = defaultConfig.header;
+const config = useConfig();
+
+// [修改] 使用 computed 创建一个安全的 header 配置对象
+const headerConfig = computed(() => {
+    // 当 config.value 未加载完成时，提供一个默认的结构，防止模板出错
+    return config.value?.header || {
+        title: '正在加载...',
+        description: '',
+        carousel: { images: [], duration: 5000 }
+    };
+});
+
 
 // 3. 创建一个响应式变量来追踪当前显示的图片索引
 const currentImageIndex = ref(0);
 let intervalId = null; // 用于存放定时器ID
 
-// 4. 定义组件挂载和卸载时的行为
-onMounted(() => {
-    // 确保有超过一张图片时才启动轮播
-    if (carousel && carousel.images.length > 1) {
-        // 创建一个定时器，按配置的时长循环切换图片
+// [修改] 使用 watch 替代 onMounted 来启动轮播
+watch(() => headerConfig.value.carousel, (newCarousel) => {
+    // 先清除旧的定时器，以防配置动态变化
+    clearInterval(intervalId);
+
+    // 当新的轮播配置存在，且图片数量大于1时，启动新的定时器
+    if (newCarousel && newCarousel.images.length > 1) {
         intervalId = setInterval(() => {
-            currentImageIndex.value = (currentImageIndex.value + 1) % carousel.images.length;
-        }, carousel.duration);
+            currentImageIndex.value = (currentImageIndex.value + 1) % newCarousel.images.length;
+        }, newCarousel.duration);
     }
-});
+}, { immediate: true }); // immediate: true 确保组件加载后能立即检查一次配置
 
 onUnmounted(() => {
     // 组件销毁时，清除定时器，防止内存泄漏
@@ -29,7 +41,7 @@ onUnmounted(() => {
 <template>
     <header class="app-header">
         <div class="carousel-images">
-            <div v-for="(image, index) in carousel.images" :key="image" class="carousel-image"
+            <div v-for="(image, index) in headerConfig.carousel.images" :key="image" class="carousel-image"
                 :class="{ 'is-active': index === currentImageIndex }" :style="{ backgroundImage: `url(${image})` }">
             </div>
         </div>
@@ -37,8 +49,8 @@ onUnmounted(() => {
         <div class="overlay"></div>
 
         <div class="text-container">
-            <h1>{{ title }}</h1>
-            <p>{{ description }}</p>
+            <h1>{{ headerConfig.title }}</h1>
+            <p>{{ headerConfig.description }}</p>
         </div>
     </header>
 </template>

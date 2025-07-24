@@ -1,14 +1,15 @@
 <script setup>
-    import {ref, computed, onMounted, onUnmounted, watch} from 'vue';
-    import {defaultConfig} from '../config/app.config.js';
-    import {useI18n} from 'vue-i18n';
-    const {t} = useI18n();
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useConfig } from '../composables/useConfig';
+const { t } = useI18n();
+const config = useConfig();
 
-    // [核心修正 1] 接收从 HomeView 传来的所有原始查询参数
-    const props = defineProps({
-        serverData: {
+// [核心修正 1] 接收从 HomeView 传来的所有原始查询参数
+const props = defineProps({
+    serverData: {
         type: Object,
-    required: true
+        required: true
     },
     address: String,
     port: String,
@@ -16,12 +17,12 @@
     isSrv: Boolean,
 });
 
-    const width = ref(700);
-    const height = ref(389);
-    const darkMode = ref(false);
-    const copyButtonText = ref(t("comp.embedG.copy"));
-    const previewIframe = ref(null);
-    const iconUrl = ref('');
+const width = ref(700);
+const height = ref(389);
+const darkMode = ref(false);
+const copyButtonText = ref(t("comp.embedG.copy"));
+const previewIframe = ref(null);
+const iconUrl = ref('');
 
 // watch 侦听器现在只负责同步来自服务器的 iconUrl
 watch(() => props.serverData.icon, (newIcon) => {
@@ -30,45 +31,31 @@ watch(() => props.serverData.icon, (newIcon) => {
     } else {
         iconUrl.value = '';
     }
-}, {immediate: true });
+}, { immediate: true });
 
-// [核心修正 2] 重构 embedUrl 计算属性，直接使用 props 中的原始查询参数
 const embedUrl = computed(() => {
-    if (!props.address) {
+    // 如果 props.address 或全局 config 未加载，则返回空字符串
+    if (!props.address || !config.value) {
         return '';
     }
 
-    // 使用 URLSearchParams 来干净、安全地构建查询字符串
     const params = new URLSearchParams();
     params.append('ip', props.address);
 
-    if (props.port) {
-        params.append('port', props.port);
-    }
-    if (props.serverType) {
-        params.append('stype', props.serverType);
-    }
-    // 布尔值需要显式转换为字符串
-    if (props.isSrv) {
-        params.append('srv', String(props.isSrv));
-    }
-
-    // 添加组件内部的选项
+    // ... (其他参数的 append 逻辑保持不变)
+    if (props.port) params.append('port', props.port);
+    if (props.serverType) params.append('stype', props.serverType);
+    if (props.isSrv) params.append('srv', String(props.isSrv));
     params.append('dark', String(darkMode.value));
-
     const icon = iconUrl.value;
     const isHttpUrl = (url) => url && /^https?:\/\/.+\..+/.test(url);
-    if (isHttpUrl(icon)) {
-        params.append('icon', icon);
-    }
-
+    if (isHttpUrl(icon)) params.append('icon', icon);
     params.append('source', `mc-status-${props.address}`);
 
-    const fullBaseUrl = window.location.origin + defaultConfig.embed.baseUrl;
-    console.log(`${fullBaseUrl}?${params.toString()}`);
+    // [修改] 从动态的 config.value 中获取 embed.baseUrl
+    const fullBaseUrl = window.location.origin + config.value.embed.baseUrl;
     return `${fullBaseUrl}?${params.toString()}`;
 });
-
 
 // [核心修正 3] iframeCode 也需要使用原始的 address 和 port
 const iframeCode = computed(() => {
@@ -86,7 +73,7 @@ const iframeCode = computed(() => {
     }
   });
         <\/script>`;
-        return iframeTag + scriptTag;
+    return iframeTag + scriptTag;
 });
 
 // ... (copyToClipboard 和 handleIframeMessage 等其余函数保持不变)
@@ -98,22 +85,22 @@ const copyToClipboard = () => {
         }
         return new Promise((resolve, reject) => {
             const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        try {
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
                 const ok = document.execCommand('copy');
-        document.body.removeChild(ta);
-        ok ? resolve() : reject(new Error('execCommand failed'));
+                document.body.removeChild(ta);
+                ok ? resolve() : reject(new Error('execCommand failed'));
             } catch (e) {
-            document.body.removeChild(ta);
-        reject(e);
+                document.body.removeChild(ta);
+                reject(e);
             }
         });
     };
-        copyText(iframeCode.value)
+    copyText(iframeCode.value)
         .then(() => {
             copyButtonText.value = t('comp.embedG.copyed');
             setTimeout(() => (copyButtonText.value = t("comp.embedG.copy")), 2000);
@@ -129,10 +116,10 @@ const handleIframeMessage = (event) => {
     }
 };
 onMounted(() => {
-            window.addEventListener('message', handleIframeMessage);
+    window.addEventListener('message', handleIframeMessage);
 });
 onUnmounted(() => {
-            window.removeEventListener('message', handleIframeMessage);
+    window.removeEventListener('message', handleIframeMessage);
 });
 </script>
 
@@ -148,7 +135,8 @@ onUnmounted(() => {
                 <input type="number" id="embed-width" class="form-input" v-model="width">
             </div>
             <div class="form-group">
-                <label for="embed-height">{{ $t("comp.embedG.height") }} (px) - <span class="label-hint">{{ $t("comp.embedG.autoAdjust") }}</span></label>
+                <label for="embed-height">{{ $t("comp.embedG.height") }} (px) - <span class="label-hint">{{
+                    $t("comp.embedG.autoAdjust") }}</span></label>
                 <input type="number" id="embed-height" class="form-input" v-model="height">
             </div>
             <div class="form-group icon-group">

@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted,watch } from 'vue';
-import { defaultConfig } from '../config/app.config.js';
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
 
@@ -79,15 +78,11 @@ const handleFetchData = async (payload) => {
 
 // 在 HomeView.vue 的 <script setup> 中
 watch(config, (newConfig) => {
-    // 在 watch 回调的最顶端，立刻打印收到的值！
-    console.log('[HomeView] watch 监听到 config 变化:', newConfig);
 
     // [防御性编程] 在使用 newConfig 之前，先进行严格的检查
     if (newConfig && newConfig.serverAddress && newConfig.port) {
-        console.log('配置有效，正在设置初始值并获取数据...');
         serverAddress.value = newConfig.serverAddress;
         port.value = newConfig.port;
-
         handleFetchData({
             address: serverAddress.value,
             port: port.value,
