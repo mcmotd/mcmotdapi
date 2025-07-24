@@ -14,7 +14,7 @@ const FONT_NAME = 'HYPixel';
 
 const rowTopMargins = [35, 90, 135, 185, 235, 285, 335];
 
-async function generateTextImage(bgPath, lines, color = '#ffffff'){
+async function generateTextImage(bgPath, lines, iconOptions, color = '#ffffff'){
   registerFont(FONT_FILE, { family: FONT_NAME });
   const background = await loadImage(bgPath);
   const canvas = createCanvas(background.width, background.height);
@@ -70,10 +70,10 @@ async function generateTextImage(bgPath, lines, color = '#ffffff'){
  * @param {string[]} lines 7 行文字
  * @returns {Buffer} PNG 圖片的 Buffer
  */
-async function text4img(bgPath, lines) {
+async function text4img(bgPath, lines, iconOptions) {
   if (lines.length !== 7) throw new Error('必須是 7 行文字');
 
-  return await generateTextImage(bgPath, lines);
+  return await generateTextImage(bgPath, lines, iconOptions);
 }
 
 /**
@@ -82,13 +82,13 @@ async function text4img(bgPath, lines) {
  * @param {string[]} errorMsg 
  * @returns 
  */
-async function error4img(bgPath, errorMsg) {
+async function error4img(bgPath, errorMsg, iconOptions) {
   const lines = [
     'ERROR',
     errorMsg,
   ];
 
-  return await generateTextImage(bgPath, lines, "#d64552");
+  return await generateTextImage(bgPath, lines, iconOptions, "#d64552");
 }
 
 module.exports = { text4img, error4img }
