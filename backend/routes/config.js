@@ -6,7 +6,7 @@ const fs = require('fs');
 
 router.get('/', (req, res) => {
     // 构造配置文件的绝对路径
-    const configPath = path.join(__dirname,'../','config', 'front.json');
+    const configPath = path.join(__dirname,'../', 'front.json');
 
     // 读取文件内容
     fs.readFile(configPath, 'utf8', (err, data) => {

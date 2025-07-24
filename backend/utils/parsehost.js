@@ -44,7 +44,7 @@ export default function parseHost(ip,port,host) {
 
     return {
         success: true,
-        ip,
+        ip:targetAddress,
         port: numericPort
     };
 }
