@@ -204,8 +204,6 @@ async function renderSimpleBackground(ctx, conf, data) {
         ctx.drawImage(icon, x, y, size, size);
     }
 
-    // console.log(serverData);
-
     conf.text.lines_format.forEach((format, idx) => {
         // 使用辅助函数生成最终文本
         const finalText = interpolate(format, serverData);
