@@ -14,40 +14,19 @@ const FONT_NAME = 'HYPixel';
 
 const rowTopMargins = [35, 90, 135, 185, 235, 285, 335];
 
-async function generateTextImage(bgPath, lines, iconOptions, color = '#ffffff'){
+async function generateTextImage(bgPath, lines, iconOptions, color = '#ffffff') {
   registerFont(FONT_FILE, { family: FONT_NAME });
   const background = await loadImage(bgPath);
   const canvas = createCanvas(background.width, background.height);
   const ctx = canvas.getContext('2d');
   ctx.drawImage(background, 0, 0, background.width, background.height);
 
-  // =================================================================
-  // 新增功能：如果提供了圖示選項，則繪製圖示
-  // =================================================================
   if (iconOptions && iconOptions.base64Icon && iconOptions.x !== undefined && iconOptions.y !== undefined && iconOptions.size !== undefined) {
     try {
-      // 直接從 Base64 Data URI 載入圖示
       const icon = await loadImage(iconOptions.base64Icon);
-      // 將圖示繪製到畫布的指定位置和大小
       ctx.drawImage(icon, iconOptions.x, iconOptions.y, iconOptions.size, iconOptions.size);
     } catch (error) {
-      console.error('載入或繪製 Base64 圖示時出錯:', error);
-      // 您可以選擇在這裡拋出錯誤或忽略它
-    }
-  }
-
-  // =================================================================
-  // 新增功能：如果提供了圖示選項，則繪製圖示
-  // =================================================================
-  if (iconOptions && iconOptions.base64Icon && iconOptions.x !== undefined && iconOptions.y !== undefined && iconOptions.size !== undefined) {
-    try {
-      // 直接從 Base64 Data URI 載入圖示
-      const icon = await loadImage(iconOptions.base64Icon);
-      // 將圖示繪製到畫布的指定位置和大小
-      ctx.drawImage(icon, iconOptions.x, iconOptions.y, iconOptions.size, iconOptions.size);
-    } catch (error) {
-      console.error('載入或繪製 Base64 圖示時出錯:', error);
-      // 您可以選擇在這裡拋出錯誤或忽略它
+      console.error('载入或绘制 Base64 图片时发生错误:', error);
     }
   }
 
@@ -71,7 +50,7 @@ async function generateTextImage(bgPath, lines, iconOptions, color = '#ffffff'){
  * @returns {Buffer} PNG 圖片的 Buffer
  */
 async function text4img(bgPath, lines, iconOptions) {
-  if (lines.length !== 7) throw new Error('必須是 7 行文字');
+  if (lines.length !== 7) throw new Error('必须是 7 行文字');
 
   return await generateTextImage(bgPath, lines, iconOptions);
 }
