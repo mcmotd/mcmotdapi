@@ -1,7 +1,10 @@
 <script setup>
-import { defaultConfig } from '../config/app.config.js';
+import { useConfig } from '../composables/useConfig';
 
-const contributors = defaultConfig.contributors;
+// 从配置中解构出新的对象
+const config = useConfig();
+
+const contributors = config.value.contributors;
 </script>
 
 <template>

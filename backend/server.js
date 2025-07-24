@@ -41,6 +41,7 @@ const statusImageRoute = require('./routes/status_img'); // 导入新的图片�
 const iframeImageRoute = require('./routes/iframe_img');
 const syncIframeImageRoute = require('./routes/sync_iframe_img');
 const screenshotRoute = require('./routes/screenshot');
+const configRoute = require('./routes/config');
 
 const app = express();
 const PORT = config.serverPort || 3000;
@@ -53,6 +54,7 @@ app.use('/api/status_img', statusImageRoute); // 挂载新的图片路由
 app.use('/api/iframe_img',iframeImageRoute)
 app.use('/api/sync_iframe_img',syncIframeImageRoute);
 app.use('/api/screenshot', screenshotRoute);
+app.use('/api/config', configRoute);
 
 // --- 静态文件托管与Vue Router支持 ---
 app.use(express.static(path.join(__dirname, 'dist')));

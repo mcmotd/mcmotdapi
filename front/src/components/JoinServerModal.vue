@@ -1,9 +1,11 @@
 <script setup>
-import { defaultConfig } from '../config/app.config.js';
+import { useConfig } from '../composables/useConfig';
+
 import { useI18n } from 'vue-i18n';
 
 // 获取 t 函数和当前的 locale
 const { t, locale } = useI18n();
+const config = useConfig();
 
 const props = defineProps({
     show: Boolean,
@@ -40,7 +42,7 @@ const handleJoin = () => {
 };
 
 const handleDownload = () => {
-    window.open(defaultConfig.client.downloadUrl, '_blank');
+    window.open(config.value.client.downloadUrl, '_blank');
     emit('close'); // 点击后关闭弹窗
 };
 

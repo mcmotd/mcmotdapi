@@ -4,10 +4,11 @@ import { parseMotdToHtml } from '../utils/motd-parser.js';
 import defaultIcon from '/mc.png';
 import InfoModal from './InfoModal.vue';
 import axios from 'axios';
-import { defaultConfig } from '../config/app.config.js';
+import { useConfig } from '../composables/useConfig';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const  config  = useConfig();
 
 const props = defineProps({
   serverData: {
@@ -54,26 +55,33 @@ const playerPercentage = computed(() => {
   return props.serverData.players.max > 0 ? (props.serverData.players.online / props.serverData.players.max) * 100 : 0;
 });
 
-const offlineSlogan = ref(defaultConfig.failureState.defaultSlogan);
+const offlineSlogan = ref('');
 const dynamicMotd = ref(null);
 let motdUpdateInterval = null;
 
 
 const fetchSlogan = async () => {
+  if (!config.value?.failureState?.sloganApi) return;
   try {
-    const response = await axios.get(defaultConfig.failureState.sloganApi);
-
-    // API 返回纯文本，直接赋值
+    const response = await axios.get(config.value.failureState.sloganApi);
     offlineSlogan.value = response.data;
     console.log('Slogan fetched:', offlineSlogan.value);
 
   } catch (error) {
     // 这里会立刻捕获到 CORS 错误
     console.error("获取离线标语失败 (CORS Error):", error);
-    offlineSlogan.value = defaultConfig.failureState.defaultSlogan;
+    offlineSlogan.value = config.value.failureState.defaultSlogan;
   }
 };
-fetchSlogan();
+
+
+watch(config, (newConfig) => {
+  if (newConfig) {
+    // 当配置加载完成后，设置默认标语并尝试获取新标语
+    offlineSlogan.value = newConfig.failureState.defaultSlogan;
+    fetchSlogan();
+  }
+}, { immediate: true });
 
 const fetchLatestMotd = async () => {
   if (isOffline.value || !props.serverData?.host) return;
@@ -144,7 +152,7 @@ onUnmounted(() => {
       <template v-else>
         <div v-if="isOffline" class="offline-container" @click="$emit('card-click')">
           <span class="offline-slogan">{{ offlineSlogan }}</span>
-          <span class="offline-subtext">{{ defaultConfig.failureState.subtext }}</span>
+          <span class="offline-subtext">{{ config?.failureState?.subtext }}</span>
         </div>
 
         <template v-else>

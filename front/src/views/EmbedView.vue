@@ -2,7 +2,6 @@
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
-import { defaultConfig } from '../config/app.config.js';
 import ServerStatusDisplay from '../components/ServerStatusDisplay.vue';
 import { useI18n } from 'vue-i18n';
 
@@ -51,7 +50,7 @@ const fetchData = async () => {
         return;
     }
     try {
-        const apiUrl = `${defaultConfig.api.baseUrl}/status`;
+        const apiUrl = `/api/status`;
         const response = await axios.get(apiUrl, {
             params: { ip: serverIp, port: serverPort, icon,stype:serverType, srv: isSrv }
         });
@@ -135,6 +134,10 @@ watch(data, () => {
     height: 100%;
     /* 使用 height 替代 min-height */
     box-sizing: border-box;
+}
+
+.embed-wrapper.dark-theme {
+    background-color: var(--card-background);
 }
 
 /* message-box 的样式保持不变，它只在加载和错误时出现 */

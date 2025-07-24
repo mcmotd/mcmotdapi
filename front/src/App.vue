@@ -1,11 +1,9 @@
 <script setup>
-import { RouterView } from 'vue-router';
+import ConfigProvider from './components/ConfigProvider.vue';
 </script>
 
 <template>
-  <RouterView />
+  <ConfigProvider>
+    <router-view />
+  </ConfigProvider>
 </template>
-
-<style scoped>
-/* 这个文件通常不需要太多样式 */
-</style>

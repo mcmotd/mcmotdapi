@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 // 1. 引入 node-canvas 的主要功能
 const { createCanvas, loadImage, registerFont } = require('canvas');
-const {customsFont} = require("../config.json")
+const { customsFont } = require("../config.json")
 
 const W = 640;
 const H = 360;
@@ -20,6 +20,36 @@ async function generateTextImage(bgPath, lines, color = '#ffffff'){
   const canvas = createCanvas(background.width, background.height);
   const ctx = canvas.getContext('2d');
   ctx.drawImage(background, 0, 0, background.width, background.height);
+
+  // =================================================================
+  // 新增功能：如果提供了圖示選項，則繪製圖示
+  // =================================================================
+  if (iconOptions && iconOptions.base64Icon && iconOptions.x !== undefined && iconOptions.y !== undefined && iconOptions.size !== undefined) {
+    try {
+      // 直接從 Base64 Data URI 載入圖示
+      const icon = await loadImage(iconOptions.base64Icon);
+      // 將圖示繪製到畫布的指定位置和大小
+      ctx.drawImage(icon, iconOptions.x, iconOptions.y, iconOptions.size, iconOptions.size);
+    } catch (error) {
+      console.error('載入或繪製 Base64 圖示時出錯:', error);
+      // 您可以選擇在這裡拋出錯誤或忽略它
+    }
+  }
+
+  // =================================================================
+  // 新增功能：如果提供了圖示選項，則繪製圖示
+  // =================================================================
+  if (iconOptions && iconOptions.base64Icon && iconOptions.x !== undefined && iconOptions.y !== undefined && iconOptions.size !== undefined) {
+    try {
+      // 直接從 Base64 Data URI 載入圖示
+      const icon = await loadImage(iconOptions.base64Icon);
+      // 將圖示繪製到畫布的指定位置和大小
+      ctx.drawImage(icon, iconOptions.x, iconOptions.y, iconOptions.size, iconOptions.size);
+    } catch (error) {
+      console.error('載入或繪製 Base64 圖示時出錯:', error);
+      // 您可以選擇在這裡拋出錯誤或忽略它
+    }
+  }
 
   lines.forEach((txt, idx) => {
     const fontSize = idx === 0 ? 24 : 35; // 字號
