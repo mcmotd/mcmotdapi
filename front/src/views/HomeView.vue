@@ -15,6 +15,7 @@ import ImageLinkGenerator from '../components/ImageLinkGenerator.vue';
 import JoinServerModal from '../components/JoinServerModal.vue';
 import Contributors from '../components/Contributors.vue';
 import { useConfig } from '../composables/useConfig';
+import SideMenu from '../components/SideMenu.vue';
 
 const config = useConfig();
 
@@ -130,6 +131,7 @@ watch(config, (newConfig) => {
         </div>
         <AppFooter />
         <JoinServerModal :show="isJoinModalVisible" :server-data="data" @close="isJoinModalVisible = false" />
+        <SideMenu />
     </div>
 </template>
 
