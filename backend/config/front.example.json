@@ -19,6 +19,19 @@
     "api": {
         "baseUrl": "/api"
     },
+    "image_generator": {
+        "default_theme": "simple",
+        "themes": [
+            {
+                "name": "简约背景",
+                "value": "simple"
+            },
+            {
+                "name": "暗色科技",
+                "value": "dark_tech"
+            }
+        ]
+    },
     "footer": {
         "developer": {
             "name": "Sbaoor",
