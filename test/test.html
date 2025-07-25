@@ -76,12 +76,22 @@
         <div class="iframe-wrapper">
             <h2>测试 1：查询默认BE服务器 (亮色模式)</h2>
             <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
-            <iframe id="mc-status-play.easecation.net" class="responsive-iframe" frameborder="0" width="700"
+            <!-- <iframe id="mc-status-play.easecation.net" class="responsive-iframe" frameborder="0" width="700"
                 height="427" scrolling="no"
                 src="http://localhost:3123/iframe?ip=play.easecation.net&port=19132&dark=false&source=mc-status-play.easecation.net"></iframe>
             <script>
                 window.addEventListener('message', function (event) {
                     var iframe = document.getElementById('mc-status-play.easecation.net');
+                    if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
+                        iframe.style.height = event.data.height + 'px';
+                    }
+                });
+            </script> -->
+            <iframe id="mc-status-play-easecation-net-19132"  class="responsive-iframe" frameborder="0" width="700" style="max-width:100%;" scrolling="no"
+                src="http://localhost:5173/iframe?ip=play.easecation.net&port=19132&stype=auto&dark=false&source=mc-status-play.easecation.net"></iframe>
+            <script>
+                window.addEventListener('message', function (event) {
+                    var iframe = document.getElementById('mc-status-play-easecation-net-19132');
                     if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
                         iframe.style.height = event.data.height + 'px';
                     }

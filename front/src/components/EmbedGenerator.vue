@@ -19,7 +19,7 @@ const props = defineProps({
 // --- 状态 ---
 const width = ref(700);
 // [移除] height 和相关的 postMessage 逻辑不再需要
-// const height = ref(389); 
+const height = ref(389);
 const darkMode = ref(false);
 const copyButtonText = ref(t("comp.embedG.copy"));
 const iconUrl = ref('');
@@ -57,12 +57,30 @@ const embedUrl = computed(() => {
 
 
 // iframeCode 计算属性逻辑不变
+// const iframeCode = computed(() => {
+//     if (!embedUrl.value) return '';
+//     // ... (此部分逻辑不变)
+//     const uniqueId = `${props.address}-${props.port || ''}`.replace(/[:.]/g, '-');
+//     const iframeId = `mc-status-${uniqueId}`;
+//     const iframeTag = `<iframe id="${iframeId}" frameborder="0" width="${width.value}" style="max-width:100%;" scrolling="no" src="${embedUrl.value}"></iframe>`;
+//     const scriptTag = `
+//     <script>
+//         window.addEventListener('message', function(event) {
+//             var iframe = document.getElementById('${iframeId}');
+//             if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
+//                 iframe.style.height = event.data.height + 'px';
+//             }
+//         });
+//     <\/script>`;
+//     return iframeTag + scriptTag;
+// });
+
 const iframeCode = computed(() => {
     if (!embedUrl.value) return '';
-    // ... (此部分逻辑不变)
     const uniqueId = `${props.address}-${props.port || ''}`.replace(/[:.]/g, '-');
     const iframeId = `mc-status-${uniqueId}`;
-    const iframeTag = `<iframe id="${iframeId}" frameborder="0" width="${width.value}" style="max-width:100%;" scrolling="no" src="${embedUrl.value}"></iframe>`;
+    // [修改] 添加 height 属性，并使用 width.value 和 height.value
+    const iframeTag = `<iframe id="${iframeId}" frameborder="0" width="${width.value}" height="${height.value}" style="max-width:100%;" scrolling="no" src="${embedUrl.value}"></iframe>`;
     const scriptTag = `
     <script>
         window.addEventListener('message', function(event) {
@@ -74,6 +92,7 @@ const iframeCode = computed(() => {
     <\/script>`;
     return iframeTag + scriptTag;
 });
+
 
 // --- 方法 & 生命周期钩子 ---
 
