@@ -40,7 +40,8 @@
             "copyFailed": "Replication failed",
             "title": "Generate a link to the status image",
             "description": "Copy the link below and you can use it in your forum signature file or Markdown document.",
-            "preview": "Image preview"
+            "preview": "Image preview",
+            "theme":"theme"
         },
         "joinM": {
             "title": "Joining Server",
