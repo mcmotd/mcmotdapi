@@ -48,29 +48,33 @@ function interpolate(format, data) {
  * @returns {object} - 混合了特殊字段的新数据对象
  */
 function processSpecialFields(serverData) {
-    const processedData = { ...serverData };
-    const specialConf = config.special_fields;
+    try{
+        const processedData = { ...serverData };
+        const specialConf = config.special_fields;
 
-    if (!specialConf) return processedData;
+        if (!specialConf) return processedData;
 
-    // 1. 处理 MOTD 截断
-    if (specialConf.motd_truncate) {
-        const conf = specialConf.motd_truncate;
-        const sourceText = processedData[conf.source_key] || '';
-        if (sourceText.length >= conf.max_length) {
-            processedData.motd_truncate = sourceText.substring(0, conf.max_length) + conf.ellipsis;
-        } else {
-            processedData.motd_truncate = sourceText;
+        // 1. 处理 MOTD 截断
+        if (specialConf.motd_truncate) {
+            const conf = specialConf.motd_truncate;
+            const sourceText = processedData[conf.source_key] || '';
+            if (sourceText.length >= conf.max_length) {
+                processedData.motd_truncate = sourceText.substring(0, conf.max_length) + conf.ellipsis;
+            } else {
+                processedData.motd_truncate = sourceText;
+            }
         }
-    }
 
-    // 2. 处理时间戳
-    if (specialConf.timestamp) {
-        const conf = specialConf.timestamp;
-        processedData.timestamp = new Date().toLocaleString(conf.locale, conf.options);
-    }
+        // 2. 处理时间戳
+        if (specialConf.timestamp) {
+            const conf = specialConf.timestamp;
+            processedData.timestamp = new Date().toLocaleString(conf.locale, conf.options);
+        }
 
-    return processedData;
+        return processedData;
+    }catch(e){
+        console.error(e);   
+    }
 }
 
 
@@ -98,8 +102,6 @@ async function generateImage(templateName, data) {
         default:
             throw new Error(`不支持的模板: ${templateName}`);
     }
-
-    console.log('开始生成图片...');
 
     return canvas.toBuffer('image/png');
 }
@@ -130,7 +132,7 @@ async function renderDarkTech(ctx, conf, serverData) {
 
     ctx.save();
     const lightConf = conf.status_light;
-    ctx.fillStyle = serverData.isOnline ? lightConf.color_online : lightConf.color_offline;
+    ctx.fillStyle = serverData.status == 'online'? lightConf.color_online : lightConf.color_offline;
     ctx.shadowColor = ctx.fillStyle;
     ctx.shadowBlur = lightConf.shadow_blur;
     ctx.beginPath();
@@ -156,7 +158,7 @@ async function renderDarkTech(ctx, conf, serverData) {
             }
             case 'progress_bar': {
                 const barConf = conf.progress_bar;
-                const playerText = `${serverData.currentPlayers} / ${serverData.maxPlayers}`;
+                const playerText = `${serverData.players.online} / ${serverData.players.max}`;
 
                 // 绘制标签
                 ctx.fillText(line.label, textConf.start_position.x, currentY);
@@ -168,7 +170,7 @@ async function renderDarkTech(ctx, conf, serverData) {
                 ctx.fillStyle = barConf.bg_color;
                 ctx.fillRect(progressBarX, currentY - barConf.height + 5, barConf.width, barConf.height);
 
-                const progress = serverData.currentPlayers / serverData.maxPlayers;
+                const progress = serverData.players.online / serverData.players.max;
                 ctx.fillStyle = barConf.fill_color;
                 ctx.fillRect(progressBarX, currentY - barConf.height + 5, barConf.width * progress, barConf.height);
 

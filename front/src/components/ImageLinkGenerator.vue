@@ -1,9 +1,13 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+// [新增] 引入 useConfig Hook
+import { useConfig } from '../composables/useConfig';
 
+const { t } = useI18n();
+// [新增] 获取全局配置
+const config = useConfig();
 // 获取 t 函数和当前的 locale
-const { t, locale } = useI18n();
 const props = defineProps({
     serverData: {
         type: Object,
@@ -22,30 +26,38 @@ const props = defineProps({
 const copyButtonText = ref(t('comp.imgG.copy'));
 const imageUrl = ref('');
 
-// [核心改动 2] 侦听所有相关的 props，而不仅仅是 serverData
-watch(() => [props.address, props.port, props.serverType, props.isSrv], () => {
-    if (!props.address) {
+// [新增] 存储当前选中的主题
+const selectedTheme = ref('');
+
+// [新增] 从全局配置中安全地获取可用主题列表
+const availableThemes = computed(() => config.value?.image_generator?.themes || []);
+
+// [新增] 监听配置加载，设置默认主题
+watch(config, (newConfig) => {
+    if (newConfig?.image_generator?.default_theme) {
+        selectedTheme.value = newConfig.image_generator.default_theme;
+    }
+}, { immediate: true });
+
+
+// [修改] 侦听所有会影响 URL 的 props 和新加的 selectedTheme
+watch(() => [props.address, props.port, props.serverType, props.isSrv, selectedTheme.value], () => {
+    if (!props.address || !selectedTheme.value) {
         imageUrl.value = '';
         return;
     }
 
-    // [核心改动 3] 使用 URLSearchParams 来构建包含所有参数的 URL
     const params = new URLSearchParams();
     params.append('ip', props.address);
-    if (props.port) {
-        params.append('port', props.port);
-    }
-    if (props.serverType) {
-        params.append('stype', props.serverType);
-    }
-    if (props.isSrv) {
-        params.append('srv', Boolean(props.isSrv == true));
-    }
+    if (props.port) params.append('port', props.port);
+    if (props.serverType) params.append('stype', props.serverType);
+    if (props.isSrv) params.append('srv', String(props.isSrv));
+    // [新增] 将选中的主题作为 template 参数添加到 URL 中
+    params.append('template', selectedTheme.value);
 
     imageUrl.value = `/api/status_img?${params.toString()}`;
 
 }, { immediate: true, deep: true });
-
 
 const copyToClipboard = () => {
     // ... (复制逻辑保持不变)
@@ -88,15 +100,24 @@ const copyToClipboard = () => {
         <h3>{{ $t('comp.imgG.title') }}</h3>
         <p class="description">{{ $t('comp.imgG.description') }}</p>
 
+        <div class="form-group theme-selector">
+            <label for="theme-select">{{ $t('comp.imgG.theme') }}</label>
+            <select id="theme-select" class="form-input" v-model="selectedTheme">
+                <option v-for="theme in availableThemes" :key="theme.value" :value="theme.value">
+                    {{ theme.name }}
+                </option>
+            </select>
+        </div>
+
         <div class="input-with-button">
-            <input type="text" class="form-input" v-model="imageUrl">
+            <input type="text" readonly class="form-input" :value="imageUrl">
             <button class="btn btn-copy-link" @click="copyToClipboard">{{ copyButtonText }}</button>
         </div>
 
         <div class="preview-area">
             <h4>{{ $t('comp.imgG.preview') }}</h4>
             <div class="image-container" :class="{ 'is-loading': loading }">
-                <img v-if="imageUrl" :src="imageUrl" alt="Server Status Image" class="status-image">
+                <img v-if="imageUrl" :src="imageUrl" :key="imageUrl" alt="Server Status Image" class="status-image">
             </div>
         </div>
     </div>
@@ -203,6 +224,55 @@ h4 {
     border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
+}
+
+/* --- [核心修改] 表单和输入框样式 --- */
+.form-group {
+    margin-bottom: 2rem;
+}
+
+label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* 通用输入框样式 */
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    /* 为所有输入框添加圆角 */
+    font-size: 1rem;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-shadow);
+}
+
+/* [新增] 专门针对 select 下拉框的样式优化 */
+select.form-input {
+    /* 1. 移除浏览器默认的下拉箭头 */
+    -webkit-appearance: none;
+    appearance: none;
+
+    /* 2. 添加自定义的箭头图标 (使用内联 SVG) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+
+    /* 3. 定位自定义箭头，让它离右边框有合适的距离 */
+    background-position: right 1rem center;
+
+    /* 4. 增加右侧内边距，防止文字和箭头重叠 */
+    padding-right: 2.5rem;
+
+    cursor: pointer;
 }
 
 @keyframes spin {

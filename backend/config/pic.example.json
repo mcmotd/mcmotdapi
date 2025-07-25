@@ -4,6 +4,24 @@
         "path": "./HYPixel.ttf",
         "name": "HYPixel"
     },
+    "special_fields": {
+        "motd_truncate": {
+            "source_key": "pureMotd",
+            "max_length": 13,
+            "ellipsis": "..."
+        },
+        "timestamp": {
+            "locale": "zh-CN",
+            "options": {
+                "year": "numeric",
+                "month": "2-digit",
+                "day": "2-digit",
+                "hour": "2-digit",
+                "minute": "2-digit",
+                "second": "2-digit"
+            }
+        }
+    },
     "templates": {
         "dark_tech": {
             "width": 640,
@@ -42,38 +60,46 @@
                 "color_online": "#4caf50",
                 "color_offline": "#f44336"
             },
-            "lines": [
-                {
-                    "type": "text",
-                    "y_offset": 0,
-                    "format": "服务器地址: {serverAddress}"
+            "info_text": {
+                "font_size": 22,
+                "color": "#cceae7",
+                "start_position": {
+                    "x": 30,
+                    "y": 110
                 },
-                {
-                    "type": "text",
-                    "y_offset": 42,
-                    "format": "游戏版本: {version}"
-                },
-                {
-                    "type": "progress_bar",
-                    "y_offset": 84,
-                    "label": "在线玩家:"
-                },
-                {
-                    "type": "text",
-                    "y_offset": 126,
-                    "format": "网络延迟: {latency}ms"
-                },
-                {
-                    "type": "text",
-                    "y_offset": 168,
-                    "format": "当前地图: {worldName}"
-                },
-                {
-                    "type": "text",
-                    "y_offset": 210,
-                    "format": "MOTD: {motd}"
-                }
-            ],
+                "lines": [
+                    {
+                        "type": "text",
+                        "y_offset": 0,
+                        "format": "协议: {protocol}"
+                    },
+                    {
+                        "type": "text",
+                        "y_offset": 42,
+                        "format": "游戏版本: {version}"
+                    },
+                    {
+                        "type": "progress_bar",
+                        "y_offset": 84,
+                        "label": "在线玩家:"
+                    },
+                    {
+                        "type": "text",
+                        "y_offset": 126,
+                        "format": "网络延迟: {delay}ms"
+                    },
+                    {
+                        "type": "text",
+                        "y_offset": 168,
+                        "format": "MOTD: {motd_truncate}"
+                    },
+                    {
+                        "type": "text",
+                        "y_offset": 210,
+                        "format": "查询时间: {timestamp}"
+                    }
+                ]
+            },
             "progress_bar": {
                 "height": 20,
                 "width": 250,
@@ -89,13 +115,13 @@
             "default_background_path": "./img/status_img.png",
             "text": {
                 "lines_format": [
-                    "MOTD: {motd}",
-                    "服务器地址: {serverAddress}",
-                    "游戏版本: {version}",
-                    "在线玩家: {currentPlayers} / {maxPlayers}",
-                    "网络延迟: {latency}ms",
-                    "游戏模式: {gamemode}",
-                    "当前地图: {worldName}"
+                    "状态: {type} - 在线",
+                    "协议: {protocol}",
+                    "MOTD: {motd_truncate}",
+                    "玩家: {players.online} / {players.max}",
+                    "网络延迟: {delay}ms",
+                    "版本: {version}",
+                    "查询时间: {timestamp}"
                 ],
                 "left_margin": 30,
                 "row_top_margins": [
