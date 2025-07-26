@@ -78,6 +78,21 @@ function processSpecialFields(serverData) {
 }
 
 
+function drawRoundRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+}
+
+
 async function generateImage(templateName, data) {
     const templateConfig = config.templates[templateName];
     if (!templateConfig) throw new Error(`模板 "${templateName}" 在配置文件中未找到。`);
@@ -99,13 +114,16 @@ async function generateImage(templateName, data) {
         case 'simple':
             await renderSimpleBackground(ctx, templateConfig, finalData);
             break;
+        case 'glass_card':
+            await renderGlassCard(ctx,templateConfig, finalData.serverData);
+            break;
         default:
             throw new Error(`不支持的模板: ${templateName}`);
     }
 
+
     return canvas.toBuffer('image/png');
 }
-
 // --- 模板渲染函数 ---
 
 /**
@@ -219,4 +237,102 @@ async function renderSimpleBackground(ctx, conf, data) {
     });
 }
 
+async function renderGlassCard(ctx, conf, serverData) {
+    // 1. 绘制背景和毛玻璃面板
+    ctx.fillStyle = conf.background.color;
+    ctx.fillRect(0, 0, conf.width, conf.height);
+
+    const glassWidth = conf.width - (conf.glass.margin * 2);
+    const glassHeight = conf.height - (conf.glass.margin * 2);
+    drawRoundRect(ctx, conf.glass.margin, conf.glass.margin, glassWidth, glassHeight, conf.glass.corner_radius);
+    ctx.fillStyle = conf.glass.fill_color;
+    ctx.fill();
+    ctx.strokeStyle = conf.glass.border_color;
+    ctx.lineWidth = conf.glass.border_width;
+    ctx.stroke();
+
+    // --- 2. 绘制内容 ---
+    const contentX = conf.glass.margin + conf.glass.padding;
+    const contentWidth = glassWidth - (conf.glass.padding * 2);
+    let currentY = conf.glass.margin + conf.glass.padding;
+
+    // 2.1 绘制主视觉区 (图标, MOTD, 玩家信息)
+    const mainConf = conf.main_section;
+    ctx.textAlign = 'center';
+
+    if (serverData.icon) {
+        const iconX = conf.width / 2 - mainConf.icon.size / 2;
+        try {
+            const iconPath = path.isAbsolute(serverData.icon) ? serverData.icon : path.join(__dirname, '../', serverData.icon);
+            const icon = await loadImage(iconPath);
+            ctx.drawImage(icon, iconX, currentY, mainConf.icon.size, mainConf.icon.size);
+        } catch (e) { console.error("加载图标失败:", e.message); }
+        currentY += mainConf.icon.size;
+    }
+
+    currentY += mainConf.motd.margin_top;
+    ctx.font = `${mainConf.motd.font_weight || ''} ${mainConf.motd.font_size}px "${config.font.name}"`;
+    ctx.fillStyle = mainConf.motd.color;
+    ctx.fillText(interpolate("{motd}", serverData), conf.width / 2, currentY, contentWidth);
+    currentY += mainConf.motd.font_size;
+
+    currentY += mainConf.players.margin_top;
+    ctx.font = `${mainConf.players.font_size}px "${config.font.name}"`;
+    ctx.fillStyle = mainConf.players.color;
+    ctx.fillText(interpolate("{players.online} / {players.max}", serverData), conf.width / 2, currentY);
+
+    currentY += mainConf.progress_bar.margin_top;
+    const barConf = mainConf.progress_bar;
+    const progressBarWidth = contentWidth * barConf.width_ratio;
+    const progressBarX = conf.width / 2 - progressBarWidth / 2;
+    ctx.fillStyle = barConf.bg;
+    ctx.fillRect(progressBarX, currentY, progressBarWidth, barConf.height);
+    const progress = (serverData.players.online / serverData.players.max) || 0;
+    ctx.fillStyle = barConf.fill;
+    ctx.fillRect(progressBarX, currentY, progressBarWidth * progress, barConf.height);
+
+    // 2.2 绘制分割线
+    const divConf = conf.divider;
+    currentY += divConf.margin_y;
+    ctx.fillStyle = divConf.color;
+    ctx.fillRect(contentX, currentY, contentWidth, divConf.height);
+    currentY += divConf.margin_y;
+
+    // 2.3 绘制详细信息区 (两列布局)
+    const infoConf = conf.info_section;
+    ctx.font = `${infoConf.font_size}px "${config.font.name}"`;
+
+    const validInfoFields = infoConf.fields.filter(field => serverData[field.key] !== undefined);
+    const midPoint = Math.ceil(validInfoFields.length / 2);
+    const leftFields = validInfoFields.slice(0, midPoint);
+    const rightFields = validInfoFields.slice(midPoint);
+
+    const columnWidth = contentWidth / 2;
+    const leftColumnX = contentX;
+    const rightColumnX = contentX + columnWidth;
+
+    for (let i = 0; i < midPoint; i++) {
+        const rowY = currentY + i * infoConf.line_height;
+
+        if (leftFields[i]) {
+            ctx.textAlign = 'left';
+            ctx.fillStyle = infoConf.label_color;
+            ctx.fillText(leftFields[i].label, leftColumnX, rowY);
+            ctx.textAlign = 'right';
+            ctx.fillStyle = infoConf.value_color;
+            let value = interpolate(`{${leftFields[i].key}}`, serverData) + (leftFields[i].suffix || '');
+            ctx.fillText(value, leftColumnX + columnWidth - conf.glass.padding, rowY);
+        }
+
+        if (rightFields[i]) {
+            ctx.textAlign = 'left';
+            ctx.fillStyle = infoConf.label_color;
+            ctx.fillText(rightFields[i].label, rightColumnX + conf.glass.padding, rowY);
+            ctx.textAlign = 'right';
+            ctx.fillStyle = infoConf.value_color;
+            let value = interpolate(`{${rightFields[i].key}}`, serverData) + (rightFields[i].suffix || '');
+            ctx.fillText(value, rightColumnX + columnWidth, rowY);
+        }
+    }
+}
 module.exports = { generateImage };

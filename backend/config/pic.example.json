@@ -23,6 +23,74 @@
         }
     },
     "templates": {
+        "glass_card": {
+            "width": 500,
+            "height": 320,
+            "background": {
+                "color": "#0f172a"
+            },
+            "glass": {
+                "margin": 10,
+                "fill_color": "rgba(255, 255, 255, 0.15)",
+                "border_color": "rgba(255, 255, 255, 0.3)",
+                "border_width": 1.5,
+                "corner_radius": 20,
+                "padding": 24
+            },
+            "main_section": {
+                "icon": {
+                    "size": 64
+                },
+                "motd": {
+                    "font_size": 24,
+                    "font_weight": "bold",
+                    "color": "#ffffff",
+                    "margin_top": 16
+                },
+                "players": {
+                    "font_size": 18,
+                    "color": "#cbd5e1",
+                    "margin_top": 12
+                },
+                "progress_bar": {
+                    "height": 6,
+                    "width_ratio": 0.6,
+                    "bg": "rgba(0, 0, 0, 0.3)",
+                    "fill": "#00dc82",
+                    "margin_top": 16
+                }
+            },
+            "divider": {
+                "color": "rgba(255, 255, 255, 0.2)",
+                "height": 1,
+                "margin_y": 24
+            },
+            "info_section": {
+                "font_size": 16,
+                "line_height": 32,
+                "label_color": "#94a3b8",
+                "value_color": "#f1f5f9",
+                "fields": [
+                    {
+                        "key": "version",
+                        "label": "版本"
+                    },
+                    {
+                        "key": "type",
+                        "label": "类型"
+                    },
+                    {
+                        "key": "latency",
+                        "label": "延迟",
+                        "suffix": "ms"
+                    },
+                    {
+                        "key": "protocol",
+                        "label": "协议"
+                    }
+                ]
+            }
+        },
         "dark_tech": {
             "width": 640,
             "height": 360,
