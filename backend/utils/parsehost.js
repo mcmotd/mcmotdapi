@@ -3,29 +3,33 @@ export default function parseHost(ip, port, host) {
     let targetPort = null;
 
     if (host) {
-        // [核心修改] 增强对 IPv6 和其他格式的解析能力
-        const ipv6WithPortMatch = host.match(/^\[(.+)\]:(\d+)$/);
+        // [优化] 增强对 IPv6 和其他格式的解析能力
+        const ipv6WithPortMatch = host.trim().match(/^\[(.+)\]:(\d+)$/);
 
         if (ipv6WithPortMatch) {
             // 匹配到 [IPv6]:port 格式, e.g., "[2001:db8::1]:25565"
             targetAddress = ipv6WithPortMatch[1];
             targetPort = ipv6WithPortMatch[2];
         } else {
-            // 处理 IPv4/域名 + 端口，或纯地址
-            const lastColonIndex = host.lastIndexOf(':');
-            const firstColonIndex = host.indexOf(':');
+            const trimmedHost = host.trim();
+            const lastColonIndex = trimmedHost.lastIndexOf(':');
+            const firstColonIndex = trimmedHost.indexOf(':');
 
-            // 如果存在冒号，并且它不是 IPv6 地址的一部分 (即只有一个冒号)
-            if (lastColonIndex > -1 && lastColonIndex === firstColonIndex) {
-                targetAddress = host.substring(0, lastColonIndex);
-                targetPort = host.substring(lastColonIndex + 1);
-            } else if (lastColonIndex > -1 && host.includes('.')) {
-                // 兼容域名/IPv4后跟端口的情况，例如 example.com:25565
-                targetAddress = host.substring(0, lastColonIndex);
-                targetPort = host.substring(lastColonIndex + 1);
+            // 检查是否为带端口的 IPv4/域名，或不含端口的地址
+            if (lastColonIndex > -1 && lastColonIndex > trimmedHost.lastIndexOf(']')) {
+                // 冒号在IPv6的 "]" 之后，或者地址中不含 "]"
+                // 并且它不是IPv6地址的一部分（即只有一个冒号，或者包含"."）
+                if (lastColonIndex === firstColonIndex || trimmedHost.includes('.')) {
+                    targetAddress = trimmedHost.substring(0, lastColonIndex);
+                    targetPort = trimmedHost.substring(lastColonIndex + 1);
+                } else {
+                    // 认为是纯IPv6地址
+                    targetAddress = trimmedHost;
+                    targetPort = null;
+                }
             } else {
-                // 不包含端口的地址 (域名, IPv4, 或纯 IPv6)
-                targetAddress = host;
+                // 不包含端口的地址
+                targetAddress = trimmedHost;
                 targetPort = null;
             }
         }
@@ -33,6 +37,11 @@ export default function parseHost(ip, port, host) {
     else if (ip) {
         targetAddress = ip;
         targetPort = port;
+    }
+
+    // [核心修复] 在返回前，对最终的地址进行 trim() 操作
+    if (targetAddress) {
+        targetAddress = targetAddress.trim();
     }
 
     if (!targetAddress) {
@@ -45,7 +54,6 @@ export default function parseHost(ip, port, host) {
     let numericPort = undefined;
 
     if (targetPort) {
-        // 端口验证逻辑保持不变，它已经很健壮了
         const parsedPort = parseInt(targetPort, 10);
         if (Number.isNaN(parsedPort) || parsedPort < 1 || parsedPort > 65535 || String(parsedPort) !== targetPort.trim()) {
             return {

@@ -10,9 +10,9 @@ const Logger = require('../utils/logger');
 
 router.get('/', async (req, res) => {
     const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
-    var { ip, port, host, stype, icon, srv,template:template } = req.query;
-    if(!template){
-        template = 'simple';
+    var { ip, port, host, stype, icon, srv,theme:theme } = req.query;
+    if(!theme){
+        theme = 'simple';
     }
     let pre_host = parseHost(ip, port, host);
 
@@ -66,7 +66,7 @@ router.get('/', async (req, res) => {
                 size: 100
             }
         };
-        const pngBuffer = await generateImage(template, simpleData);
+        const pngBuffer = await generateImage(theme, simpleData);
 
 
         return res.send(pngBuffer);

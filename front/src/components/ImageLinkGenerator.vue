@@ -53,7 +53,7 @@ watch(() => [props.address, props.port, props.serverType, props.isSrv, selectedT
     if (props.serverType) params.append('stype', props.serverType);
     if (props.isSrv) params.append('srv', String(props.isSrv));
     // [新增] 将选中的主题作为 template 参数添加到 URL 中
-    params.append('template', selectedTheme.value);
+    params.append('theme', selectedTheme.value);
 
     imageUrl.value = `/api/status_img?${params.toString()}`;
 
