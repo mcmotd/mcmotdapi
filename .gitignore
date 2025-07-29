@@ -2,6 +2,7 @@
 backend/config.json
 backend/front.json
 backend/pic.json
+*.zip
 # Logs
 logs
 *.log
