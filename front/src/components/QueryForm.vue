@@ -1,5 +1,5 @@
 <script setup>
-import { ref,watch } from 'vue';
+import { ref,watch,computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 // 获取 t 函数
@@ -20,12 +20,13 @@ const port = ref(props.initialPort);
 const serverType = ref('auto');
 
 // [核心改动 2] 定义查询选项，用于下拉框
-const queryOptions = [
+const queryOptions = computed(() => [
     { value: 'auto', text: t('comp.queryF.typeAuto') },
     { value: 'je', text: t('comp.queryF.typeJava') },
     { value: 'be', text: t('comp.queryF.typeBedrock') },
     { value: 'srv', text: t('comp.queryF.typeSrv') },
-];
+]);
+
 
 watch(serverType, (newType) => {
     if (newType === 'srv') {

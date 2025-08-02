@@ -23,7 +23,7 @@ const props = defineProps({
     isSrv: Boolean,
 });
 
-const copyButtonText = ref(t('comp.imgG.copy'));
+const copyButtonText = computed(() => t('comp.imgG.copy'));
 const imageUrl = ref('');
 
 // [新增] 存储当前选中的主题
