@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 // 1. 引入 node-canvas 的主要功能
 const { createCanvas, loadImage, registerFont } = require('canvas');
-const { customsFont } = require("../config.json")
+const { customsFont } = require("../config/config.json")
 
 const W = 640;
 const H = 360;

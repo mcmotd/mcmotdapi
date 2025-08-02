@@ -29,6 +29,8 @@ COPY backend/package-lock.json ./
 # 步骤 2: 在一个 RUN 指令中，完成安装依赖、编译、清理
 # 由于上一步 COPY 了 package.json，现在容器内可以找到它们了。
 RUN \
+    sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && \
+    \
     # 安装 node-canvas 的【运行时】依赖，这些必须保留
     apk add --no-cache cairo jpeg pango giflib \
     \
@@ -36,7 +38,7 @@ RUN \
     && apk add --no-cache --virtual .build-deps build-base g++ python3 cairo-dev jpeg-dev pango-dev giflib-dev \
     \
     # 执行 npm install
-    && npm install --omit=dev \
+    && npm install --omit=dev --registry=https://registry.npmmirror.com \
     \
     # [关键] 删除所有编译时的依赖和缓存，为镜像瘦身
     && apk del .build-deps \

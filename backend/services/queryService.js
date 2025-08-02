@@ -1,4 +1,4 @@
-const config = require('../config.json');
+const config = require('../config/config.json');
 const PingMCServer = require("../utils/java").fetch;
 const pingBedrock = require('../utils/bedrock');
 const Logger = require('../utils/logger');

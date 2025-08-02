@@ -6,15 +6,18 @@ const fs = require('fs');
 
 
 // --- [核心改动] 配置文件自动创建逻辑 ---
-const configPath = path.join(__dirname, 'config.json');
-const frontPath = path.join(__dirname, 'front.json');
-const picPath = path.join(__dirname, 'pic.json');
+const configPath = path.join(__dirname, 'config','config.json');
+const frontPath = path.join(__dirname, 'config', 'front.json');
+const picPath = path.join(__dirname, 'config','pic.json');
 
-const exampleConfigPath = path.join(__dirname,'config' ,'config.example.json');
-const exampleFrontPath = path.join(__dirname, 'config', 'front.example.json');
-const examplPicPath = path.join(__dirname, 'config', 'pic.example.json');
+const exampleConfigPath = path.join(__dirname, 'example','config.example.json');
+const exampleFrontPath = path.join(__dirname, 'example', 'front.example.json');
+const examplPicPath = path.join(__dirname, 'example', 'pic.example.json');
 
 function cehckConfig(cfgPath,examplePath) { 
+  if(!fs.existsSync('./config')){
+    fs.mkdirSync('./config');
+  }
   if (!fs.existsSync(cfgPath)) {
     logger.warn('[CONFIG]', `未找到 ${cfgPath} 文件。`);
     // 如果不存在，则检查 config.example.json 是否存在
@@ -40,7 +43,7 @@ cehckConfig(frontPath,exampleFrontPath);
 cehckConfig(picPath,examplPicPath);
 
 
-const config = require('./config.json');
+const config = require('./config/config.json');
 
 
 // 导入所有路由模块

@@ -2,7 +2,7 @@
 const { inspect } = require('util');
 var log_level = 5;
 try{
-    log_level  = require("../config.json").log_level;
+    log_level  = require("../config/config.json").log_level;
 }catch{}
 
 

@@ -4,7 +4,7 @@ const path = require('path');
 // const {} = require("../pic.json")
 
 // 1. 加载并解析配置文件
-const config = JSON.parse(fs.readFileSync(path.join(__dirname,'../', 'pic.json'), 'utf8'));
+const config = JSON.parse(fs.readFileSync(path.join(__dirname,'../','config', 'pic.json'), 'utf8'));
 
 // 2. 注册全局字体
 try {
