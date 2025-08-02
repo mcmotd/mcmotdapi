@@ -1,0 +1,242 @@
+{
+    "default_template": "simple",
+    "font": {
+        "path": "./HYPixel.ttf",
+        "name": "HYPixel"
+    },
+    "special_fields": {
+        "motd_truncate": {
+            "source_key": "pureMotd",
+            "max_length": 13,
+            "ellipsis": "..."
+        },
+        "timestamp": {
+            "locale": "zh-CN",
+            "options": {
+                "year": "numeric",
+                "month": "2-digit",
+                "day": "2-digit",
+                "hour": "2-digit",
+                "minute": "2-digit",
+                "second": "2-digit"
+            }
+        }
+    },
+    "templates": {
+        "glass_card": {
+            "width": 500,
+            "height": 320,
+            "background": {
+                "color": "#0f172a"
+            },
+            "glass": {
+                "margin": 10,
+                "fill_color": "rgba(255, 255, 255, 0.15)",
+                "border_color": "rgba(255, 255, 255, 0.3)",
+                "border_width": 1.5,
+                "corner_radius": 20,
+                "padding": 24
+            },
+            "main_section": {
+                "icon": {
+                    "size": 64
+                },
+                "motd": {
+                    "font_size": 24,
+                    "font_weight": "bold",
+                    "color": "#ffffff",
+                    "margin_top": 16
+                },
+                "players": {
+                    "font_size": 18,
+                    "color": "#cbd5e1",
+                    "margin_top": 12
+                },
+                "progress_bar": {
+                    "height": 6,
+                    "width_ratio": 0.6,
+                    "bg": "rgba(0, 0, 0, 0.3)",
+                    "fill": "#00dc82",
+                    "margin_top": 16
+                }
+            },
+            "divider": {
+                "color": "rgba(255, 255, 255, 0.2)",
+                "height": 1,
+                "margin_y": 24
+            },
+            "info_section": {
+                "font_size": 16,
+                "line_height": 32,
+                "label_color": "#94a3b8",
+                "value_color": "#f1f5f9",
+                "fields": [
+                    {
+                        "key": "version",
+                        "label": "版本"
+                    },
+                    {
+                        "key": "type",
+                        "label": "类型"
+                    },
+                    {
+                        "key": "latency",
+                        "label": "延迟",
+                        "suffix": "ms"
+                    },
+                    {
+                        "key": "protocol",
+                        "label": "协议"
+                    }
+                ]
+            }
+        },
+        "dark_tech": {
+            "width": 640,
+            "height": 360,
+            "background": {
+                "color": "#0d1b1e",
+                "symbol_color": "#2a4a4f",
+                "symbols": [
+                    "+",
+                    "□",
+                    "—",
+                    "*",
+                    "/",
+                    "<",
+                    ">"
+                ],
+                "symbol_count": 350,
+                "symbol_font_size": 14
+            },
+            "header": {
+                "text": "服务器状态",
+                "font_size": 28,
+                "color": "#cceae7",
+                "position": {
+                    "x": 30,
+                    "y": 50
+                }
+            },
+            "status_light": {
+                "radius": 12,
+                "shadow_blur": 15,
+                "position": {
+                    "x": 595,
+                    "y": 40
+                },
+                "color_online": "#4caf50",
+                "color_offline": "#f44336"
+            },
+            "info_text": {
+                "font_size": 22,
+                "color": "#cceae7",
+                "start_position": {
+                    "x": 30,
+                    "y": 110
+                },
+                "lines": [
+                    {
+                        "type": "text",
+                        "y_offset": 0,
+                        "format": "协议: {protocol}"
+                    },
+                    {
+                        "type": "text",
+                        "y_offset": 42,
+                        "format": "游戏版本: {version}"
+                    },
+                    {
+                        "type": "progress_bar",
+                        "y_offset": 84,
+                        "label": "在线玩家:"
+                    },
+                    {
+                        "type": "text",
+                        "y_offset": 126,
+                        "format": "网络延迟: {delay}ms"
+                    },
+                    {
+                        "type": "text",
+                        "y_offset": 168,
+                        "format": "MOTD: {motd_truncate}"
+                    },
+                    {
+                        "type": "text",
+                        "y_offset": 210,
+                        "format": "查询时间: {timestamp}"
+                    }
+                ]
+            },
+            "progress_bar": {
+                "height": 20,
+                "width": 250,
+                "bg_color": "#333333",
+                "fill_color": "#4caf50",
+                "text_offset_x": 15,
+                "label_offset_x": 10
+            }
+        },
+        "simple": {
+            "width": 640,
+            "height": 360,
+            "default_background_path": "./img/status_img.png",
+            "text": {
+                "lines_format": [
+                    "状态: {type} - 在线",
+                    "协议: {protocol}",
+                    "MOTD: {motd_truncate}",
+                    "玩家: {players.online} / {players.max}",
+                    "网络延迟: {delay}ms",
+                    "版本: {version}",
+                    "查询时间: {timestamp}"
+                ],
+                "left_margin": 30,
+                "row_top_margins": [
+                    35,
+                    90,
+                    135,
+                    185,
+                    235,
+                    285,
+                    335
+                ],
+                "line_styles": [
+                    {
+                        "font_size": 24,
+                        "color": "#000000"
+                    },
+                    {
+                        "font_size": 35,
+                        "color": "#ffffff"
+                    },
+                    {
+                        "font_size": 35,
+                        "color": "#ffffff"
+                    },
+                    {
+                        "font_size": 35,
+                        "color": "#ffffff"
+                    },
+                    {
+                        "font_size": 35,
+                        "color": "#ffffff"
+                    },
+                    {
+                        "font_size": 35,
+                        "color": "#ffffff"
+                    },
+                    {
+                        "font_size": 35,
+                        "color": "#ffffff"
+                    }
+                ]
+            },
+            "icon": {
+                "default_x": 520,
+                "default_y": 40,
+                "default_size": 80
+            }
+        }
+    }
+}

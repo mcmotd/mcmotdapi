@@ -29,7 +29,7 @@ onMounted(() => {
 
             if (data?.i18n?.default) {
                 locale.value = data.i18n.default;
-                console.log(`[ConfigProvider] 全局语言已设置为: ${locale.value}`);
+                // console.log(`[ConfigProvider] 全局语言已设置为: ${locale.value}`);
             }
         })
         .catch(err => {
@@ -67,28 +67,30 @@ provide(ConfigKey, readonly(config));
 </script>
 
 <template>
-    <div v-if="loading" class="loading-screen-image-based">
-        <div class="loading-content">
-            <img :src="loadingImagePath" alt="Loading indicator" class="flicker-image" />
+    <div>
+        <div v-if="loading" class="loading-screen-image-based">
+            <div class="loading-content">
+                <img :src="loadingImagePath" alt="Loading indicator" class="flicker-image" />
 
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill" :style="{ width: progress + '%' }"></div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" :style="{ width: progress + '%' }"></div>
+                </div>
+
+                <p class="loading-text">Loading...</p>
             </div>
-
-            <p class="loading-text">连接中...</p>
         </div>
-    </div>
 
-    <div v-else-if="error" class="error-container">
-        <h3>配置加载失败</h3>
-        <p>{{ error }}</p>
-    </div>
+        <div v-else-if="error" class="error-container">
+            <h3>配置加载失败</h3>
+            <p>{{ error }}</p>
+        </div>
 
-    <slot v-else-if="config && Object.keys(config).length > 0"></slot>
+        <slot v-else-if="config && Object.keys(config).length > 0"></slot>
 
-    <div v-else class="error-container">
-        <h3>致命错误</h3>
-        <p>应用配置已加载，但内容为空。请检查后端 /api/config 的返回值。</p>
+        <div v-else class="error-container">
+            <h3>致命错误</h3>
+            <p>应用配置已加载，但内容为空。请检查后端 /api/config 的返回值。</p>
+        </div>
     </div>
 </template>
 

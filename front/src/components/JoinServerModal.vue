@@ -33,9 +33,12 @@ const handleJoin = () => {
     }
 
     // 使用服务器的 MOTD 或名称作为标题，如果没有则使用IP
-    const serverName = props.serverData.motd?.clean || ip;
+    const serverName = props.serverData.motd || ip;
+
+    console.log(props.serverData)
+
     // 构造特殊的 URL scheme
-    const joinUrl = `minecraft:?addExternalServer=${encodeURIComponent(serverName)}|${encodeURIComponent(props.serverData.host)}|${ip}:${port}`;
+    const joinUrl = `minecraft:?addExternalServer=${encodeURIComponent(serverName)}|${ip}:${port}`;
     // window.location.href = joinUrl;
     window.open(joinUrl, "_blank");
     emit('close'); // 点击后关闭弹窗

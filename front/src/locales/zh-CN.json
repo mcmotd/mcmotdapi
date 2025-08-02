@@ -40,7 +40,8 @@
             "copyFailed": "复制失败",
             "title": "生成状态图片链接",
             "description": "复制下方链接，你可以将其用于论坛签名档或 Markdown 文档中。",
-            "preview": "图片预览"
+            "preview": "图片预览",
+            "theme":"主题"
         },
         "joinM": {
             "title": "即将加入服务器",
