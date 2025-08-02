@@ -1,7 +1,5 @@
 # CFG
-backend/config.json
-backend/front.json
-backend/pic.json
+backend/config/
 *.zip
 # Logs
 logs
