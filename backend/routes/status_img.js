@@ -31,18 +31,7 @@ router.get('/', async (req, res) => {
 
     try {
         const serverData = await queryServerStatus(pre_host.ip, pre_host.port, icon, stype, Boolean(srv == 'true'));
-
-        // 5. 调用您的函数生成 SVG buffer
-        // const pngBuffer = await text4img(bgPath, lines, {
-        //     base64Icon: serverData.icon,
-        //     x: 490,
-        //     y: 170,
-        //     size: 100
-        // });
-
-        // 7. 发送最终的 PNG 图片
-
-        // [修改] 不再传入写死的 lines 数组
+        
         const simpleData = {
             serverData: serverData, // 传入 serverData 让模板自己格式化
             // backgroundPath: './bg.png', // 仍然可以覆盖默认背景
