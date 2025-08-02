@@ -43,82 +43,9 @@ pnpm install
 
 后端配置文件位于`backed/config`
 
-<details>
-  <summary>点击展开</summary>
+前端配置文件位于`backend/front.json`
 
-``` json
-{
-  "javaDefaultPort": 25565,  // java版本默认查询端口
-  "bedrockDefaultPort": 19132,  // 基岩版默认查询端口
-  "queryTimeout": 1000,  // 查询超时时间
-  "serverPort": 3123,  // 服务监听的端口
-  "log_level": 2  //日志等级
-}
-```
-
-</details>
-
-
-
-前端配置文件位于`front/src/config/app.config.js`
-
-<details>
-  <summary>点击展开</summary>
-
-``` js
-export const defaultConfig = {
-    header: {
-        title: 'MC 服务器状态查询',
-        description: '我的世界基岩版/JAVA版本服务器实时状态，随时随地查看你的服务器信息。',
-    },
-    serverAddress: 'play.easecation.net',
-    port: '19132',
-
-    embed: {
-        baseUrl: '/iframe'
-    },
-
-    api:{
-        baseUrl:"/api"
-    },
-
-    footer: {
-        developer: {
-            name: 'Your Name', // 替换为你的名字或ID
-            url: 'https://github.com/your-repo', // 你的链接
-        },
-        poweredBy: {
-            name: 'Gemini', // 驱动方名称
-            url: 'https://gemini.google.com/', // 驱动方链接
-        },
-        company: {
-            name: 'Google', // 公司名称
-            url: 'https://google.com', // 公司链接
-        }
-    },
-
-    failureState: {
-        sloganApi: 'https://v1.hitokoto.cn/?encode=text',   //可以从语言api获取提示语
-        defaultSlogan: '山高路远，后会有期。', 
-        subtext: '服务器未响应或不存在', 
-    },
-    client: {
-        // 点击“下载”按钮后跳转的网页地址
-        downloadUrl: 'https://www.minecraft.net/zh-hans/download' // 这里可以替换为您指定的下载页面
-    },
-    contributors: [
-        {
-            name: 'Sbaoor',
-            title: '项目发起人 & 全栈开发',
-            github: 'https://github.com/Sbaoor-fly',
-            slogan: '把宇宙的问候写进第一行，把余生的热爱写进每一行。',
-            avatar: 'https://s21.ax1x.com/2025/07/19/pV3bX2F.jpg'
-        }
-    ]
-};
-```
-
-</details>
+图片生成器配置位于`backend/pic.json`
 
 ---
 
@@ -161,23 +88,19 @@ npm run start
 1) 拉取项目
 
 ``` bash
-git clone https://github.com/sbaoor-fly/mcmotdapi
+git clone https://github.com/mcmotd/mcmotdapi.git
 ```
 
-2) 修改前端配置文件
-
-编辑`front/src/config/app.config.json`
-
-3) 进行构建
+2) 进行构建
 
 ```bash
 docker build -t mc-status-app .
 ```
-4) 修改配置文件
+3) 修改配置文件
 
 这时候的app文件夹里面只有后端配置文件了，前端已经编译完成
 
-修改`config.json`
+参照 [修改配置](#3-️修改配置)
 
 ---
 
@@ -190,4 +113,4 @@ docker build -t mc-status-app .
 
 ## License
 
-MIT © Sbaoor-Fly
+MIT © mcmotd
