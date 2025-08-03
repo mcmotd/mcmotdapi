@@ -1,116 +1,145 @@
-# 🚀 MC-MOTD-API  
-<center>
+# 🚀 MC-MOTD-API
 
-![](https://s21.ax1x.com/2025/07/21/pV8WvaF.png)
+[//]: # (Language Switcher)
+<p align="center">
+  <a href="./README.cn.md">简体中文</a> | <strong>English</strong>
+</p>
 
-</center>
+[//]: # (Badges)
+<p align="center">
+  <a href="https://github.com/mcmotd/mcmotdapi/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="#"><img src="https://img.shields.io/badge/node-%3E%3D24.4-brightgreen.svg" alt="Node.js Version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/pnpm-%3E%3D8-orange.svg" alt="PNPM Version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Vue.js-3-42b883.svg" alt="Vue.js"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Express.js-4-lightgrey.svg" alt="Express.js"></a>
+</p>
 
-> 基于 Node.js 的 Minecraft 服务器 MOTD 实时查询与展示服务  
-> 前后端分离，前端 Vite + Vue3，后端 Express + JavaScript
+[//]: # (Logo)
+<p align="center">
+  <img src="https://s21.ax1x.com/2025/07/21/pV8WvaF.png" alt="Project Logo">
+</p>
+
+> A real-time Minecraft server MOTD query and display service based on Node.js.
+> Built with a separated front-end (Vite + Vue3) and back-end (Express + JavaScript).
 
 ---
 
-## 1. 🛠️ 环境要求
+## 🎨 Preview
 
-| 工具      | 最低版本 | 推荐版本 |
-|-----------|----------|----------|
-| Node.js   | >= 24.4    | 24.4.0   |
-| pnpm / npm / yarn | 任意 | pnpm 8+ |
-|python| 3.0| 3.10+|
+| External embedding | Main site |
+| :---: | :---: |
+| [![](https://s21.ax1x.com/2025/07/18/pV3dDgJ.png)](https://imgse.com/i/pV3dDgJ) | [![](https://s21.ax1x.com/2025/07/18/pV3drv9.png)](https://imgse.com/i/pV3drv9) |
 
-> 注意，本项目虽然用不到python，但是您在编译node-canvas的时候会使用本地python环境
 ---
 
-## 2. 📥 安装步骤
+## 🛠️ Environment Requirements
+
+| Tool              | Minimum Version | Recommended Version |
+| ----------------- | --------------- | ------------------- |
+| Node.js           | `>= 24.4`       | `24.4.0`            |
+| pnpm / npm / yarn | Any             | `pnpm 8+`           |
+| Python            | `3.0`           | `3.10+`             |
+
+> **Important Note**: Although this project does not use Python directly, your local Python environment is required for compiling the `node-canvas` dependency. Please ensure it is installed correctly.
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone Repository
+
+``` bash
+git clone https://github.com/mcmotd/mcmotdapi.git
+
+cd mcmotdapi
+```
+
+### 2\. Install Dependencies
+
+Using `pnpm` is recommended for dependency management.
 
 ```bash
-# 克隆仓库
-git clone https://github.com/Sbaoor-fly/mcmotdapi.git
-cd mcmotdapi
-
-# 安装后端依赖
+# Install backend dependencies
 cd backend
-pnpm install         # 或 npm install / yarn
+pnpm install
 
-# 安装前端依赖
+# Go back to the root and install frontend dependencies
 cd ../front
 pnpm install
 ```
 
----
+### 3\. Modify Configuration
 
-## 3. ✏️修改配置
+All configuration files are located in the `backend/config/` directory.
 
-后端配置文件位于`backed/config`
+  - **Main Backend Config**: `backend/config/config`
+  - **Frontend Config**: `backend/config/front.json`
+  - **Image Generator Config**: `backend/config/pic.json`
 
-前端配置文件位于`backend/front.json`
+### 4\. Run the Project
 
-图片生成器配置位于`backend/pic.json`
+| Step                 | Command                 | Description                                       |
+| -------------------- | ----------------------- | ------------------------------------------------- |
+| ① Build Static Files | `npm run build:publish` | If you encounter errors, try upgrading Node.js to the latest stable version. |
+| ② Start Server       | `npm run start`         | The service will listen on `http://localhost:3123` by default. |
 
----
+> After a successful start, open **http://localhost:3123** in your browser to see the result.
 
-## 4. 🏁 启动项目
+-----
 
-| 步骤 | 命令 | 说明 |
-|------|------|------|
-| ① 编译静态文件 | `npm run build:publish` | 如果出现报错升级Nodejs版本到最新版 |
-| ② 启动前端 | `npm run start`   | 默认监听 `http://localhost:3123` |
+## 📜 Optional Scripts
 
-> 浏览器打开 `http://localhost:3123` 即可查看效果。
+For convenience, you can create the following scripts in the project's root directory for a one-click start.
 
----
+#### Linux / macOS (`start.sh`)
 
-## 5. 🧪 一键脚本（可选）
-
-在项目根目录添加 `start.sh`（Linux/macOS）或 `start.bat`（Windows）：
-
-**start.sh**
 ```bash
 #!/usr/bin/env bash
+# Grant execute permission: chmod +x start.sh
+
+echo "Building front-end files..."
 npm run build:publish
+
+echo "Starting server..."
 npm run start
+
 wait
 ```
- 
-**start.bat**
-```bat
+
+#### Windows (`start.bat`)
+
+```batch
 @echo off
+echo "Building front-end files..."
 npm run build:publish
+
+echo "Starting server..."
 npm run start
 ```
 
-赋予可执行权限后，只需 `./start.sh` 或双击 `start.bat` 即可同时启动前后端。
+-----
 
----
+## 🐳 Docker Deployment
 
-## 6. 🐳 Docker部署（可选）
-
-1) 拉取项目
-
-``` bash
-git clone https://github.com/mcmotd/mcmotdapi.git
-```
-
-2) 进行构建
+### 1\. Pull Image
 
 ```bash
-docker build -t mc-status-app .
+docker pull sbaoor/mc-status-app:latest
 ```
-3) 修改配置文件
 
-这时候的app文件夹里面只有后端配置文件了，前端已经编译完成
+### 2\. Run Container
 
-参照 [修改配置](#3-️修改配置)
+This command maps port `3123` of the container to the host and mounts the configuration directory for easy modification.
 
----
+```bash
+docker run -d --name mc-status-container \
+  -p 3123:3123 \
+  -v mc-status-config:/app/config \
+  mc-status-app
+```
 
-## 7. 🎨 预览
+-----
 
-[![pV3dDgJ.png](https://s21.ax1x.com/2025/07/18/pV3dDgJ.png)](https://imgse.com/i/pV3dDgJ)
-[![pV3drv9.png](https://s21.ax1x.com/2025/07/18/pV3drv9.png)](https://imgse.com/i/pV3drv9)
+## 📄 License
 
----
-
-## License
-
-MIT © mcmotd
+[MIT](https://github.com/mcmotd) © mcmotd
