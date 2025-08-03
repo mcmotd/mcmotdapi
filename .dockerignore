@@ -1,5 +1,7 @@
 # .dockerignore
 
+# config
+backend/config/
 
 # 本地依赖
 node_modules
