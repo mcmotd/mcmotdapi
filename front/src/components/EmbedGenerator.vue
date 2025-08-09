@@ -90,7 +90,7 @@ const iframeCode = computed(() => {
             }
         });
     <\/script>`;
-    return iframeTag + scriptTag;
+    return iframeTag ;//+ scriptTag;
 });
 
 
