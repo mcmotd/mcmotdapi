@@ -13,14 +13,14 @@
     },
     "comp": {
         "footer": {
-            "developedBy": "由 {name} 开发",
-            "poweredBy": "由 {name} 驱动",
+            "poweredBy": "由 {name} 提供技术支持",
             "rightsReserved": "版权所有"
         },
         "contr": {
             "title": "项目贡献者"
         },
         "embedG": {
+            "previewText":"预览图",
             "copy": "复制",
             "copyed": "已复制！",
             "copyFailed": "复制失败",
@@ -68,6 +68,7 @@
             "typeSrv": "SRV记录"
         },
         "serverDis": {
+            "initialPrompt": "请输入服务器地址以开始查询。",
             "host": "地址",
             "version": "版本",
             "protocol": "协议",

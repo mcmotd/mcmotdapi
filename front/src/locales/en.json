@@ -5,60 +5,60 @@
             "connectingMsg": "Connecting to server..."
         },
         "embed": {
-            "noServerIpMsg": "The server IP parameter must be provided in the URL.",
-            "unableConnectMsg": "Unable to connect to query backend.",
-            "offlineMsg":"The server is unresponsive or non-existent",
-            "loadingMsg": "Loading..."
+            "noServerIpMsg": "The server IP parameter is required in the URL.",
+            "unableConnectMsg": "Unable to connect to the query backend.",
+            "offlineMsg": "Server is not responding or does not exist.",
+            "loadingMsg": "Querying..."
         }
     },
     "comp": {
         "footer": {
-            "developedBy": "Developed by {name}",
             "poweredBy": "Powered by {name}",
-            "rightsReserved": "All Rights Reserved."
+            "rightsReserved": "All rights reserved."
         },
         "contr": {
             "title": "Project Contributors"
         },
         "embedG": {
-            "copy": "copy",
-            "copyed": "copyed!",
-            "copyFailed": "Replication failed",
-            "title": "Embedded in your web page",
-            "description": "Adjust the options below to preview the effect in real time, then copy the generated code.",
-            "width": "width",
-            "height": "height",
-            "autoAdjust": "Automatic adjustment",
+            "previewText": "Preview",
+            "copy": "Copy",
+            "copyed": "Copied!",
+            "copyFailed": "Failed to copy",
+            "title": "Embed into Your Website",
+            "description": "Adjust the options below for a live preview, then copy the generated code.",
+            "width": "Width",
+            "height": "Height",
+            "autoAdjust": "Auto-adjust",
             "iconUrl": "Icon URL (optional)",
-            "darkMode": "dark Mode",
-            "preview": "Real-time preview",
-            "copyCode": "copy the code"
+            "darkMode": "Dark Mode",
+            "preview": "Live Preview",
+            "copyCode": "Copy Code"
         },
         "imgG": {
-            "copy": "copy",
-            "copyed": "copyed!",
-            "copyFailed": "Replication failed",
-            "title": "Generate a link to the status image",
-            "description": "Copy the link below and you can use it in your forum signature file or Markdown document.",
-            "preview": "Image preview",
-            "theme":"theme"
+            "copy": "Copy",
+            "copyed": "Copied!",
+            "copyFailed": "Failed to copy",
+            "title": "Generate Status Image URL",
+            "description": "Copy the link below to use in forum signatures or Markdown documents.",
+            "preview": "Image Preview",
+            "theme": "Theme"
         },
         "joinM": {
-            "title": "Joining Server",
-            "body1": "We will launch your local MinecraftBE client and automatically add the server information.",
-            "warning1": "If you have both the International and NetEase versions of MC installed, ",
-            "warning2": "please select the International version to open",
-            "warning3": ", or the link will not work!",
-            "body2": "If you haven't downloaded the client, click the button below. If it fails to launch, check your browser permissions or switch browsers.",
+            "title": "About to Join Server",
+            "body1": "We will launch your local Minecraft Bedrock Edition client and automatically add the server details.",
+            "warning1": "If you have both the global and NetEase versions installed, ",
+            "warning2": "please choose the global version",
+            "warning3": ", otherwise the link will fail!",
+            "body2": "If you don't have the client yet, click the button below to download. If the game doesn't launch, check your browser permissions or try another browser.",
             "cancel": "Cancel",
             "download": "Download",
             "join": "Join Server"
         },
         "queryF": {
             "ip": "Server Address",
-            "ipPlaceholder": "Example: play.hypixel.net",
-            "port": "Port (Optional)",
-            "portPlaceholder": "Example: 19132",
+            "ipPlaceholder": "e.g. play.hypixel.net",
+            "port": "Port (optional)",
+            "portPlaceholder": "e.g. 19132",
             "querying": "Querying...",
             "query": "Query Server Status",
             "queryType": "Query Type",
@@ -67,19 +67,20 @@
             "typeBedrock": "Bedrock Edition",
             "typeSrv": "SRV Record"
         },
-        "serverDis":{
-            "host":"address",
-            "version":"version",
-            "protocol":"protocol",
-            "modList":"mod list",
-            "gamemode":"gamemode",
-            "levelname":"levelname",
-            "onlineList":" online list",
-            "delay":"delay",
-            "clickToView":"(Click to view)",
-            "players":"players",
-            "modVersion":"version",
-            "modCount": "Mod List ({count} mod) | Mod List ({count} mods)"
+        "serverDis": {
+            "initialPrompt": "Enter a server address to begin querying.",
+            "host": "Host",
+            "version": "Version",
+            "protocol": "Protocol",
+            "modList": "Mod List",
+            "gamemode": "Game Mode",
+            "levelname": "Level Name",
+            "onlineList": "Online Players",
+            "delay": "Latency",
+            "clickToView": "(click to view)",
+            "players": "Players",
+            "modVersion": "Version",
+            "modCount": "Mods (total {count})"
         }
     }
 }

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onUnmounted, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { parseMotdToHtml } from '../utils/motd-parser.js';
 import defaultIcon from '/mc.png';
 import InfoModal from './InfoModal.vue';
@@ -8,7 +8,7 @@ import { useConfig } from '../composables/useConfig';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
-const  config  = useConfig();
+const config = useConfig();
 
 const props = defineProps({
   serverData: {
@@ -19,11 +19,16 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  hasQueried: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 const emit = defineEmits(['card-click']);
 
 const isModalVisible = ref(false);
+// isOffline 的计算逻辑保持不变，但其渲染时机将被调整
 const isOffline = computed(() => props.serverData?.status === 'offline' || !props.serverData?.version);
 
 // --- MOD 弹窗标题国际化 ---
@@ -55,89 +60,42 @@ const playerPercentage = computed(() => {
   return props.serverData.players.max > 0 ? (props.serverData.players.online / props.serverData.players.max) * 100 : 0;
 });
 
+const motdHtml = computed(() => {
+  if (!props.serverData) return '';
+  if (props.serverData.motd_html) {
+    return props.serverData.motd_html;
+  }
+  if (props.serverData.motd) {
+    return parseMotdToHtml(props.serverData.motd);
+  }
+  return '';
+});
+
 const offlineSlogan = ref('');
-const dynamicMotd = ref(null);
-let motdUpdateInterval = null;
-
-
 const fetchSlogan = async () => {
   if (!config.value?.failureState?.sloganApi) return;
   try {
     const response = await axios.get(config.value.failureState.sloganApi);
     offlineSlogan.value = response.data;
-    console.log('Slogan fetched:', offlineSlogan.value);
-
   } catch (error) {
-    // 这里会立刻捕获到 CORS 错误
-    console.error("获取离线标语失败 (CORS Error):", error);
+    console.error("获取离线标语失败:", error);
     offlineSlogan.value = config.value.failureState.defaultSlogan;
   }
 };
 
-
 watch(config, (newConfig) => {
-  if (newConfig) {
-    // 当配置加载完成后，设置默认标语并尝试获取新标语
+  if (newConfig?.failureState) {
     offlineSlogan.value = newConfig.failureState.defaultSlogan;
     fetchSlogan();
   }
 }, { immediate: true });
 
-const fetchLatestMotd = async () => {
-  if (isOffline.value || !props.serverData?.host) return;
-  try {
-    const host = props.serverData.host;
-    let ip, port;
-    const ipv6Match = host.match(/^\[([a-fA-F0-9:]+)\]:(\d+)$/);
-    if (ipv6Match) {
-      ip = ipv6Match[1];
-      port = ipv6Match[2];
-    } else {
-      const parts = host.split(':');
-      ip = parts[0];
-      port = parts.length > 1 ? parts[parts.length - 1] : '';
-    }
-    const apiUrl = `/api/status`;
-    const response = await axios.get(apiUrl, { params: { ip, port: port || undefined } });
-    dynamicMotd.value = { motd: response.data.motd, motd_html: response.data.motd_html };
-  } catch (error) {
-    console.error("后台MOTD刷新失败:", error.message);
-  }
-};
-
-// 现在，可以安全地创建 watch 侦听器了
-watch(() => isOffline.value, (currentlyOffline) => {
-  if (motdUpdateInterval) {
-    clearInterval(motdUpdateInterval);
-    motdUpdateInterval = null;
-  }
-
-  if (currentlyOffline) {
-    dynamicMotd.value = null;
-    // fetchSlogan(); // 调用现在是安全的
-  } else {
-    dynamicMotd.value = { motd: props.serverData.motd, motd_html: props.serverData.motd_html };
-    motdUpdateInterval = setInterval(fetchLatestMotd, 5000); // 调用现在是安全的
-  }
-}, { immediate: true });
-
-const motdHtml = computed(() => {
-  if (!dynamicMotd.value) return '';
-  if (dynamicMotd.value.motd_html) return dynamicMotd.value.motd_html;
-  return dynamicMotd.value.motd ? parseMotdToHtml(dynamicMotd.value.motd) : '';
-});
-
-onUnmounted(() => {
-  if (motdUpdateInterval) {
-    clearInterval(motdUpdateInterval);
-  }
-});
 </script>
 
 <template>
   <div>
-    <div class="card status-card" :class="{ 'is-clickable': !isOffline && !loading && serverData.type !== 'Java' }"
-      @click="!isOffline && !loading && $emit('card-click')">
+    <div class="card status-card" :class="{ 'is-clickable': !isOffline && !loading && hasQueried }"
+      @click="!isOffline && !loading && hasQueried && $emit('card-click')">
 
       <div v-if="loading" class="loading-container">
         <p class="loading-text">{{ $t('view.home.connectingMsg') }}</p>
@@ -146,55 +104,54 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <template v-else>
-        <div v-if="isOffline" class="offline-container" @click="$emit('card-click')">
-          <span class="offline-slogan">{{ offlineSlogan }}</span>
-          <span class="offline-subtext">{{ config?.failureState?.subtext }}</span>
-        </div>
+      <div v-else-if="!hasQueried" class="initial-container">
+        <span class="initial-prompt-text">{{ t("comp.serverDis.initialPrompt") }}</span>
+      </div>
 
-        <template v-else>
-          <div class="online-content-wrapper" @click="$emit('card-click')">
-            <div class="icon-container">
-              <img :src="iconUrl" alt="Server Icon" class="server-icon" />
-            </div>
-            <div class="main-content">
-              <div class="card-header">
-                <div v-if="motdHtml" class="motd-display" v-html="motdHtml"></div>
-                <div class="status-indicator" :class="serverData.type || serverData.status">
-                  <span class="status-dot"></span>
-                  {{ serverData.type }}
-                </div>
-              </div>
-              <div class="info-grid">
-                <div v-for="key in filteredInfoKeys" :key="key" class="info-item">
-                  <span class="info-label">{{ infoLabels[key] }}</span>
-                  <div v-if="key === 'mod_info'" class="info-value">
-                    <button @click.stop="isModalVisible = true" class="info-button">
-                      {{ serverData.mod_info.modList.length }} {{ $t('comp.serverDis.clickToView') }}
-                    </button>
-                  </div>
-                  <div v-else-if="key === 'players'" class="info-value players-sample">
-                    {{ serverData.players.sample }}
-                  </div>
-                  <span v-else-if="key === 'delay'" class="info-value">{{ serverData[key] }}ms</span>
-                  <span v-else class="info-value" :class="{ version: key === 'version' }">{{ serverData[key]
-                    }}</span>
-                </div>
-              </div>
-              <div class="players-info">
-                <div class="player-count">
-                  {{ $t('comp.serverDis.players') }}: <strong>{{ serverData.players?.online ?? 0 }}</strong> /
-                  {{ serverData.players?.max ?? 0 }}
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-bar-inner" :style="{ width: playerPercentage + '%' }"></div>
-                </div>
-              </div>
+      <div v-else-if="isOffline" class="offline-container">
+        <span class="offline-slogan">{{ offlineSlogan || '查询失败' }}</span>
+        <span class="offline-subtext">{{ config?.failureState?.subtext }}</span>
+      </div>
+
+      <div v-else class="online-content-wrapper">
+        <div class="icon-container">
+          <img :src="iconUrl" alt="Server Icon" class="server-icon" />
+        </div>
+        <div class="main-content">
+          <div class="card-header">
+            <div v-if="motdHtml" class="motd-display" v-html="motdHtml"></div>
+            <div class="status-indicator" :class="serverData.type || serverData.status">
+              <span class="status-dot"></span>
+              {{ serverData.type }}
             </div>
           </div>
-        </template>
-      </template>
-
+          <div class="info-grid">
+            <div v-for="key in filteredInfoKeys" :key="key" class="info-item">
+              <span class="info-label">{{ infoLabels[key] }}</span>
+              <div v-if="key === 'mod_info'" class="info-value">
+                <button @click.stop="isModalVisible = true" class="info-button">
+                  {{ serverData.mod_info.modList.length }} {{ $t('comp.serverDis.clickToView') }}
+                </button>
+              </div>
+              <div v-else-if="key === 'players'" class="info-value players-sample">
+                {{ serverData.players.sample }}
+              </div>
+              <span v-else-if="key === 'delay'" class="info-value">{{ serverData[key] }}ms</span>
+              <span v-else class="info-value" :class="{ version: key === 'version' }">{{ serverData[key]
+              }}</span>
+            </div>
+          </div>
+          <div class="players-info">
+            <div class="player-count">
+              {{ $t('comp.serverDis.players') }}: <strong>{{ serverData.players?.online ?? 0 }}</strong> /
+              {{ serverData.players?.max ?? 0 }}
+            </div>
+            <div class="progress-bar">
+              <div class="progress-bar-inner" :style="{ width: playerPercentage + '%' }"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <teleport to="body" v-if="!isOffline && serverData.mod_info?.modList?.length">
@@ -220,6 +177,7 @@ onUnmounted(() => {
 
 
 <style scoped>
+/* 为了简洁，样式部分省略，保持原样即可 */
 /* --- 根元素与状态 --- */
 .card.status-card {
   position: relative;
@@ -245,7 +203,6 @@ onUnmounted(() => {
   transform: translateY(-4px);
   box-shadow: 0 8px 30px var(--shadow-color);
 }
-
 
 /* --- 加载中状态 --- */
 .loading-container {
@@ -295,11 +252,25 @@ onUnmounted(() => {
   }
 }
 
+/* [新增] 初始状态容器样式 */
+.initial-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.initial-prompt-text {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
 
 /* --- 离线状态 --- */
 .offline-container {
   width: 100%;
-  /* height: 100%; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -321,7 +292,6 @@ onUnmounted(() => {
 .offline-subtext {
   font-size: 0.9rem;
 }
-
 
 /* --- 在线状态 --- */
 .online-content-wrapper {
@@ -548,7 +518,6 @@ onUnmounted(() => {
   transition: width 0.5s ease;
 }
 
-
 /* --- MOD 弹窗表格 --- */
 .mod-table {
   width: 100%;
@@ -574,7 +543,6 @@ onUnmounted(() => {
 .mod-table td:first-child {
   word-break: break-all;
 }
-
 
 /* --- 响应式布局 --- */
 @media (max-width: 550px) {

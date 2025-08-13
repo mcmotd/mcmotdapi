@@ -1,10 +1,7 @@
 <script setup>
-import { ref, computed, onMounted,watch } from 'vue';
+import { ref, computed, watch } from 'vue'; // watch 已被重新引入
 import axios from 'axios';
 import { useI18n } from 'vue-i18n';
-
-// 获取 t 函数和当前的 locale
-const { t, locale } = useI18n();
 
 import AppHeader from '../components/AppHeader.vue';
 import QueryForm from '../components/QueryForm.vue';
@@ -15,30 +12,32 @@ import ImageLinkGenerator from '../components/ImageLinkGenerator.vue';
 import JoinServerModal from '../components/JoinServerModal.vue';
 import Contributors from '../components/Contributors.vue';
 import { useConfig } from '../composables/useConfig';
-import SideMenu from '../components/SideMenu.vue';
 
+const { t } = useI18n();
 const config = useConfig();
 
 const isJoinModalVisible = ref(false);
 const serverAddress = ref('');
 const port = ref('');
-const loading = ref(true);
+const loading = ref(false);
 const error = ref(null);
 const data = ref({});
-const icon = ref(null);
-// [核心改动 1] 新增状态，用于保存当前的查询类型
 const serverType = ref('auto');
 const isSRV = ref(false);
+const hasQueried = ref(false);
+
+const isServerOnline = computed(() => {
+    return data.value && data.value.version && data.value.status !== 'offline';
+});
+
 const openJoinModal = () => {
-    // 增加一个条件：服务器类型不能是 'Java'
     if (data.value && data.value.status !== 'offline' && data.value.type !== 'Java') {
         isJoinModalVisible.value = true;
     }
 };
 
-// [核心改动 2] 更新 handleFetchData 函数以接收和处理所有新参数
 const handleFetchData = async (payload) => {
-    // 从 payload 中更新所有相关的状态
+    hasQueried.value = true;
     serverAddress.value = payload.address;
     port.value = payload.port;
     serverType.value = payload.serverType;
@@ -46,10 +45,10 @@ const handleFetchData = async (payload) => {
 
     loading.value = true;
     error.value = null;
+    data.value = {};
 
     try {
         const apiUrl = `/api/status`;
-        // [核心改动 3] 将所有参数都发送给后端
         const response = await axios.get(apiUrl, {
             params: {
                 ip: serverAddress.value,
@@ -62,8 +61,6 @@ const handleFetchData = async (payload) => {
     } catch (err) {
         const errorMessage = t("view.home.errorMsg");
         error.value = err.response?.data?.error || errorMessage;
-
-        // 在失败时，依然构造一个包含查询信息的对象，以便其他组件使用
         data.value = {
             status: 'offline',
             error: error.value,
@@ -77,25 +74,27 @@ const handleFetchData = async (payload) => {
     }
 };
 
-// 在 HomeView.vue 的 <script setup> 中
+// [核心修改] 重新启用 watch 侦听器，用于在应用加载时处理默认服务器逻辑
 watch(config, (newConfig) => {
+    if (!newConfig) return;
 
-    // [防御性编程] 在使用 newConfig 之前，先进行严格的检查
-    if (newConfig && newConfig.serverAddress && newConfig.port) {
-        serverAddress.value = newConfig.serverAddress;
-        port.value = newConfig.port;
+    // 检查 defaultServer 配置
+    const { defaultServer } = newConfig;
+    if (defaultServer && defaultServer.enable === true && defaultServer.host) {
+        // 如果启用，则使用默认值并自动执行一次查询
+        const host = defaultServer.host;
+        const portVal = defaultServer.port ? String(defaultServer.port) : '';
+
         handleFetchData({
-            address: serverAddress.value,
-            port: port.value,
+            address: host,
+            port: portVal,
             serverType: 'auto',
             isSRV: false
         });
-    } else if (newConfig) {
-        // 如果 newConfig 存在但缺少必要属性
-        console.error('[HomeView] 收到的配置对象不完整:', newConfig);
     }
+    // 如果不满足条件，则什么都不做，等待用户手动查询
+}, { immediate: true }); // immediate: true 确保在加载时立即运行
 
-}, { immediate: true });
 </script>
 
 <template>
@@ -103,15 +102,9 @@ watch(config, (newConfig) => {
         <div class="app-content">
             <AppHeader />
             <div class="main-content-area">
-                <!-- <div class="top-content-block">
-                    <div v-if="loading" class="card status-box">
-                        <p>{{$t('view.home.connectingMsg')}}</p>
-                    </div>
-                    <ServerStatusDisplay v-else :server-data="data" @card-click="openJoinModal" />
-                </div> -->
-
                 <div class="top-content-block">
-                    <ServerStatusDisplay :server-data="data" :loading="loading" @card-click="openJoinModal" />
+                    <ServerStatusDisplay :server-data="data" :loading="loading" :has-queried="hasQueried"
+                        @card-click="openJoinModal" />
                 </div>
 
                 <div class="bottom-content-block">
@@ -119,7 +112,7 @@ watch(config, (newConfig) => {
                         @start-query="handleFetchData" />
                 </div>
 
-                <div v-if="!loading" class="generators-section">
+                <div v-if="!loading && isServerOnline" class="generators-section">
                     <EmbedGenerator :server-data="data" :address="serverAddress" :port="port" :server-type="serverType"
                         :is-srv="isSRV" />
                     <ImageLinkGenerator :server-data="data" :loading="loading" :address="serverAddress" :port="port"
@@ -127,11 +120,9 @@ watch(config, (newConfig) => {
                 </div>
                 <Contributors />
             </div>
-
         </div>
         <AppFooter />
         <JoinServerModal :show="isJoinModalVisible" :server-data="data" @close="isJoinModalVisible = false" />
-        <SideMenu />
     </div>
 </template>
 

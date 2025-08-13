@@ -7,7 +7,7 @@ const { locale } = useI18n();
 
 // [重要] 请在这里替换为您自己的图片路径！
 // 建议将图片放在项目根目录下的 `public` 文件夹中，这样路径就是以 `/` 开头的。
-const loadingImagePath = '/mc.png'; // 例如: '/logo.png' 或 '/icon.webp'
+const loadingImagePath = '/loading.png'; // 例如: '/logo.png' 或 '/icon.webp'
 
 // --- 状态定义 ---
 const config = ref(null);

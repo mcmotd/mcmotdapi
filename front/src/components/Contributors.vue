@@ -8,10 +8,10 @@ const contributors = config.value.contributors;
 </script>
 
 <template>
-    <div class="contributors-section">
+    <div class="contributors-section" v-if="contributors.enable">
         <h2 class="section-title">{{ $t("comp.contr.title") }}</h2>
         <div class="contributors-grid">
-            <div v-for="contributor in contributors" :key="contributor.name" class="contributor-card">
+            <div v-for="contributor in contributors.member" :key="contributor.name" class="contributor-card">
                 <a :href="contributor.github" target="_blank" rel="noopener noreferrer" class="card-link">
                     <div class="card-header">
                         <img :src="contributor.avatar" :alt="contributor.name" class="avatar">
