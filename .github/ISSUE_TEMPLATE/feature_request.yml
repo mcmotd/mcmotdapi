@@ -1,0 +1,35 @@
+name: "✨ 功能请求 (Feature Request)"
+description: "为这个项目提出一个新想法或功能建议。"
+title: "[Feature]：<在此处填写新功能名称>"
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: related-problem
+    attributes:
+      label: 这个功能请求是否与某个问题有关？
+      description: "请描述一下您在使用中遇到的不便之处，或者您认为可以改进的地方。"
+      placeholder: "例如：我发现每次修改配置都需要手动重启后端服务才能生效，这很不方便。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 描述您想要的解决方案
+      description: "请清晰、简洁地描述您希望增加什么功能，以及它应该如何工作。"
+      placeholder: "我希望在管理员面板修改并保存配置后，后端能够自动热重载配置，无需我手动重启服务。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 描述您考虑过的替代方案
+      description: "您是否考虑过其他实现方式或替代方案？"
+      placeholder: "或者，可以在管理员面板增加一个“重启服务”的按钮。"
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 其他信息
+      description: "还有其他关于此功能的补充信息吗？例如设计稿、参考链接等。"

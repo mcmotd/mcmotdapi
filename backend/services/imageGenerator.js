@@ -51,6 +51,8 @@ function processSpecialFields(serverData) {
     try{
         const processedData = { ...serverData };
         const specialConf = config.special_fields;
+        
+        // console.log("特殊字段配置:", specialConf)
 
         if (!specialConf) return processedData;
 

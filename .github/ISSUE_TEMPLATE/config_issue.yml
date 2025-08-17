@@ -1,0 +1,53 @@
+name: "🔧 配置问题报告"
+description: "报告有关 `front.json` 或 `config.json` 的配置问题。"
+title: "[Config]：<在此处描述您的配置问题>"
+labels: ["configuration", "help wanted"]
+body:
+  - type: dropdown
+    id: config-file
+    attributes:
+      label: 您遇到问题的配置文件是哪个？
+      options:
+        - front.json (前端配置)
+        - config.json (后端/管理员配置)
+        - 两个文件都相关
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: 描述问题
+      description: "请详细描述您遇到的配置问题。例如，某个配置项没有按预期生效，或者您不确定如何配置某个功能。"
+      placeholder: "我尝试在 front.json 中添加第三个轮播图链接，但页面上只显示了前两个。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: config-snippet
+    attributes:
+      label: 相关的配置片段
+      description: |
+        请将您 `json` 文件中相关的部分粘贴到下方。
+        **⚠️ 重要：请务必删除或替换掉任何敏感信息，例如密码、私有链接等！**
+      placeholder: |
+        ```json
+        "carousel": {
+            "duration": 5000,
+            "images": [
+                "URL_1",
+                "URL_2",
+                "URL_3"
+            ]
+        }
+        ```
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-result
+    attributes:
+      label: 您期望的结果是什么？
+      description: "您认为正确的配置应该产生什么样的效果？"
+      placeholder: "我期望页眉能够轮播三张背景图片。"

@@ -84,48 +84,63 @@ const dns = require('dns').promises; // 1. 引入 dns 模块的 promise 版本
 async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV = false) {
     const now = Date.now();
 
-    // 初始目标地址和端口
-    let targetHost = ip;
-    let targetPort = port;
+    // --- 步骤 1: 确定 Java 和 Bedrock 的查询目标 ---
+    // Bedrock 目标始终是原始IP
+    const bedrockTarget = {
+        host: ip,
+        port: port ? parseInt(port, 10) : config.bedrockDefaultPort
+    };
+    // Java 目标初始为原始IP，但可能会被 SRV 记录覆盖
+    let javaTarget = {
+        host: ip,
+        port: port ? parseInt(port, 10) : config.javaDefaultPort
+    };
 
-    // --- 步骤 1: SRV 记录解析 (如果 isSRV 为 true) ---
-    // SRV 记录强制只查询 Java 服务器
-
-    if (isSRV === true) {
-        // console.log('is srv','checking',targetHost)
-        serverType = 'je'; // 强制 serverType 为 'je'
+    // --- 步骤 2: SRV 记录解析 ---
+    // 当用户强制指定(isSRV=true)或在自动模式下，都尝试解析 SRV
+    if (isSRV === true || serverType === 'auto') {
         const srvAddress = `_minecraft._tcp.${ip}`;
         try {
-            Logger.info('[SRV]',`解析: ${srvAddress}`);
+            const logPrefix = isSRV ? '[SRV]' : '[SRV Auto]';
+            Logger.info(logPrefix, `解析: ${srvAddress}`);
             const records = await dns.resolveSrv(srvAddress);
+
             if (records.length > 0) {
-                targetHost = records[0].name;
-                targetPort = records[0].port;
-                Logger.info('[SRV]',`解析成功: ${targetHost}:${targetPort}`);
+                // 解析成功，更新 Java 的查询目标
+                javaTarget.host = records[0].name;
+                javaTarget.port = records[0].port;
+                Logger.info(logPrefix, `解析成功: ${javaTarget.host}:${javaTarget.port}`);
+
+                // 如果是强制SRV模式，则将查询类型锁定为仅 Java
+                if (isSRV === true) {
+                    serverType = 'je';
+                }
             }
         } catch (err) {
-            Logger.warn('[SRV]',`解析失败: ${srvAddress}, 将使用默认端口进行查询。`, err.code);
-            // 如果 SRV 解析失败，则继续使用原始 ip 和指定的或默认的 Java 端口
+            // 在强制SRV模式下，解析失败需要警告用户
+            if (isSRV === true) {
+                Logger.warn('[SRV]', `解析失败: ${srvAddress}, 将使用默认地址查询。`, err.code);
+            } else {
+                // 在自动模式下，静默失败是正常行为，仅记录日志即可
+                Logger.info('[SRV Auto]', `解析 ${srvAddress} 失败，将使用默认地址。`);
+            }
         }
     }
 
-    // --- 步骤 2: 根据 serverType 动态创建查询任务 ---
-    const javaPort = targetPort ? parseInt(targetPort, 10) : config.javaDefaultPort;
-    const bedrockPort = targetPort ? parseInt(targetPort, 10) : config.bedrockDefaultPort;
-
+    // --- 步骤 3: 根据 serverType 动态创建查询任务 ---
     let promisesToRace = [];
 
-    // 如果是 'je' 或 'auto'，则创建 Java 查询任务
+    // 创建 Java 查询任务 (使用可能被SRV更新过的 javaTarget)
     if (serverType === 'je' || serverType === 'auto') {
-        const javaPromise = PingMCServer(targetHost, javaPort, config.queryTimeout)
-            .then(response => ({ type: 'Java', data: response, host: targetHost, port: javaPort }));
+        const javaPromise = PingMCServer(javaTarget.host, javaTarget.port, config.queryTimeout)
+            .then(response => ({ type: 'Java', data: response, host: javaTarget.host, port: javaTarget.port }));
         promisesToRace.push(javaPromise);
     }
 
-    // 如果是 'be' 或 'auto'，则创建 Bedrock 查询任务
+    // 创建 Bedrock 查询任务 (始终使用原始 bedrockTarget)
     if (serverType === 'be' || serverType === 'auto') {
-        const bedrockPromise = pingBedrockPromise(targetHost, bedrockPort)
-            .then(response => ({ type: 'Bedrock', data: response, host: targetHost, port: bedrockPort }));
+        const bedrockPromise = pingBedrockPromise(bedrockTarget.host, bedrockTarget.port)
+            .then(response => ({ type: 'Bedrock', data: response, host: bedrockTarget.host, port: bedrockTarget.port }));
         promisesToRace.push(bedrockPromise);
     }
 
@@ -134,12 +149,11 @@ async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV =
         throw new Error(`无效的 serverType: "${serverType}"`);
     }
 
-    // --- 步骤 3: 执行查询并格式化返回 ---
-    // 使用 try...catch 捕获 Promise.any 的失败（即所有查询都失败）
+    // --- 步骤 4: 执行查询并格式化返回 ---
     try {
         const result = await Promise.any(promisesToRace);
 
-        // 根据结果类型，格式化并返回标准化的数据对象
+        // (此部分格式化逻辑保持不变)
         if (result.type === 'Java') {
             const { data } = result;
             const playersSample = data.players.sample?.map(p => p.name).join(', ') || '无';
@@ -186,7 +200,6 @@ async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV =
             };
         }
     } catch (error) {
-        // 当所有查询都失败时，Promise.any 会抛出错误
         throw new Error('所有服务器查询都失败了。');
     }
 }
