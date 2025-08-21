@@ -177,8 +177,7 @@ watch(config, (newConfig) => {
 
 
 <style scoped>
-/* 为了简洁，样式部分省略，保持原样即可 */
-/* --- 根元素与状态 --- */
+/* 根元素与状态 */
 .card.status-card {
   position: relative;
   background-color: var(--card-background);
@@ -204,7 +203,8 @@ watch(config, (newConfig) => {
   box-shadow: 0 8px 30px var(--shadow-color);
 }
 
-/* --- 加载中状态 --- */
+
+/* 加载中状态 */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -252,7 +252,7 @@ watch(config, (newConfig) => {
   }
 }
 
-/* [新增] 初始状态容器样式 */
+/* 初始状态容器样式 */
 .initial-container {
   width: 100%;
   display: flex;
@@ -268,7 +268,7 @@ watch(config, (newConfig) => {
   color: var(--text-color);
 }
 
-/* --- 离线状态 --- */
+/* 离线状态 */
 .offline-container {
   width: 100%;
   display: flex;
@@ -293,7 +293,8 @@ watch(config, (newConfig) => {
   font-size: 0.9rem;
 }
 
-/* --- 在线状态 --- */
+
+/* 在线状态 */
 .online-content-wrapper {
   display: flex;
   width: 100%;
@@ -345,70 +346,144 @@ watch(config, (newConfig) => {
   min-width: 0;
 }
 
+/* [核心修改] 最终稳定版的乱码 (Obfuscated) 文本样式 */
 :deep(.obfuscated) {
   display: inline-block;
-  color: transparent;
   position: relative;
-  width: 1ch;
-  margin-right: 0.2em;
+  width: 0.65em;
+  height: 1em;
+  /* 高度与字体大小一致 */
+  vertical-align: -0.10em;
+  /* [核心] 微调垂直对齐，负值向下移动 */
 }
-
 :deep(.obfuscated)::before {
-  content: "█";
+  content: " ";
   position: absolute;
   left: 0;
   top: 0;
-  color: #aaa;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
-  animation: obfuscate-char-anim 0.2s steps(1, end) infinite;
+  width: 100%;
+  height: 100%;
+  color: #AAAAAA;
+  font-weight: bold;
+  font-family: monospace;
+  text-shadow: none;
+
+  /* Flexbox居中，确保动画字符在固定容器内 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  animation: obfuscate-char-anim 80ms steps(1, end) infinite;
 }
 
 @keyframes obfuscate-char-anim {
   0% {
-    content: "█";
+    content: 'A';
   }
 
-  10% {
-    content: "▓";
+  4% {
+    content: 'B';
+  }
+
+  8% {
+    content: 'C';
+  }
+
+  12% {
+    content: 'D';
+  }
+
+  16% {
+    content: 'E';
   }
 
   20% {
-    content: "▒";
+    content: 'F';
   }
 
-  30% {
-    content: "░";
+  24% {
+    content: 'G';
+  }
+
+  28% {
+    content: 'H';
+  }
+
+  32% {
+    content: 'I';
+  }
+
+  36% {
+    content: 'J';
   }
 
   40% {
-    content: "█";
+    content: 'K';
   }
 
-  50% {
-    content: "▓";
+  44% {
+    content: 'L';
+  }
+
+  48% {
+    content: 'M';
+  }
+
+  52% {
+    content: 'N';
+  }
+
+  56% {
+    content: 'O';
   }
 
   60% {
-    content: "▒";
+    content: 'P';
   }
 
-  70% {
-    content: "░";
+  64% {
+    content: 'Q';
+  }
+
+  68% {
+    content: 'R';
+  }
+
+  72% {
+    content: 'S';
+  }
+
+  76% {
+    content: 'T';
   }
 
   80% {
-    content: "█";
+    content: 'U';
   }
 
-  90% {
-    content: "▓";
+  84% {
+    content: 'V';
+  }
+
+  88% {
+    content: 'W';
+  }
+
+  92% {
+    content: 'X';
+  }
+
+  96% {
+    content: 'Y';
   }
 
   100% {
-    content: "▒";
+    content: 'Z';
   }
 }
 
+
+/* (以下样式保持不变) */
 .status-indicator {
   display: flex;
   align-items: center;
@@ -518,7 +593,6 @@ watch(config, (newConfig) => {
   transition: width 0.5s ease;
 }
 
-/* --- MOD 弹窗表格 --- */
 .mod-table {
   width: 100%;
   border-collapse: collapse;
@@ -544,7 +618,6 @@ watch(config, (newConfig) => {
   word-break: break-all;
 }
 
-/* --- 响应式布局 --- */
 @media (max-width: 550px) {
   .online-content-wrapper {
     flex-direction: column;

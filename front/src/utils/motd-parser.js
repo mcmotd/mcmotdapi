@@ -1,150 +1,132 @@
-// Minecraft §代码 到 CSS颜色 的映射
-const codeColorMap = {
-    '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
-    '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
-    '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
-    'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF',
+/**
+ * Minecraft MOTD 全功能解析器 (最终稳定版)
+ * - [核心] 乱码(§k)字符不再生成原始文本，而是生成一个空的span容器，由CSS伪元素填充动画。
+ */
+
+const LEGACY_CODES = {
+    '0': { color: '#000000' }, '1': { color: '#0000AA' }, '2': { color: '#00AA00' }, '3': { color: '#00AAAA' },
+    '4': { color: '#AA0000' }, '5': { color: '#AA00AA' }, '6': { color: '#FFAA00' }, '7': { color: '#AAAAAA' },
+    '8': { color: '#555555' }, '9': { color: '#5555FF' }, 'a': { color: '#55FF55' }, 'b': { color: '#55FFFF' },
+    'c': { color: '#FF5555' }, 'd': { color: '#FF55FF' }, 'e': { color: '#FFFF55' }, 'f': { color: '#FFFFFF' },
+    'l': { style: 'font-weight: bold;' },
+    'm': { style: 'text-decoration: line-through;' },
+    'n': { style: 'text-decoration: underline;' },
+    'o': { style: 'font-style: italic;' },
+    'k': { class: 'obfuscated' }
 };
 
-// Minecraft 颜色名 到 CSS颜色 的映射 (用于JSON格式)
-const nameColorMap = {
+const JSON_NAME_COLOR_MAP = {
     'black': '#000000', 'dark_blue': '#0000AA', 'dark_green': '#00AA00', 'dark_aqua': '#00AAAA',
     'dark_red': '#AA0000', 'dark_purple': '#AA00AA', 'gold': '#FFAA00', 'gray': '#AAAAAA',
     'dark_gray': '#555555', 'blue': '#5555FF', 'green': '#55FF55', 'aqua': '#55FFFF',
     'red': '#FF5555', 'light_purple': '#FF55FF', 'yellow': '#FFFF55', 'white': '#FFFFFF',
 };
 
-/**
- * [重构] 用于解析带§代码的字符串的内部函数
- * @param {string} str - 带§代码的字符串
- * @returns {string} - 转换后的HTML字符串
- */
-function parseStringMotd(str) {
+function escapeHtml(text) {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function parseLegacyMotd(str) {
     if (!str) return '';
-
-    let html = '';
     const parts = str.split('§');
-    let currentStyles = { color: null, fontWeight: null, fontStyle: null, textDecorations: new Set(), isObfuscated: false };
-    const createNewStyles = () => ({ color: null, fontWeight: null, fontStyle: null, textDecorations: new Set(), isObfuscated: false });
+    let html = `<span>${escapeHtml(parts[0])}</span>`;
+    let activeStyles = [];
+    let activeClasses = new Set();
 
-    for (let i = 0; i < parts.length; i++) {
+    for (let i = 1; i < parts.length; i++) {
         const part = parts[i];
         if (!part) continue;
 
-        if (i === 0) {
-            // 第一个部分没有格式代码，直接显示为纯文本
-            if (part.length > 0) {
-                html += `<span>${part}</span>`;
-            }
-            continue;
-        }
-
-        const code = part[0];
+        const code = part[0].toLowerCase();
         const text = part.substring(1);
+        let isObfuscated = activeClasses.has('obfuscated');
 
-        if (codeColorMap[code]) {
-            currentStyles.color = codeColorMap[code];
-        } else if (code === 'l') {
-            currentStyles.fontWeight = 'bold';
-        } else if (code === 'o') {
-            currentStyles.fontStyle = 'italic';
-        } else if (code === 'n') {
-            currentStyles.textDecorations.add('underline');
-        } else if (code === 'm') {
-            currentStyles.textDecorations.add('line-through');
-        } else if (code === 'k') {
-            currentStyles.isObfuscated = true;
-        } else if (code === 'r') {
-            currentStyles = createNewStyles();
+        if (code === 'r') {
+            activeStyles = [];
+            activeClasses.clear();
+            isObfuscated = false;
+        } else {
+            const format = LEGACY_CODES[code];
+            if (format) {
+                if (format.color) {
+                    activeStyles = [`color: ${format.color};`];
+                    activeClasses.clear();
+                }
+                if (format.style) activeStyles.push(format.style);
+                if (format.class) {
+                    activeClasses.add(format.class);
+                    if (format.class === 'obfuscated') isObfuscated = true;
+                }
+            }
         }
 
         if (text) {
-            const inlineStyles = [];
-            if (currentStyles.color) inlineStyles.push(`color: ${currentStyles.color};`);
-            if (currentStyles.fontWeight) inlineStyles.push(`font-weight: ${currentStyles.fontWeight};`);
-            if (currentStyles.fontStyle) inlineStyles.push(`font-style: ${currentStyles.fontStyle};`);
-            if (currentStyles.textDecorations.size > 0) {
-                const decorationString = [...currentStyles.textDecorations].join(' ');
-                inlineStyles.push(`text-decoration: ${decorationString};`);
-            }
-            const styleString = inlineStyles.join(' ');
+            const styleAttr = activeStyles.length > 0 ? `style="${[...new Set(activeStyles)].join(' ')}"` : '';
+            const classAttr = activeClasses.size > 0 ? `class="${[...activeClasses].join(' ')}"` : '';
 
-            if (currentStyles.isObfuscated) {
-                for (const char of text) {
-                    html += `<span class="obfuscated" style="${styleString}">${char}</span>`;
+            if (isObfuscated) {
+                // [核心] 为每个乱码字符生成一个不包含内容的span
+                for (let j = 0; j < text.length; j++) {
+                    html += `<span ${styleAttr} ${classAttr}></span>`;
                 }
             } else {
-                html += `<span style="${styleString}">${text}</span>`;
+                html += `<span ${styleAttr} ${classAttr}>${escapeHtml(text)}</span>`;
             }
         }
     }
-
     return html;
 }
 
-/**
- * [新增] 用于解析JSON对象格式MOTD的函数
- * @param {object} motdObject - MOTD的JSON对象
- * @returns {string} - 转换后的HTML字符串
- */
-function parseJsonMotd(motdObject) {
-    let html = '';
-    // "extra" 字段通常包含一个组件数组
-    const components = motdObject.extra || [];
+function parseJsonComponent(component) {
+    if (typeof component === 'string') return parseLegacyMotd(component);
+    if (typeof component !== 'object' || component === null) return '';
 
-    // 有时根对象自己也包含文本
-    if (motdObject.text) {
-        components.unshift({ text: motdObject.text });
+    let content = '';
+    if (Array.isArray(component.extra)) {
+        content = component.extra.map(c => parseJsonComponent(c)).join('');
     }
 
-    for (const component of components) {
-        const styles = [];
-        if (component.bold) styles.push('font-weight: bold;');
-        if (component.italic) styles.push('font-style: italic;');
-        if (component.underlined) styles.push('text-decoration: underline;');
-        if (component.strikethrough) styles.push('text-decoration: line-through;');
-        if (component.color && nameColorMap[component.color]) {
-            styles.push(`color: ${nameColorMap[component.color]};`);
-        }
-
-        const styleString = styles.join(' ');
-
-        // 文本内容本身可能还含有§代码，所以我们递归调用字符串解析器来处理
-        const innerHtml = parseStringMotd(component.text || '');
-
-        // 如果文本本身没有§代码，parseStringMotd会返回一个无包裹的字符串
-        // 我们需要确保它被包裹在span里以应用JSON定义的样式
-        if (innerHtml.startsWith('§')) {
-            // 如果文本以§开头，说明它已经被字符串解析器处理并包裹
-            html += `<span style="${styleString}">${innerHtml}</span>`;
+    if (typeof component.text === 'string' && component.text) {
+        // [核心] 如果当前组件是乱码，则特殊处理
+        if (component.obfuscated) {
+            let tempContent = '';
+            for (let i = 0; i < component.text.length; i++) {
+                tempContent += '<span></span>'; // 生成空span
+            }
+            content += tempContent;
         } else {
-            // 否则，我们需要自己包裹
-            const classString = component.obfuscated ? 'class="obfuscated"' : '';
-            html += `<span ${classString} style="${styleString}">${innerHtml}</span>`;
+            content += parseLegacyMotd(component.text);
         }
     }
-    // 将换行符\n替换为<br>标签
-    return html.replace(/\n/g, '<br>');
+
+    if (content === '') return '';
+
+    const styles = [];
+    const classes = [];
+
+    if (component.color) {
+        const color = component.color.startsWith('#') ? component.color : JSON_NAME_COLOR_MAP[component.color];
+        if (color) styles.push(`color: ${color};`);
+    }
+
+    if (component.bold) styles.push('font-weight: bold;');
+    if (component.italic) styles.push('font-style: italic;');
+    if (component.underlined) styles.push('text-decoration: underline;');
+    if (component.strikethrough) styles.push('text-decoration: line-through;');
+    if (component.obfuscated) classes.push('obfuscated');
+
+    if (styles.length === 0 && classes.length === 0) return content;
+
+    const styleAttr = `style="${styles.join(' ')}"`;
+    const classAttr = `class="${classes.join(' ')}"`;
+
+    return `<span ${classAttr} ${styleAttr}>${content}</span>`;
 }
 
-
-/**
- * [主函数] 将带 § 格式代码或JSON对象的 MOTD 转换为 HTML
- * @param {string|object} motd - 原始 MOTD
- * @returns {string} - 转换后的 HTML 字符串
- */
-export function parseMotdToHtml(motd) {
-    if (!motd) return '';
-
-    // 判断MOTD是对象还是字符串，并调用相应的解析函数
-    if (typeof motd === 'object') {
-        return parseJsonMotd(motd);
-    }
-
-    // 对于字符串，我们还需要手动替换换行符
-    if (typeof motd === 'string') {
-        return parseStringMotd(motd).replace(/\n/g, '<br>');
-    }
-
-    return '';
+export function parseMotdToHtml(motdData) {
+    if (!motdData) return '';
+    let htmlResult = (typeof motdData === 'object' && motdData !== null)
+        ? parseJsonComponent(motdData)
+        : parseLegacyMotd(String(motdData));
+    return htmlResult.replace(/\n/g, '<br>');
 }
