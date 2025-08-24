@@ -136,14 +136,14 @@ docker pull sbaoor/mc-status-app:latest
 docker run -d --name mc-status-container \
   -p 3123:3123 \
   -v mc-status-config:/app/config \
-  mc-status-app
+  sbaoor/mc-status-app:latest
 ```
 
 -----
 
 ## 📄 开源许可证 (License)
 
-[MIT](https://github.com/mcmotd) © mcmotd
+[BSD2](https://github.com/mcmotd) © mcmotd
 
 ````
 

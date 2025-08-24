@@ -135,11 +135,11 @@ This command maps port `3123` of the container to the host and mounts the config
 docker run -d --name mc-status-container \
   -p 3123:3123 \
   -v mc-status-config:/app/config \
-  mc-status-app
+  sbaoor/mc-status-app:latest
 ```
 
 -----
 
 ## 📄 License
 
-[MIT](https://github.com/mcmotd) © mcmotd
+[BSD2](https://github.com/mcmotd) © mcmotd
