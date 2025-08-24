@@ -9,9 +9,56 @@
             "unableConnectMsg": "Unable to connect to the query backend.",
             "offlineMsg": "Server is not responding or does not exist.",
             "loadingMsg": "Querying..."
+        },
+        "docs": {
+            "title": "API Documentation",
+            "subtitle": "Easily integrate Minecraft server status into your applications with our API.",
+            "common": {
+                "requestParams": "Request Parameters",
+                "param": "Parameter",
+                "type": "Type",
+                "required": "Required",
+                "description": "Description & Notes",
+                "yes": "Yes",
+                "no": "No"
+            },
+            "status": {
+                "description": "Get the full real-time status of a server, returned in JSON format. This is the base endpoint for all data.",
+                "paramIp": "The IP address or domain name of the server. (e.g., play.example.com)",
+                "paramPort": "The server port. If left blank, default ports will be used for probing.",
+                "paramHost": "Address in ip:port format. This will be ignored if ip and port are provided.",
+                "paramStype": "Query type. Options: auto (default), je (Java only), be (Bedrock only).",
+                "paramSrv": "Set to true to resolve SRV records. (e.g., ?srv=true)",
+                "paramIcon": "A URL for a custom icon. This will be returned in the response, mainly for image generation."
+            },
+            "statusImg": {
+                "description": "Dynamically generate a PNG image based on the server's real-time status.",
+                "supportsParams": "This endpoint supports all parameters from /api/status, plus the following:",
+                "paramTheme": "A preset theme for the image. If left blank, the default theme (simple) will be used."
+            },
+            "tester": {
+                "title": "Interactive API Tester",
+                "description": "Build your request and see the results in real-time here."
+            }
         }
     },
     "comp": {
+        "apiTester": {
+            "configTitle": "Parameters",
+            "ipLabel": "ip / host",
+            "portLabel": "port",
+            "stypeLabel": "stype",
+            "themeLabel": "theme",
+            "iconLabel": "Custom Icon URL (Optional)",
+            "srvLabel": "Enable SRV Lookup",
+            "querying": "Querying...",
+            "sendRequest": "Send Request",
+            "jsonResponse": "JSON Response",
+            "imagePreview": "Image Preview",
+            "placeholder": "The JSON response will be displayed here after sending a request.",
+            "imageHint": "The image will update in real-time based on the configuration above.",
+            "imageAlt": "API Image Preview"
+        },
         "footer": {
             "poweredBy": "Powered by {name}",
             "rightsReserved": "All rights reserved."

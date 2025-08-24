@@ -9,9 +9,56 @@
             "unableConnectMsg": "无法连接到查询后端。",
             "offlineMsg": "服务器未响应或不存在",
             "loadingMsg":"正在查询..."
+        },
+        "docs": {
+            "title": "API 文档",
+            "subtitle": "通过我们的 API，轻松将 Minecraft 服务器状态集成到您的应用中。",
+            "common": {
+                "requestParams": "请求参数",
+                "param": "参数",
+                "type": "类型",
+                "required": "必需",
+                "description": "描述和备注",
+                "yes": "是",
+                "no": "否"
+            },
+            "status": {
+                "description": "获取服务器的全部实时状态信息，以 JSON 格式返回。这是所有数据的基础接口。",
+                "paramIp": "服务器的 IP 地址或域名。 (例如: play.example.com)",
+                "paramPort": "服务器端口。如果留空，将自动使用默认端口进行探测。",
+                "paramHost": "格式为 ip:port 的地址。如果提供了 ip 和 port，此参数将被忽略。",
+                "paramStype": "查询类型。可选值: auto (默认), je (仅Java), be (仅Bedrock)。",
+                "paramSrv": "设为 true 以解析 SRV 记录。 (例如: ?srv=true)",
+                "paramIcon": "一个自定义图标的 URL。此图标将在响应中原样返回，主要用于图片生成。"
+            },
+            "statusImg": {
+                "description": "根据服务器实时状态，动态生成一张 PNG 格式的图片。",
+                "supportsParams": "此接口支持 /api/status 的所有参数，并额外支持以下参数：",
+                "paramTheme": "图片的预设主题样式。如果留空，将使用默认主题 (simple)。"
+            },
+            "tester": {
+                "title": "API 交互式测试",
+                "description": "在此处构建您的请求，并实时查看返回结果。"
+            }
         }
     },
     "comp": {
+        "apiTester": {
+            "configTitle": "参数配置",
+            "ipLabel": "ip / host",
+            "portLabel": "port",
+            "stypeLabel": "stype",
+            "themeLabel": "theme",
+            "iconLabel": "自定义图标 URL (可选)",
+            "srvLabel": "启用 SRV 解析",
+            "querying": "正在查询...",
+            "sendRequest": "发送请求",
+            "jsonResponse": "JSON 响应",
+            "imagePreview": "图片预览",
+            "placeholder": "点击“发送请求”后，将在此处显示 JSON 响应。",
+            "imageHint": "图片将根据上方配置实时更新。",
+            "imageAlt": "API 图片预览"
+        },
         "footer": {
             "poweredBy": "由 {name} 提供技术支持",
             "rightsReserved": "版权所有"

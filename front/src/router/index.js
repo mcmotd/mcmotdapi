@@ -6,6 +6,7 @@ import HomeView from '../views/HomeView.vue';
 import EmbedView from '../views/EmbedView.vue';
 import AdminView from '../views/AdminView.vue';
 import LoginView from '../views/LoginView.vue';
+import DocsView from '../views/DocsView.vue'; 
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +33,11 @@ const router = createRouter({
             name: 'Admin',
             component: AdminView,
             meta: { requiresAuth: true }
+        },
+        {
+            path: '/docs',
+            name: 'Docs',
+            component: DocsView
         }
     ]
 });
