@@ -24,8 +24,8 @@ async function handleRequest(req, res) {
 
         const url = `http://127.0.0.1:${PORT}/iframe?${new URLSearchParams(req.query).toString()}`;
 
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 15000 });
-        await page.waitForSelector('#app', { timeout: 5000 });
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 30*1000 });
+        await page.waitForSelector('#app', { timeout: 30*1000 });
 
         // 获取页面实际高度
         const actualHeight = await page.evaluate(() => {
@@ -67,6 +67,7 @@ async function handleRequest(req, res) {
 
         //打包Json和图片链接
         const protocol = req.protocol; // http 或 https
+        //console.log(req)
         const host = req.get('host');  // 域名 + 端口（如果有）
         const screenshotUrl = `${protocol}://${host}/api/screenshot?file=${savedFilename}`;
         const dataPackage = { serverData, screenshotUrl, expireAt }
@@ -75,8 +76,10 @@ async function handleRequest(req, res) {
         return res.send(JSON.stringify(dataPackage));
     } 
     catch (error) {
+        console.error(error)
+        logger.error('[SYNC IFRAME]', 'Request Failed:', error.message);
         if('TimeoutError' === error.name) {
-            logger.error('[SYNC IFRAME]', 'Request Failed:22222');
+            logger.error('[SYNC IFRAME]', 'Request Failed:TimeOut');
             const errorPackage = {serverData:{status: 'offline'}}
             return res.send(JSON.stringify(errorPackage))
         }

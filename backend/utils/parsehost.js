@@ -47,18 +47,35 @@ export default function parseHost(ip, port, host) {
     if (!targetAddress) {
         return {
             success: false,
-            error: '请求格式不正确。必须提供 host 或 ip 参数。'
+            message: '请求格式不正确。必须提供 host 或 ip 参数。'
         };
+    }
+
+    // 添加额外验证，确保即使使用ip参数，如果其中包含端口号也能正确处理
+    if (targetAddress.includes(':') && !targetAddress.startsWith('[') && !targetAddress.endsWith(']')) {
+        const lastColonIndex = targetAddress.lastIndexOf(':');
+        const possiblePort = targetAddress.substring(lastColonIndex + 1);
+        // 检查冒号后面的部分是否为数字
+        if (!isNaN(possiblePort) && possiblePort >= 1 && possiblePort <= 65535) {
+            // 如果是，则认为地址部分包含了端口号，需要分离
+            const actualAddress = targetAddress.substring(0, lastColonIndex);
+            if (!targetPort) {  // 只有当targetPort未设置时才设置
+                targetPort = parseInt(possiblePort, 10);
+            }
+            targetAddress = actualAddress;
+        }
     }
 
     let numericPort = undefined;
 
     if (targetPort) {
         const parsedPort = parseInt(targetPort, 10);
-        if (Number.isNaN(parsedPort) || parsedPort < 1 || parsedPort > 65535 || String(parsedPort) !== targetPort.trim()) {
+        // 确保targetPort是字符串后再调用trim()
+        const targetPortStr = String(targetPort);
+        if (Number.isNaN(parsedPort) || parsedPort < 1 || parsedPort > 65535 || String(parsedPort) !== targetPortStr.trim()) {
             return {
                 success: false,
-                error: '端口无效。如果提供，端口必须是 1 到 65535 之间的纯数字。'
+                message: '端口无效。如果提供，端口必须是 1 到 65535 之间的纯数字。'
             };
         }
         numericPort = parsedPort;

@@ -5,8 +5,8 @@ const config = require('../config.json');
 
 const PORT = config.serverPort || 3000;
 
-const MAX_REQUESTS_BEFORE_RESTART = 100; // 每100次请求重启一次
-const MAX_QUEUE_SIZE = 20;
+const MAX_REQUESTS_BEFORE_RESTART = 50; // 每50次请求重启一次，减少内存占用
+const MAX_QUEUE_SIZE = 10; // 降低队列大小
 
 let browser = null;
 let requestCount = 0;
@@ -19,9 +19,9 @@ const browserState = {
 
 // 请求队列增强
 const requestQueue = new PQueue({
-    concurrency: 6, // 降低并发数
+    concurrency: 3, // 降低并发数以减少资源占用
     autoStart: false,
-    timeout: 20000,
+    timeout: 15000,
     throwOnTimeout: true,
     capacity: MAX_QUEUE_SIZE
 });
@@ -41,14 +41,9 @@ async function startBrowserManager() {
             browser = await chromium.launch({
                 headless: true,
                 args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--disable-background-networking',
-                    '--js-flags="--expose-gc"'
+
                 ],
-                timeout: 30000
+                timeout: 20000
             });
 
             browser.on('disconnected', () => {
@@ -87,10 +82,10 @@ async function startBrowserManager() {
     setInterval(async () => {
         await healthCheck();
 
-        // 每小时重启一次
+        // 每30分钟重启一次（降低频率）
         const uptime = Date.now() - browserState.lastActivity;
-        if (browserState.status === 'ready' && uptime > 3600000) {
-            logger.info('[BrowserManager]', 'Browser Scheduled restart (1h)');
+        if (browserState.status === 'ready' && uptime > 1800000) {
+            logger.info('[BrowserManager]', 'Browser Scheduled restart (30min)');
             handleBrowserCrash();
         }
     }, 60 * 1000);
@@ -98,7 +93,7 @@ async function startBrowserManager() {
     // 内存检查
     setInterval(() => {
         const memoryUsage = process.memoryUsage();
-        if (memoryUsage.heapUsed > 200 * 1024 * 1024) {
+        if (memoryUsage.heapUsed > 150 * 1024 * 1024) { // 降低内存阈值
             logger.info('[BrowserManager]', 'Memory High usage detected, restarting browser');
             handleBrowserCrash();
         }
@@ -165,8 +160,11 @@ async function getContext() {
         deviceScaleFactor: 1,
         isMobile: false,
         hasTouch: false,
-        acceptDownloads: false
+        acceptDownloads: false,
+        // 禁用一些不必要的功能以提高性能
+        permissions: []
     });
+    
     return context
 }
 

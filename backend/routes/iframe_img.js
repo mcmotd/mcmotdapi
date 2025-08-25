@@ -11,7 +11,7 @@ const PORT = config.serverPort || 3000;
 
 // 路由处理器
 async function handleRequest(req, res) {
-    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Content-Type', 'image/png');
 
     try {
         const page = await (await getContext()).newPage();
