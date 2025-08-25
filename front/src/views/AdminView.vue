@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import { useConfig } from '../composables/useConfig';
 import DashboardPanel from '../components/admin/DashboardPanel.vue';
 import ConfigEditor from '../components/admin/ConfigEditor.vue';
+import AnalyticsPanel from '../components/admin/AnalyticsPanel.vue';
+
 
 const config = useConfig();
 const isLoading = computed(() => !config.value);
@@ -24,6 +26,7 @@ const refreshConfig = () => {
         <header class="admin-header">
             <h1>管理员面板</h1>
             <nav class="admin-tabs">
+                <button @click="activeTab = 'analytics'" :class="{ active: activeTab === 'analytics' }">数据统计</button>
                 <button @click="activeTab = 'dashboard'" :class="{ active: activeTab === 'dashboard' }">数据面板</button>
                 <button @click="activeTab = 'editor'" :class="{ active: activeTab === 'editor' }">配置修改</button>
             </nav>
@@ -32,6 +35,9 @@ const refreshConfig = () => {
         <main class="admin-content">
             <div v-if="isLoading" class="loading-panel">正在加载配置...</div>
             <div v-else>
+                <div v-show="activeTab === 'analytics'">
+                    <AnalyticsPanel />
+                </div>
                 <div v-show="activeTab === 'dashboard'">
                     <DashboardPanel :config="config" />
                 </div>

@@ -1,5 +1,6 @@
 # CFG
 /backend/config/
+/backend/data/
 *.zip
 # Logs
 logs

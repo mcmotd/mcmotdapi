@@ -3,6 +3,7 @@ const router = express.Router();
 const logger = require('../utils/logger');
 const { queryServerStatus } = require('../services/queryService');
 const { default: parseHost } = require('../utils/parsehost');
+const { logQuery } = require('../services/analyticsService');
 
 router.get('/', async (req, res) => {
     // 获取客户端IP，并进行标准化处理
@@ -29,9 +30,29 @@ router.get('/', async (req, res) => {
         // [核心改动] 调用核心服务。
         // 如果 numericPort 是 undefined，JavaScript 会视其为未传递该参数。
         const serverData = await queryServerStatus(pre_host.ip, pre_host.port,icon,stype,Boolean(srv == 'true'));
+
+        logQuery( {
+            endpoint: '/api/status',
+            ip: pre_host.ip,
+            port: pre_host.port,
+            clientIp: clientIP,
+            success: true,
+            serverType: serverData.type
+        });
+
         return res.json(serverData);
     } catch (error) {
         logger.info('[QUERY]', `查询失败: ${fullAddress}`);
+
+        logQuery( {
+            endpoint: '/api/status',
+            ip: pre_host.ip,
+            port: pre_host.port,
+            clientIp: clientIP,
+            success: false,
+            serverType: null
+        });
+
         return res.json({
             status: 'offline',
             "host": fullAddress,

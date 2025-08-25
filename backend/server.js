@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const logger = require('./utils/logger');
 const fs = require('fs');
-const bodyParser = require('body-parser');
+const analyticsService = require('./services/analyticsService');
 
 
 // --- [核心改动] 配置文件自动创建逻辑 ---
@@ -14,6 +14,9 @@ const picPath = path.join(__dirname, 'config','pic.json');
 const exampleConfigPath = path.join(__dirname, 'example','config.example.json');
 const exampleFrontPath = path.join(__dirname, 'example', 'front.example.json');
 const examplPicPath = path.join(__dirname, 'example', 'pic.example.json');
+
+// 初始化数据库
+analyticsService.init();
 
 function cehckConfig(cfgPath,examplePath) { 
   if(!fs.existsSync('./config')){
@@ -52,6 +55,7 @@ const statusRoute = require('./routes/status');
 const statusImageRoute = require('./routes/status_img'); // 导入新的图片路由
 const configRoute = require('./routes/config');
 const AuthRoute = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = config.serverPort || 3000;
@@ -65,6 +69,7 @@ app.use('/api/status', statusRoute);
 app.use('/api/status_img', statusImageRoute); // 挂载新的图片路由
 app.use('/api/config', configRoute);
 app.use('/api/login', AuthRoute);
+app.use('/api/admin', adminRoutes); // 挂载 admin 路由
 
 // --- 静态文件托管与Vue Router支持 ---
 app.use(express.static(path.join(__dirname, 'dist')));
