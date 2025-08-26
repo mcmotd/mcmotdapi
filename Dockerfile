@@ -28,21 +28,25 @@ COPY backend/package-lock.json ./
 
 # 步骤 2: 在一个 RUN 指令中，完成安装依赖、编译、清理
 # 由于上一步 COPY 了 package.json，现在容器内可以找到它们了。
+# [核心修正] 将安装、编译、清理步骤合并回一个 RUN 命令，以彻底减小镜像体积
 RUN \
+    # 2.1: 切换 Alpine 软件源为国内清华大学镜像
     sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && \
     \
-    # 安装 node-canvas 的【运行时】依赖，这些必须保留
-    apk add --no-cache cairo jpeg pango giflib \
+    # 2.2: 安装运行时的系统依赖
+    apk add --no-cache cairo jpeg pango giflib && \
     \
-    # 将【编译时】的工具和开发库安装为一个虚拟包
-    && apk add --no-cache --virtual .build-deps build-base g++ python3 cairo-dev jpeg-dev pango-dev giflib-dev \
+    # 2.3: 安装编译时所需的系统依赖 (并创建虚拟包)
+    apk add --no-cache --virtual .build-deps build-base g++ python3 py3-setuptools pkgconf cairo-dev jpeg-dev pango-dev giflib-dev sqlite-dev && \
     \
-    # 执行 npm install
-    && npm install --omit=dev --registry=https://registry.npmmirror.com \
+    # 2.4: 使用编译依赖来安装 npm 包
+    npm install --production --registry=https://registry.npmmirror.com && \
     \
-    # [关键] 删除所有编译时的依赖和缓存，为镜像瘦身
-    && apk del .build-deps \
-    && rm -rf /var/cache/apk/* /tmp/*
+    # 2.5: 删除不再需要的编译时依赖
+    apk del .build-deps && \
+    \
+    # 2.6: 清理 apk 缓存
+    rm -rf /var/cache/apk/* /tmp/*
 
 # 步骤 3: 复制后端的所有项目源代码
 # 这一步在 npm install 之后，这样修改业务代码不会导致依赖重新安装。

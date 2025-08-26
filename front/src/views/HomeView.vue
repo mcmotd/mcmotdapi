@@ -55,6 +55,9 @@ const handleFetchData = async (payload) => {
                 port: port.value || undefined,
                 stype: serverType.value,
                 srv: isSRV.value
+            },
+            headers: {
+                'X-Internal-Request': 'true'
             }
         });
         data.value = response.data;

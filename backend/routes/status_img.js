@@ -12,6 +12,7 @@ const { logQuery } = require('../services/analyticsService');
 router.get('/', async (req, res) => {
     const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
     var { ip, port, host, stype, icon, srv,theme:theme } = req.query;
+    const isInternalRequest = req.headers['x-internal-request'] === 'true';
     if(!theme){
         theme = 'simple';
     }
@@ -32,7 +33,7 @@ router.get('/', async (req, res) => {
 
     try {
         // 同样调用核心查询服务来获取数据
-        const serverData = await queryServerStatus(pre_host.ip, pre_host.port, icon, stype, Boolean(srv == 'true'));
+        const serverData = await queryServerStatus(pre_host.ip, pre_host.port, icon, stype, Boolean(srv == 'true'), isInternalRequest);
         const simpleData = {
             serverData: serverData, // 传入 serverData 让模板自己格式化
             // backgroundPath: './bg.png', // 仍然可以覆盖默认背景

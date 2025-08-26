@@ -11,6 +11,8 @@ router.get('/', async (req, res) => {
 
     const { ip, port, host, icon ,stype ,srv} = req.query;
 
+    const isInternalRequest = req.headers['x-internal-request'] === 'true';
+
     let pre_host = parseHost(ip, port,host);
 
     if(!pre_host.success){
@@ -29,7 +31,7 @@ router.get('/', async (req, res) => {
     try {
         // [核心改动] 调用核心服务。
         // 如果 numericPort 是 undefined，JavaScript 会视其为未传递该参数。
-        const serverData = await queryServerStatus(pre_host.ip, pre_host.port,icon,stype,Boolean(srv == 'true'));
+        const serverData = await queryServerStatus(pre_host.ip, pre_host.port, icon, stype, Boolean(srv == 'true'), isInternalRequest);
 
         logQuery( {
             endpoint: '/api/status',

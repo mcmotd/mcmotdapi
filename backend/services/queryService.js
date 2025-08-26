@@ -2,7 +2,7 @@ const config = require('../config/config.json');
 const PingMCServer = require("../utils/java").fetch;
 const pingBedrock = require('../utils/bedrock');
 const Logger = require('../utils/logger');
-
+const { getCache, setCache } = require('./cacheService');
 
 // 将 mcpe-ping 包装成 Promise
 function pingBedrockPromise(ip, port) {
@@ -81,7 +81,48 @@ function motdToPlainText(motd) {
 const dns = require('dns').promises; // 1. 引入 dns 模块的 promise 版本
 // 假设 PingMCServer, pingBedrockPromise, motdToPlainText 等函数已正确引入
 
-async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV = false) {
+
+// [核心修改] 将 SRV 解析和缓存逻辑封装到一个独立的函数中
+async function resolveSrvRecord(domain) {
+    // [核心修改] 从配置文件读取 SRV 缓存时间，如果未配置则默认为 600 秒
+    const ttl = config.caching?.srv_ttl_seconds || 600;
+    const cacheKey = `srv:${domain}`;
+
+    try {
+        const cachedSrv = await getCache(cacheKey, ttl);
+        if (cachedSrv) {
+            Logger.debug('[SRV CACHE]', `命中SRV缓存: ${domain}`);
+            // 'not_found' 是我们主动缓存的失败记录
+            return cachedSrv.status === 'not_found' ? null : cachedSrv.data;
+        }
+
+        Logger.debug('[SRV CACHE]', `未命中SRV缓存，执行实时DNS查询: ${domain}`);
+        const srvAddress = `_minecraft._tcp.${domain}`;
+        const records = await dns.resolveSrv(srvAddress);
+
+        if (records.length > 0) {
+            const result = {
+                host: records[0].name,
+                port: records[0].port
+            };
+            // 异步写入成功的缓存，无需等待
+            setCache(cacheKey, { status: 'found', data: result });
+            Logger.info('[SRV]', `解析成功: ${result.host}:${result.port}`);
+            return result;
+        }
+
+        // 如果没有记录，也视为一种“失败”并进行缓存
+        throw new Error('No SRV records found');
+
+    } catch (err) {
+        Logger.warn('[SRV]', `解析失败: ${domain}, ${err.code || err.message}`);
+        // 缓存失败结果5分钟，防止频繁查询无效域名
+        setCache(cacheKey, { status: 'not_found' });
+        return null;
+    }
+}
+
+async function performLiveQuery(ip, port, iconUrl, serverType = 'auto', isSRV = false) {
     const now = Date.now();
 
     // --- 步骤 1: 确定 Java 和 Bedrock 的查询目标 ---
@@ -99,30 +140,11 @@ async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV =
     // --- 步骤 2: SRV 记录解析 ---
     // 当用户强制指定(isSRV=true)或在自动模式下，都尝试解析 SRV
     if (isSRV === true || serverType === 'auto') {
-        const srvAddress = `_minecraft._tcp.${ip}`;
-        try {
-            const logPrefix = isSRV ? '[SRV]' : '[SRV Auto]';
-            Logger.info(logPrefix, `解析: ${srvAddress}`);
-            const records = await dns.resolveSrv(srvAddress);
-
-            if (records.length > 0) {
-                // 解析成功，更新 Java 的查询目标
-                javaTarget.host = records[0].name;
-                javaTarget.port = records[0].port;
-                Logger.info(logPrefix, `解析成功: ${javaTarget.host}:${javaTarget.port}`);
-
-                // 如果是强制SRV模式，则将查询类型锁定为仅 Java
-                if (isSRV === true) {
-                    serverType = 'je';
-                }
-            }
-        } catch (err) {
-            // 在强制SRV模式下，解析失败需要警告用户
+        const srvResult = await resolveSrvRecord(ip);
+        if (srvResult) {
+            javaTarget = { host: srvResult.host, port: srvResult.port };
             if (isSRV === true) {
-                Logger.warn('[SRV]', `解析失败: ${srvAddress}, 将使用默认地址查询。`, err.code);
-            } else {
-                // 在自动模式下，静默失败是正常行为，仅记录日志即可
-                Logger.info('[SRV Auto]', `解析 ${srvAddress} 失败，将使用默认地址。`);
+                serverType = 'je'; // 强制只查Java
             }
         }
     }
@@ -201,6 +223,40 @@ async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV =
         }
     } catch (error) {
         throw new Error('所有服务器查询都失败了。');
+    }
+}
+
+async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV = false, isInternalRequest = false) {
+
+    // 如果缓存未启用，或者这是一个来自前端UI的内部请求，则直接进行实时查询
+    if (!config.caching?.enable || isInternalRequest) {
+        if (isInternalRequest) Logger.debug('[CACHE]', '内部请求，绕过缓存。');
+        const liveData = await performLiveQuery(ip, port, iconUrl, serverType, isSRV);
+        return { ...liveData, cached: false };
+    }
+
+    // 对于外部API调用，走缓存逻辑
+    const cacheKey = `${ip}:${port}:${serverType}:${isSRV}`;
+    const ttl = config.caching.ttl_seconds || 60;
+
+    try {
+        const cachedData = await getCache(cacheKey, ttl);
+        if (cachedData) {
+            Logger.debug('[CACHE]', `命中数据库缓存: ${cacheKey}`);
+            return { ...cachedData, cached: true };
+        }
+
+        Logger.debug('[CACHE]', `未命中缓存，执行实时查询: ${cacheKey}`);
+        const liveData = await performLiveQuery(ip, port, iconUrl, serverType, isSRV);
+
+        // 异步写入缓存，无需等待
+        setCache(cacheKey, liveData);
+
+        return { ...liveData, cached: false };
+
+    } catch (error) {
+        // 如果实时查询失败，直接抛出错误
+        throw error;
     }
 }
 

@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const logger = require('./utils/logger');
 const fs = require('fs');
-const analyticsService = require('./services/analyticsService');
+
 
 
 // --- [核心改动] 配置文件自动创建逻辑 ---
@@ -15,8 +15,6 @@ const exampleConfigPath = path.join(__dirname, 'example','config.example.json');
 const exampleFrontPath = path.join(__dirname, 'example', 'front.example.json');
 const examplPicPath = path.join(__dirname, 'example', 'pic.example.json');
 
-// 初始化数据库
-analyticsService.init();
 
 function cehckConfig(cfgPath,examplePath) { 
   if(!fs.existsSync('./config')){
@@ -49,6 +47,15 @@ cehckConfig(picPath,examplPicPath);
 
 const config = require('./config/config.json');
 
+const analyticsService = require('./services/analyticsService');
+// 初始化数据库
+analyticsService.init();
+
+const cacheService = require('./services/cacheService');
+cacheService.init();
+
+
+
 
 // 导入所有路由模块
 const statusRoute = require('./routes/status');
@@ -56,6 +63,7 @@ const statusImageRoute = require('./routes/status_img'); // 导入新的图片�
 const configRoute = require('./routes/config');
 const AuthRoute = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+
 
 const app = express();
 const PORT = config.serverPort || 3000;

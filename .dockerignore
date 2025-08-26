@@ -2,6 +2,7 @@
 
 # config
 backend/config/
+backend/data/
 
 # 本地依赖
 node_modules
