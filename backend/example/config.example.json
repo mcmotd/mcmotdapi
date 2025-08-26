@@ -13,6 +13,7 @@
   },
   "caching": {
     "enable": true,
-    "ttl_seconds": 60
+    "ttl_seconds": 60,
+    "srv_ttl_second": 600
   }
 }
