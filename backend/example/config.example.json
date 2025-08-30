@@ -4,10 +4,12 @@
   "queryTimeout": 1000,
   "serverPort": 3123,
   "log_level": 2,
-  "admin": {
-    "username": "admin",
-    "password": "5f4dcc3b5aa765d61d8327deb882cf99"
-  },
+  "admin": [
+    {
+      "username": "admin",
+      "password": "5f4dcc3b5aa765d61d8327deb882cf99"
+    }
+  ],
   "analytics": {
     "enable": true
   },
