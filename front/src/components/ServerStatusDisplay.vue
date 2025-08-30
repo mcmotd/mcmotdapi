@@ -89,7 +89,6 @@ watch(config, (newConfig) => {
     fetchSlogan();
   }
 }, { immediate: true });
-
 </script>
 
 <template>

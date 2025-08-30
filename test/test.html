@@ -76,38 +76,20 @@
         <div class="iframe-wrapper">
             <h2>测试 1：查询默认BE服务器 (亮色模式)</h2>
             <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
-            <!-- <iframe id="mc-status-play.easecation.net" class="responsive-iframe" frameborder="0" width="700"
-                height="427" scrolling="no"
-                src="http://localhost:3123/iframe?ip=play.easecation.net&port=19132&dark=false&source=mc-status-play.easecation.net"></iframe>
-            <script>
-                window.addEventListener('message', function (event) {
-                    var iframe = document.getElementById('mc-status-play.easecation.net');
-                    if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
-                        iframe.style.height = event.data.height + 'px';
-                    }
-                });
-            </script> -->
-            <iframe id="mc-status-play-easecation-net-19132"  class="responsive-iframe" frameborder="0" width="700" style="max-width:100%;" scrolling="no"
-                src="http://localhost:5173/iframe?ip=play.easecation.net&port=19132&stype=auto&dark=false&source=mc-status-play.easecation.net"></iframe>
-            <script>
-                window.addEventListener('message', function (event) {
-                    var iframe = document.getElementById('mc-status-play-easecation-net-19132');
-                    if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
-                        iframe.style.height = event.data.height + 'px';
-                    }
-                });
-            </script>
+            <iframe id="mc-status-play-easecation-net-" frameborder="0" width="700" style="max-width:100%;"
+                scrolling="no"
+                src="https://motd.minebbs.com/iframe?ip=play.easecation.net&stype=auto&dark=false"></iframe>
         </div>
 
         <div class="iframe-wrapper">
             <h2>测试 2：查询默认BE服务器 (暗色模式)</h2>
             <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
-            <iframe id="mc-status-play.easecation.net-2" class="responsive-iframe" frameborder="0" width="700"
-                height="427" scrolling="no"
-                src="http://localhost:3123/iframe?ip=play.easecation.net&port=19132&dark=true&source=mc-status-play.easecation.net"></iframe>
+            <iframe id="mc-status-play-easecation-net" frameborder="0" width="700" style="max-width:100%;"
+                scrolling="no"
+                src="http://localhost:5173/iframe?ip=play.easecati.net&stype=auto&dark=false&port=19132"></iframe>
             <script>
                 window.addEventListener('message', function (event) {
-                    var iframe = document.getElementById('mc-status-play.easecation.net-2');
+                    var iframe = document.getElementById('mc-status-play-easecation-net');
                     if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
                         iframe.style.height = event.data.height + 'px';
                     }
@@ -140,8 +122,8 @@
         <div class="iframe-wrapper">
             <h2>测试 5：获取状态图片，风格：dark_tech</h2>
             <p>这是一个动态生成的图片链接，你可以将它用于论坛签名档或文档中。</p>
-            <img src="http://localhost:3123/api/status_img?host=45.125.44.215:10015&stype=je&theme=dark_tech" alt="服务器状态图片预览"
-                class="responsive-img">
+            <img src="http://localhost:3123/api/status_img?host=45.125.44.215:10015&stype=je&theme=dark_tech"
+                alt="服务器状态图片预览" class="responsive-img">
         </div>
 
     </div>

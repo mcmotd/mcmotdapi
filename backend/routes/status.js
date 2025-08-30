@@ -11,6 +11,16 @@ router.get('/', async (req, res) => {
 
     const { ip, port, host, icon ,stype ,srv} = req.query;
 
+    let referrer = req.headers['referer'] || null;
+    
+    if (referrer) {
+        try {
+            referrer = new URL(referrer).hostname; // 只保留域名，更干净
+        } catch (e) {
+            referrer = null; // 如果 Referer 无效，则忽略
+        }
+    }
+
     const isInternalRequest = req.headers['x-internal-request'] === 'true';
 
     let pre_host = parseHost(ip, port,host);
@@ -39,7 +49,8 @@ router.get('/', async (req, res) => {
             port: pre_host.port,
             clientIp: clientIP,
             success: true,
-            serverType: serverData.type
+            serverType: serverData.type,
+            referrer: referrer
         });
 
         return res.json(serverData);
@@ -52,7 +63,8 @@ router.get('/', async (req, res) => {
             port: pre_host.port,
             clientIp: clientIP,
             success: false,
-            serverType: null
+            serverType: null,
+            referrer: referrer
         });
 
         return res.json({

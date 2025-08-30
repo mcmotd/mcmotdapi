@@ -10,47 +10,6 @@ const openSection = ref(null); // 控制当前展开的部分
 const fetchStats = async () => {
     isLoading.value = true;
     error.value = null;
-
-    // // --- [核心修改] 使用假数据进行前端调试 ---
-    // // 模拟网络延迟
-    // await new Promise(resolve => setTimeout(resolve, 500));
-
-    // const mockStats = {
-    //     totalQueries: 1836,
-    //     successfulQueries: 1754,
-    //     successRate: "95.5",
-    //     queriesLast24h: 258,
-    //     topServers: [
-    //         { ip_address: "play.hypixel.net", port: null, count: 482 },
-    //         { ip_address: "mc.hypixel.net", port: 25565, count: 310 },
-    //         { ip_address: "play.easecation.net", port: 19132, count: 251 },
-    //         { ip_address: "pvp.land", port: null, count: 199 },
-    //         { ip_address: "hub.mc-complex.com", port: null, count: 156 }
-    //     ],
-    //     recentQueries: Array.from({ length: 20 }).map((_, i) => ({
-    //         id: 100 + i,
-    //         timestamp: new Date(Date.now() - i * 30 * 60 * 1000).toISOString(),
-    //         endpoint: i % 3 === 0 ? '/api/status_img' : '/api/status',
-    //         ip_address: ['play.hypixel.net', 'pvp.land', 'mc.example.com'][i % 3],
-    //         port: [null, 25565, 19132][i % 3],
-    //         was_successful: i % 10 !== 0 // 模拟大约10%的失败率
-    //     })),
-    //     dailyCounts: Array.from({ length: 7 }).map((_, i) => {
-    //         const date = new Date();
-    //         date.setDate(date.getDate() - (6 - i));
-    //         return {
-    //             date: date.toISOString().split('T')[0],
-    //             count: Math.floor(Math.random() * (300 - 50 + 1)) + 50
-    //         };
-    //     })
-    // };
-
-    // stats.value = mockStats;
-    // isLoading.value = false;
-
-    
-    // --- 原始的真实数据获取逻辑 ---
-    // 调试完成后，请删除或注释掉上面的假数据，并取消下面的注释
     try {
         const { data } = await axios.get('/api/admin/stats');
         
@@ -166,41 +125,75 @@ onMounted(fetchStats);
                     </div>
                 </div>
 
-                <!-- 最近20次查询 -->
-                <div class="detail-section">
-                    <button class="detail-header" @click="toggleSection('recent')">
-                        <span>最近20次查询记录</span>
-                        <span class="chevron" :class="{ open: openSection === 'recent' }">▼</span>
-                    </button>
-                    <div class="detail-content" :class="{ open: openSection === 'recent' }">
-                        <div class="content-wrapper">
-                            <table class="stats-table recent-queries">
-                                <thead>
-                                    <tr>
-                                        <th>时间</th>
-                                        <th>端点</th>
-                                        <th>查询地址</th>
-                                        <th>状态</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="log in stats.recentQueries" :key="log.id">
-                                        <td>{{ formatDate(log.timestamp, true) }}</td>
-                                        <td><span class="endpoint-tag">{{ log.endpoint }}</span></td>
-                                        <td>{{ log.ip_address }}{{ log.port ? ':' + log.port : '' }}</td>
-                                        <td><span :class="log.was_successful ? 'status-success' : 'status-fail'">{{
-                                                log.was_successful ? '成功' : '失败' }}</span></td>
-                                    </tr>
-                                    <tr v-if="!stats.recentQueries || stats.recentQueries.length === 0">
-                                        <td colspan="4" class="no-data">暂无数据</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                <div class="details-accordion">
+                    <div class="detail-section">
+                        <button class="detail-header" @click="toggleSection('referrers')">
+                            <span>API 调用来源 Top 10</span>
+                            <span class="chevron" :class="{ open: openSection === 'referrers' }">▼</span>
+                        </button>
+                        <div class="detail-content" :class="{ open: openSection === 'referrers' }">
+                            <div class="content-wrapper">
+                                <table class="stats-table">
+                                    <thead>
+                                        <tr>
+                                            <th>排名</th>
+                                            <th>来源网站 (Referrer)</th>
+                                            <th>调用次数</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(ref, index) in stats.topReferrers" :key="index">
+                                            <td>#{{ index + 1 }}</td>
+                                            <td><a :href="'http://' + ref.referrer" target="_blank">{{ ref.referrer
+                                                    }}</a></td>
+                                            <td>{{ ref.count }}</td>
+                                        </tr>
+                                        <tr v-if="!stats.topReferrers || stats.topReferrers.length === 0">
+                                            <td colspan="3" class="no-data">暂无外部来源调用记录</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
+                    </div>
+
+                </div>
+
+            <!-- 最近20次查询 -->
+            <div class="detail-section">
+                <button class="detail-header" @click="toggleSection('recent')">
+                    <span>最近20次查询记录</span>
+                    <span class="chevron" :class="{ open: openSection === 'recent' }">▼</span>
+                </button>
+                <div class="detail-content" :class="{ open: openSection === 'recent' }">
+                    <div class="content-wrapper">
+                        <table class="stats-table recent-queries">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>端点</th>
+                                    <th>查询地址</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="log in stats.recentQueries" :key="log.id">
+                                    <td>{{ formatDate(log.timestamp, true) }}</td>
+                                    <td><span class="endpoint-tag">{{ log.endpoint }}</span></td>
+                                    <td>{{ log.ip_address }}{{ log.port ? ':' + log.port : '' }}</td>
+                                    <td><span :class="log.was_successful ? 'status-success' : 'status-fail'">{{
+                                            log.was_successful ? '成功' : '失败' }}</span></td>
+                                </tr>
+                                <tr v-if="!stats.recentQueries || stats.recentQueries.length === 0">
+                                    <td colspan="4" class="no-data">暂无数据</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </template>
 
@@ -252,7 +245,7 @@ onMounted(fetchStats);
     background: var(--card-background);
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    overflow: hidden;
+    /* overflow: hidden; */
     transition: background-color 0.2s;
 }
 

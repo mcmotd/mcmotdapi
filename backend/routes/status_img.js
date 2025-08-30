@@ -13,6 +13,17 @@ router.get('/', async (req, res) => {
     const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
     var { ip, port, host, stype, icon, srv,theme:theme } = req.query;
     const isInternalRequest = req.headers['x-internal-request'] === 'true';
+
+    let referrer = req.headers['referer'] || null;
+    // console.log(req.headers)
+    if (referrer) {
+        try {
+            referrer = new URL(referrer).hostname; // 只保留域名，更干净
+        } catch (e) {
+            referrer = null; // 如果 Referer 无效，则忽略
+        }
+    }
+
     if(!theme){
         theme = 'simple';
     }
@@ -52,7 +63,8 @@ router.get('/', async (req, res) => {
             port: pre_host.port,
             clientIp: clientIP,
             success: true,
-            serverType: serverData.type
+            serverType: serverData.type,
+            referrer: referrer
         });
 
         return res.send(pngBuffer);
@@ -65,7 +77,8 @@ router.get('/', async (req, res) => {
             port: pre_host.port,
             clientIp: clientIP,
             success: false,
-            serverType: null
+            serverType: null,
+            referrer: referrer
         });
 
         console.log(error)
