@@ -40,7 +40,7 @@ const fetchData = async () => {
     const serverIp = route.query.ip;
     const serverPort = route.query.port;
     const icon = route.query.icon;
-    const serverType = route.query.type;
+    const serverType = route.query.stype;
     const isSrv = route.query.srv;
 
 

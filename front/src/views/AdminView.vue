@@ -4,10 +4,11 @@ import { useConfig } from '../composables/useConfig';
 import AnalyticsPanel from '../components/admin/AnalyticsPanel.vue';
 import DashboardPanel from '../components/admin/DashboardPanel.vue';
 import ConfigEditor from '../components/admin/ConfigEditor.vue';
-// import AppFooter from '../components/AppFooter.vue';
+import AppFooter from '../components/AppFooter.vue'; // 引入页脚
 
 const config = useConfig();
 const isLoading = computed(() => !config.value);
+
 const activeTab = ref('analytics');
 
 const refreshConfig = () => {
@@ -17,21 +18,17 @@ const refreshConfig = () => {
 
 <template>
     <div class="app-wrapper">
-        <!-- [核心修改] app-content 现在是可滚动区域 -->
         <div class="app-content">
-            <div class="admin-page-container">
+            <div class="main-content-area">
                 <header class="admin-header">
-                    <div class="header-content">
-                        <h1>管理员面板</h1>
-                        <nav class="admin-tabs">
-                            <button @click="activeTab = 'analytics'"
-                                :class="{ active: activeTab === 'analytics' }">数据统计</button>
-                            <button @click="activeTab = 'overview'"
-                                :class="{ active: activeTab === 'overview' }">配置总览</button>
-                            <button @click="activeTab = 'editor'"
-                                :class="{ active: activeTab === 'editor' }">配置修改</button>
-                        </nav>
-                    </div>
+                    <h1>管理员面板</h1>
+                    <nav class="admin-tabs">
+                        <button @click="activeTab = 'analytics'"
+                            :class="{ active: activeTab === 'analytics' }">数据统计</button>
+                        <button @click="activeTab = 'overview'"
+                            :class="{ active: activeTab === 'overview' }">配置总览</button>
+                        <button @click="activeTab = 'editor'" :class="{ active: activeTab === 'editor' }">配置修改</button>
+                    </nav>
                 </header>
 
                 <main class="admin-main-content">
@@ -50,84 +47,72 @@ const refreshConfig = () => {
                 </main>
             </div>
         </div>
-        <AppFooter />
+        <!-- <AppFooter /> -->
     </div>
 </template>
 
 <style scoped>
-/* [核心修改] 采用应用式布局，确保内容区可滚动 */
-.app-wrapper {
+/* [核心修正] 采用与主页一致的“文档式”布局，让整个页面可以滚动 */
+.admin-view-wrapper {
     display: flex;
     flex-direction: column;
-    /* 将高度固定为视口高度 */
-    height: 100vh;
-    background-color: var(--background-color);
-    /* 防止整个页面出现滚动条 */
-    overflow: hidden;
+    min-height: 100vh;
+    /* 使用 min-height 允许页面高度随内容增长 */
 }
-
 .app-content {
-    /* flex: 1; 也可以用，但 flex-grow 更明确 */
     flex-grow: 1;
-    /* [关键] 让这个区域在内容溢出时出现滚动条 */
-    overflow-y: auto;
-    /* 将内边距移到这里，确保滚动区域的边缘有空间 */
-    padding: 2rem 1rem;
+    /* 内容区域占据剩余空间 */
 }
 
-.admin-page-container {
+/* 页面主要内容区域的容器 */
+.main-content-area {
     max-width: 1200px;
     margin: 0 auto;
+    padding: 2rem 1rem 4rem 1rem;
+    /* 增加顶部和底部内边距 */
     width: 100%;
-    /* 移除内边距，因为它已移至父元素 */
 }
 
 .admin-header {
-    background-color: var(--card-background);
-    border-radius: 12px;
-    padding: 1.5rem 2rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1rem;
     margin-bottom: 2rem;
-    border: 1px solid var(--border-color);
-    /* [新增] 让头部在滚动时保持在顶部（可选，但体验更好） */
-    position: sticky;
-    top: 0;
-    z-index: 10;
 }
 
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+.admin-main-area {
+    /* 这是内容区域，不再需要独立滚动 */
+    width: 100%;
+    max-width: 1200px;
+    /* 或您需要的主内容宽度 */
+    margin: 0 auto;
+    padding: 2rem;
 }
 
 h1 {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 700;
-    margin: 0;
+    margin-bottom: 1rem;
 }
 
 .admin-tabs button {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 500;
-    padding: 0.6rem 1.2rem;
+    padding: 0.8rem 1.5rem;
     border: none;
     background: none;
     cursor: pointer;
     color: var(--text-color-light);
-    border-radius: 8px;
-    transition: color 0.2s, background-color 0.2s;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
 }
 
 .admin-tabs button:hover {
-    background-color: var(--background-color);
     color: var(--text-color);
 }
 
 .admin-tabs button.active {
-    background-color: var(--primary-color);
-    color: #fff;
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
 }
 
 .loading-panel {

@@ -80,16 +80,54 @@ const iframeCode = computed(() => {
 // --- 方法 ---
 
 const copyToClipboard = () => {
+    // ... (复制逻辑保持不变)
     if (!iframeCode.value) return;
-    navigator.clipboard.writeText(iframeCode.value)
+    const copyText = (text) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            try{
+                return navigator.clipboard.writeText(text);
+            }catch{}
+        }
+        return new Promise((resolve, reject) => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                ok ? resolve() : reject(new Error('execCommand failed'));
+            } catch (e) {
+                document.body.removeChild(ta);
+                reject(e);
+            }
+        });
+    };
+    copyText(iframeCode.value)
         .then(() => {
             copyButtonText.value = t('comp.embedG.copyed');
             setTimeout(() => (copyButtonText.value = t("comp.embedG.copy")), 2000);
         })
-        .catch(() => {
+        .catch((err) => {
             copyButtonText.value = t("comp.embedG.copyFailed");
+            // console.error('Could not copy text:', err);
         });
 };
+
+
+// const copyToClipboard = () => {
+//if      (!iframeCode.value) return;
+//     navigator.clipboard.writeText(iframeCode.value)
+//         .then(() => {
+//             copyButtonText.value = t('comp.embedG.copyed');
+//             setTimeout(() => (copyButtonText.value = t("comp.embedG.copy")), 2000);
+//         })
+//         .catch(() => {
+//             copyButtonText.value = t("comp.embedG.copyFailed");
+//         });
+// };
 </script>
 
 

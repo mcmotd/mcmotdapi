@@ -25,7 +25,8 @@ const init = () => {
                 client_ip TEXT,
                 was_successful BOOLEAN NOT NULL,
                 server_type TEXT,
-                referrer TEXT
+                referrer TEXT,
+                from_cache BOOLEAN
             )
         `);
         console.log('数据库初始化成功，日志表已准备就绪。');
@@ -37,9 +38,9 @@ const logQuery = (logData) => {
     if (!config.analytics || !config.analytics.enable) {
         return;
     }
-    const { endpoint, ip, port, clientIp, success, serverType, referrer } = logData;
-    const stmt = db.prepare("INSERT INTO query_logs (endpoint, ip_address, port, client_ip, was_successful, server_type, referrer) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    stmt.run(endpoint, ip, port, clientIp, success, serverType, referrer);
+    const { endpoint, ip, port, clientIp, success, serverType, referrer, from_cache } = logData;
+    const stmt = db.prepare("INSERT INTO query_logs (endpoint, ip_address, port, client_ip, was_successful, server_type, referrer, from_cache) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    stmt.run(endpoint, ip, port, clientIp, success, serverType, referrer, from_cache);
     stmt.finalize();
 };
 
@@ -52,7 +53,6 @@ const getStats = () => {
             successfulQueries: "SELECT COUNT(*) as count FROM query_logs WHERE was_successful = 1",
             queriesLast24h: `SELECT COUNT(*) as count FROM query_logs WHERE timestamp >= datetime('now', '-24 hours')`,
             topServers: "SELECT ip_address, port, COUNT(*) as count FROM query_logs GROUP BY ip_address, port ORDER BY count DESC LIMIT 10",
-            // [核心修改] 新增查询，统计 Top 10 的 referrer
             topReferrers: "SELECT referrer, COUNT(*) as count FROM query_logs WHERE referrer IS NOT NULL AND referrer != '' GROUP BY referrer ORDER BY count DESC LIMIT 10",
             recentQueries: "SELECT * FROM query_logs ORDER BY timestamp DESC LIMIT 20",
             dailyCounts: `SELECT strftime('%Y-%m-%d', timestamp) as date, COUNT(*) as count FROM query_logs WHERE timestamp >= ? GROUP BY date ORDER BY date ASC`
@@ -63,7 +63,7 @@ const getStats = () => {
             new Promise((res, rej) => db.get(queries.successfulQueries, [], (e, r) => e ? rej(e) : res(r.count))),
             new Promise((res, rej) => db.get(queries.queriesLast24h, [], (e, r) => e ? rej(e) : res(r.count))),
             new Promise((res, rej) => db.all(queries.topServers, [], (e, r) => e ? rej(e) : res(r))),
-            new Promise((res, rej) => db.all(queries.topReferrers, [], (e, r) => e ? rej(e) : res(r))), // 执行新查询
+            new Promise((res, rej) => db.all(queries.topReferrers, [], (e, r) => e ? rej(e) : res(r))),
             new Promise((res, rej) => db.all(queries.recentQueries, [], (e, r) => e ? rej(e) : res(r))),
             new Promise((res, rej) => db.all(queries.dailyCounts, [sevenDaysAgo], (e, r) => e ? rej(e) : res(r)))
         ]).then(([total, successful, last24h, topServers, topReferrers, recent, daily]) => {
@@ -73,7 +73,7 @@ const getStats = () => {
                 successRate: total > 0 ? ((successful / total) * 100).toFixed(1) : "0.0",
                 queriesLast24h: last24h || 0,
                 topServers: topServers || [],
-                topReferrers: topReferrers || [], // 添加新数据到响应中
+                topReferrers: topReferrers || [],
                 recentQueries: recent || [],
                 dailyCounts: daily || []
             };
