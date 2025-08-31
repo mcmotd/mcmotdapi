@@ -243,7 +243,7 @@ async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV =
         const cachedData = await getCache(cacheKey, ttl);
         if (cachedData) {
             Logger.debug('[CACHE]', `命中数据库缓存: ${cacheKey}`);
-            return { ...cachedData, /* cached: true */ };
+            return { ...cachedData, cached: true };
         }
 
         Logger.debug('[CACHE]', `未命中缓存，执行实时查询: ${cacheKey}`);
@@ -252,7 +252,7 @@ async function queryServerStatus(ip, port, iconUrl, serverType = 'auto', isSRV =
         // 异步写入缓存，无需等待
         setCache(cacheKey, liveData);
 
-        return { ...liveData,/*  cached: false */ };
+        return { ...liveData, cached: false  };
 
     } catch (error) {
         // 如果实时查询失败，直接抛出错误

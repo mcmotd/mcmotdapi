@@ -132,7 +132,7 @@ onMounted(fetchStats);
                 <!-- 最近20次查询记录 -->
                 <div class="detail-section">
                     <button class="detail-header" @click="toggleSection('recent')">
-                        <span>最近20次查询记录 (鼠标悬停查看详情)</span><span class="chevron" :class="{ open: openSection === 'recent' }">▼</span>
+                        <span>最近20次查询记录</span><span class="chevron" :class="{ open: openSection === 'recent' }">▼</span>
                     </button>
                     <div class="detail-content" :class="{ open: openSection === 'recent' }">
                         <div class="content-wrapper">

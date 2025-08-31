@@ -64,7 +64,8 @@ router.get('/', async (req, res) => {
             clientIp: clientIP,
             success: true,
             serverType: serverData.type,
-            referrer: referrer
+            referrer: referrer,
+            from_cache: serverData.cached
         });
 
         return res.send(pngBuffer);

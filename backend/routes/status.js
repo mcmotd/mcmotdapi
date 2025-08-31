@@ -50,8 +50,11 @@ router.get('/', async (req, res) => {
             clientIp: clientIP,
             success: true,
             serverType: serverData.type,
-            referrer: referrer
+            referrer: referrer,
+            from_cache: serverData.cached
         });
+
+        serverData.cached = undefined;
 
         return res.json(serverData);
     } catch (error) {
