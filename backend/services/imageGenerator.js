@@ -212,7 +212,7 @@ async function renderSimpleBackground(ctx, conf, data) {
     // if (lines.length !== 7) throw new Error('必须是 7 行文字');
 
     // 1. 绘制背景
-    const bg = await loadImage(backgroundPath || conf.default_background_path);
+    const bg = await loadImage(path.join(__dirname, '../', backgroundPath || conf.default_background_path));
     ctx.drawImage(bg, 0, 0, conf.width, conf.height);
 
     // 2. 绘制可选图标
