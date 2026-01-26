@@ -8,9 +8,9 @@ const config = JSON.parse(fs.readFileSync(path.join(__dirname,'../','config', 'p
 
 // 2. 注册全局字体
 try {
-    registerFont(config.font.path, { family: config.font.name });
+    registerFont(path.join(__dirname,'../',config.font.path), { family: config.font.name });
 } catch (e) {
-    console.error(`[错误] 字体文件加载失败: ${config.font.path}`);
+    console.error(`[错误] 字体文件加载失败: ${path.join(__dirname,'../',config.font.path)}`);
     process.exit(1);
 }
 
