@@ -14,7 +14,8 @@ const data = ref(null);
 
 const embedWrapperRef = ref(null);
 
-const isDarkMode = computed(() => route.query.dark === 'true');
+let isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const isDarkMode = computed(() => route.query.dark === 'true' ? true : route.query.dark === 'auto' ? isSystemDark : false);
 
 // [核心修复] 使用 onMounted 和 onUnmounted 动态修改 iframe 内部的样式
 onMounted(() => {
@@ -24,6 +25,8 @@ onMounted(() => {
     document.body.style.height = '100%';
     document.body.style.margin = '0';
     document.body.style.padding = '0';
+    // 监听系统主题变化
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => isSystemDark = e.matches)
 });
 
 onUnmounted(() => {
@@ -33,6 +36,7 @@ onUnmounted(() => {
     document.body.style.height = '';
     document.body.style.margin = '';
     document.body.style.padding = '';
+    window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', e => isSystemDark = e.matches)
 });
 
 
@@ -119,7 +123,7 @@ watch(data, () => {
         <div v-if="loading" class="message-box">{{ $t('view.embed.loadingMsg') }}</div>
         <div v-else-if="error" class="message-box error-box">{{ error }}</div>
         <ServerStatusDisplay v-else-if="data" :server-data="data" :has-queried="true" />
-        </div>
+    </div>
 </template>
 
 <style scoped>
@@ -127,10 +131,14 @@ watch(data, () => {
 
 /* 修改 .embed-wrapper 样式 */
 .embed-wrapper {
-    background-color: transparent;
+    background-color: var(--background-color);
     width: 100%;
     height: 100%;
-    /* 使用 height 替代 min-height */
+    min-height: 100vh;          /* 加强版，防塌陷 */
+    padding: 20px;   /* 这里是真注释/doge */
+                     /* 为什么要加边距呢？ */
+                     /* 我觉得不加边距的话配上圆角、阴影和浮动效果太奇怪了 */
+                     /* 要么就把那些去掉吧 */
     box-sizing: border-box;
 }
 

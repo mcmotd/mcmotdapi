@@ -3,6 +3,7 @@
 defineProps({
     show: Boolean, // 控制模态框的显示与隐藏
     title: String, // 模态框的标题
+    isDark: Boolean
 });
 const emit = defineEmits(['close']);
 
@@ -15,7 +16,7 @@ const handleClose = () => {
 <template>
     <Transition name="modal-fade">
         <div v-if="show" class="modal-overlay" @click.self="handleClose">
-            <div class="modal-content">
+            <div class="modal-content" :class="{ 'dark-theme': isDark }">
                 <header class="modal-header">
                     <h3>{{ title }}</h3>
                     <button class="close-button" @click="handleClose">&times;</button>

@@ -17,8 +17,8 @@
 
 /* 暗色主题的变量覆盖 */
 .dark-theme {
-    --background-color: #121212;
-    --card-background: #1e1e1e;
+    --background-color: #303030;
+    --card-background: #424242;
     --border-color: #333;
     --shadow-color: rgba(0, 0, 0, 0.2);
 
@@ -33,6 +33,46 @@
 
     --status-online-bg: rgba(61, 220, 132, 0.15);
     --status-error-bg: rgba(255, 82, 82, 0.15);
+
+    .message-box {
+        color: var(--text-color);
+    }
+
+    body {
+        background-color: var(--background-color);
+    }
+
+    .modal-content,
+    .modal-body {
+        color: #f0f0f0;                /* 主体文字更白 */
+    }
+
+    .modal-header h3 {
+    color: #ffffff;                /* 标题强制纯白 */
+    }
+
+    .close-button {
+    color: #cccccc;                /* 关闭按钮中灰白 */
+    }
+
+    .close-button:hover {
+        color: #ffffff;
+    }
+    /* 表格文字和背景 */
+    .mod-table {
+        color: #e0e0e0;
+
+        th {
+            background-color: #2a2a2a;     /* 表头稍浅一点，便于区分 */
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        td {
+            color: #d0d0d0;
+            border-bottom-color: #3a3a3a;
+        }
+    }
 }
 
 
