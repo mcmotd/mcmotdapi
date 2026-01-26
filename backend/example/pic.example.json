@@ -2,7 +2,7 @@
     "default_template": "simple",
     "font": {
         "path": "./HYPixel.ttf",
-        "name": "HYPixel"
+        "name": "汉仪像素"
     },
     "special_fields": {
         "motd_truncate": {
