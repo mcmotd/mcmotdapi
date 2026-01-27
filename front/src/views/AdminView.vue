@@ -11,6 +11,9 @@ const isLoading = computed(() => !config.value);
 
 const activeTab = ref('analytics');
 
+const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+if(isDarkMode) document.body.classList.add('dark-theme');
+
 const refreshConfig = () => {
     console.log('配置已更新，数据已刷新。');
 };

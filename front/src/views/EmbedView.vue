@@ -14,7 +14,7 @@ const data = ref(null);
 
 const embedWrapperRef = ref(null);
 
-let isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+let isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 const isDarkMode = computed(() => route.query.dark === 'true' ? true : route.query.dark === 'auto' ? isSystemDark : false);
 
 // [核心修复] 使用 onMounted 和 onUnmounted 动态修改 iframe 内部的样式
