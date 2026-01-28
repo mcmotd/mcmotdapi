@@ -280,7 +280,7 @@ async function renderGlassCard(ctx, conf, serverData) {
     currentY += mainConf.motd.margin_top;
     ctx.font = `${mainConf.motd.font_weight || ''} ${mainConf.motd.font_size}px "${config.font.name}"`;
     ctx.fillStyle = mainConf.motd.color;
-    ctx.fillText(interpolate("{motd}", serverData), conf.width / 2, currentY, contentWidth);
+    ctx.fillText(interpolate("{motd_truncate}", serverData), conf.width / 2, currentY, contentWidth);
     currentY += mainConf.motd.font_size;
 
     currentY += mainConf.players.margin_top;
