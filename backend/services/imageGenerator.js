@@ -6,11 +6,12 @@ const path = require('path');
 // 1. 加载并解析配置文件
 const config = JSON.parse(fs.readFileSync(path.join(__dirname,'../','config', 'pic.json'), 'utf8'));
 
+const fontPath = path.isAbsolute(config.font.path) ? config.font.path : path.join(__dirname,'../',config.font.path);
 // 2. 注册全局字体
 try {
-    registerFont(config.font.path, { family: config.font.name });
+    registerFont(fontPath, { family: config.font.name });
 } catch (e) {
-    console.error(`[错误] 字体文件加载失败: ${config.font.path}`);
+    console.error(`[错误] 字体文件加载失败: ${fontPath}`);
     process.exit(1);
 }
 
@@ -212,7 +213,11 @@ async function renderSimpleBackground(ctx, conf, data) {
     // if (lines.length !== 7) throw new Error('必须是 7 行文字');
 
     // 1. 绘制背景
-    const bg = await loadImage(backgroundPath || conf.default_background_path);
+    const bg = await loadImage(
+        path.isAbsolute(backgroundPath || conf.default_background_path) 
+        ? (backgroundPath || conf.default_background_path) 
+        : path.join(__dirname, '../', backgroundPath || conf.default_background_path)
+    );
     ctx.drawImage(bg, 0, 0, conf.width, conf.height);
 
     // 2. 绘制可选图标
@@ -265,7 +270,7 @@ async function renderGlassCard(ctx, conf, serverData) {
     if (serverData.icon) {
         const iconX = conf.width / 2 - mainConf.icon.size / 2;
         try {
-            const iconPath = path.isAbsolute(serverData.icon) ? serverData.icon : path.join(__dirname, '../', serverData.icon);
+            const iconPath = serverData.icon.startsWith('data:image') ? serverData.icon : (path.isAbsolute(serverData.icon) ? serverData.icon : path.join(__dirname, '../', serverData.icon));
             const icon = await loadImage(iconPath);
             ctx.drawImage(icon, iconX, currentY, mainConf.icon.size, mainConf.icon.size);
         } catch (e) { console.error("加载图标失败:", e.message); }
@@ -275,7 +280,7 @@ async function renderGlassCard(ctx, conf, serverData) {
     currentY += mainConf.motd.margin_top;
     ctx.font = `${mainConf.motd.font_weight || ''} ${mainConf.motd.font_size}px "${config.font.name}"`;
     ctx.fillStyle = mainConf.motd.color;
-    ctx.fillText(interpolate("{motd}", serverData), conf.width / 2, currentY, contentWidth);
+    ctx.fillText(interpolate("{motd_truncate}", serverData), conf.width / 2, currentY, contentWidth);
     currentY += mainConf.motd.font_size;
 
     currentY += mainConf.players.margin_top;

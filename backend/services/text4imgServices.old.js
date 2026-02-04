@@ -4,7 +4,7 @@ const path = require('path');
 
 // --- 配置区域 ---
 // 1. 字体配置 (请确保路径正确)
-const FONT_FILE = './HYPixel.ttf'; // 替换为您的字体文件路径
+const FONT_FILE = '../HYPixel.ttf'; // 替换为您的字体文件路径
 const FONT_NAME = 'HYPixel';
 try {
   registerFont(FONT_FILE, { family: FONT_NAME });

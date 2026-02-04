@@ -17,8 +17,8 @@ const examplPicPath = path.join(__dirname, 'example', 'pic.example.json');
 
 
 function cehckConfig(cfgPath,examplePath) { 
-  if(!fs.existsSync('./config')){
-    fs.mkdirSync('./config');
+  if(!fs.existsSync(path.join(__dirname, 'config'))){
+    fs.mkdirSync(path.join(__dirname, 'config'));
   }
   if (!fs.existsSync(cfgPath)) {
     logger.warn('[CONFIG]', `未找到 ${cfgPath} 文件。`);

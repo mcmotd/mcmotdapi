@@ -14,46 +14,48 @@ RUN pnpm run build:docker
 # =================================================================
 # 第二阶段 (runner): 运行生产环境 (backend 文件夹)
 # =================================================================
-FROM node:20-alpine
+FROM node:20-alpine3.17
 
 WORKDIR /app
 
-ENV PORT=3123
+RUN echo "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.17/main" > /etc/apk/repositories && \
+    echo "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.17/community" >> /etc/apk/repositories && \
+    # 补充官方源，防止清华源不可达
+    echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/main" >> /etc/apk/repositories && \
+    echo "https://dl-cdn.alpinelinux.org/alpine/v3.17/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk upgrade
 
-# --- [核心修正] ---
-# 步骤 1: 先只复制包管理文件
-# 这一层可以被 Docker 缓存。只要依赖不变，下次构建会直接跳过最耗时的 npm install 步骤。
-COPY backend/package*.json ./
-COPY backend/package-lock.json ./
+# 仅安装canvas运行时依赖（无需编译依赖）
+RUN apk add --no-cache\
+    cairo \
+    libjpeg-turbo \
+    pango \
+    giflib \
+    pangomm \
+    libpng \
+    freetype \
+    fontconfig \
+    libxml2 \
+    musl-dev
 
-# 步骤 2: 在一个 RUN 指令中，完成安装依赖、编译、清理
-# 由于上一步 COPY 了 package.json，现在容器内可以找到它们了。
-# [核心修正] 将安装、编译、清理步骤合并回一个 RUN 命令，以彻底减小镜像体积
-RUN \
-    # 2.1: 切换 Alpine 软件源为国内清华大学镜像
-    sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && \
-    \
-    # 2.2: 安装运行时的系统依赖
-    apk add --no-cache cairo jpeg pango giflib && \
-    \
-    # 2.3: 安装编译时所需的系统依赖 (并创建虚拟包)
-    apk add --no-cache --virtual .build-deps build-base g++ python3 py3-setuptools pkgconf cairo-dev jpeg-dev pango-dev giflib-dev sqlite-dev && \
-    \
-    # 2.4: 使用编译依赖来安装 npm 包
-    npm install --production --registry=https://registry.npmmirror.com && \
-    \
-    # 2.5: 删除不再需要的编译时依赖
-    apk del .build-deps && \
-    \
-    # 2.6: 清理 apk 缓存
-    rm -rf /var/cache/apk/* /tmp/*
+ENV canvas_binary_host_mirror=https://registry.npmmirror.com/-/binary/canvas/
+# 设置npm镜像源
+ENV npm_config_registry=https://registry.npmmirror.com
 
-# 步骤 3: 复制后端的所有项目源代码
-# 这一步在 npm install 之后，这样修改业务代码不会导致依赖重新安装。
+# 复制package.json（先装依赖，利用缓存）
+COPY package.json package-lock.json* ./
+
+# 安装依赖（--omit=dev替代production，适配新版npm）
+RUN npm install --omit=dev --force
+
+# 清理缓存
+RUN rm -rf /var/cache/apk/* /tmp/* /root/.npm
+
+# 复制代码
 COPY backend/ .
 
 # 从 frontend-builder 阶段复制已经构建好的前端文件
 COPY --from=frontend-builder /app/dist ./dist
-
 EXPOSE $PORT
 CMD [ "npm", "run", "start" ]

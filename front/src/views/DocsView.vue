@@ -5,6 +5,9 @@ import AppFooter from '../components/AppFooter.vue';
 import ApiTester from '../components/docs/ApiTester.vue';
 
 const { t } = useI18n(); // 获取翻译函数
+
+const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+if(isDarkMode) document.body.classList.add('dark-theme');
 </script>
 
 <template>
