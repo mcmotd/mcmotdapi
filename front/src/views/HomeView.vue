@@ -26,6 +26,9 @@ const serverType = ref('auto');
 const isSRV = ref(false);
 const hasQueried = ref(false);
 
+const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+if(isDarkMode) document.body.classList.add('dark-theme');
+
 const isServerOnline = computed(() => {
     return data.value && data.value.version && data.value.status !== 'offline';
 });

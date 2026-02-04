@@ -322,8 +322,8 @@ label {
 }
 
 .dark-theme {
-    --card-background: #2a2a2a;
-    --background-color: #1f1f1f;
+    --card-background: #303030;
+    --background-color: #424242;
     --text-color: #e0e0e0;
     --text-color-light: #a0a0a0;
     --border-color: #444;

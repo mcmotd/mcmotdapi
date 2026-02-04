@@ -15,6 +15,7 @@
             align-items: center;
             padding: 1rem;
             margin: 0;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
@@ -36,12 +37,14 @@
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
 
         .iframe-wrapper h2 {
             font-size: 1.2rem;
             margin-top: 0;
             margin-bottom: 1rem;
+            color: #222;
         }
 
         /* 统一的响应式样式，适用于 iframe */
@@ -60,6 +63,32 @@
             width: 100%;
             height: auto;
             border-radius: 4px;
+        }
+
+        /* 暗色模式适配 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #252525;
+                color: #e0e0e0;
+            }
+
+            h1 {
+                color: #f5f5f5;
+                border-bottom: 1px solid #555;
+            }
+
+            .iframe-wrapper {
+                background-color: #303030;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            }
+
+            .iframe-wrapper h2 {
+                color: #f0f0f0;
+            }
+
+            .responsive-iframe {
+                border: 1px solid #303030;
+            }
         }
     </style>
 </head>
@@ -92,7 +121,7 @@
             <p>下方应显示 <strong>play.easecation.net</strong> 的状态。</p>
             <iframe id="mc-status-play-easecation-net" frameborder="0" width="700" style="max-width:100%;"
                 scrolling="no"
-                src="http://localhost:5173/iframe?ip=play.easecati.net&stype=auto&dark=false&port=19132"></iframe>
+                src="http://localhost:3123/iframe?ip=play.easecation.net&stype=auto&dark=true&port=19132"></iframe>
             <script>
                 window.addEventListener('message', function (event) {
                     var iframe = document.getElementById('mc-status-play-easecation-net');
@@ -107,7 +136,7 @@
             <h2>测试 3：查询一个JAVA的服务器</h2>
             <p>下方应显示 <strong>play.mctop1.com</strong> 的状态。</p>
             <iframe id="mc-status-play.mctop1.com" class="responsive-iframe" frameborder="0" width="700" height="450"
-                scrolling="no" src="http://localhost:3123/iframe?ip=play.mctop1.com&port=25565&dark=false"></iframe>
+                scrolling="no" src="http://localhost:3123/iframe?ip=play.mctop1.com&port=25565&dark=auto"></iframe>
             <script>
                 window.addEventListener('message', function (event) {
                     var iframe = document.getElementById('mc-status-play.mctop1.com');
@@ -119,16 +148,53 @@
         </div>
 
         <div class="iframe-wrapper">
-            <h2>测试 4：获取状态图片</h2>
+            <h2>测试 4：查询一个不存在的服务器</h2>
+            <p>下方应显示 <strong>0.0.0.0</strong> 的状态。</p>
+            <iframe id="mc-status-0-0-0-0" class="responsive-iframe" frameborder="0" width="700" height="450"
+                scrolling="no" src="http://localhost:3123/iframe?ip=0.0.0.0&dark=auto"></iframe>
+            <script>
+                window.addEventListener('message', function (event) {
+                    var iframe = document.getElementById('mc-status-0-0-0-0');
+                    if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
+                        iframe.style.height = event.data.height + 'px';
+                    }
+                });
+            </script>
+        </div>
+        
+        <div class="iframe-wrapper">
+            <h2>测试 5：参数错误</h2>
+            <p>下方应显示 <strong>参数错误</strong> 的状态。</p>
+            <iframe id="mc-status-0-0-0" class="responsive-iframe" frameborder="0" width="700" height="450"
+                scrolling="no" src="http://localhost:3123/iframe?dark=auto"></iframe>
+            <script>
+                window.addEventListener('message', function (event) {
+                    var iframe = document.getElementById('mc-status-0-0-0');
+                    if (event.source === iframe.contentWindow && event.data && event.data.type === 'resize-iframe') {
+                        iframe.style.height = event.data.height + 'px';
+                    }
+                });
+            </script>
+        </div>
+
+        <div class="iframe-wrapper">
+            <h2>测试 6：获取状态图片</h2>
             <p>这是一个动态生成的图片链接，你可以将它用于论坛签名档或文档中。</p>
-            <img src="http://localhost:3123/api/status_img?host=45.125.44.215:10015" alt="服务器状态图片预览"
+            <img src="http://localhost:3123/api/status_img?host=play.mctop1.com&stype=je" alt="服务器状态图片预览"
                 class="responsive-img">
         </div>
 
         <div class="iframe-wrapper">
-            <h2>测试 5：获取状态图片，风格：dark_tech</h2>
+            <h2>测试 7：获取状态图片，风格：dark_tech</h2>
             <p>这是一个动态生成的图片链接，你可以将它用于论坛签名档或文档中。</p>
-            <img src="http://localhost:3123/api/status_img?host=45.125.44.215:10015&stype=je&theme=dark_tech"
+            <img src="http://localhost:3123/api/status_img?host=play.mctop1.com&stype=je&theme=dark_tech"
+                alt="服务器状态图片预览" class="responsive-img">
+        </div>
+
+        <div class="iframe-wrapper">
+            <h2>测试 8：获取状态图片（服务器不存在）</h2>
+            <p>这是一个动态生成的图片不存在链接。</p>
+            <img src="http://localhost:3123/api/status_img?host=0.0.0.0&stype=je&theme=dark_tech"
                 alt="服务器状态图片预览" class="responsive-img">
         </div>
 

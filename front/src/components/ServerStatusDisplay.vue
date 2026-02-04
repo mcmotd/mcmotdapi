@@ -1,11 +1,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { parseMotdToHtml } from '../utils/motd-parser.js';
 import defaultIcon from '/mc.png';
 import InfoModal from './InfoModal.vue';
 import axios from 'axios';
 import { useConfig } from '../composables/useConfig';
 import { useI18n } from 'vue-i18n';
+
+const route = useRoute();
 
 const { t } = useI18n();
 const config = useConfig();
@@ -83,6 +86,9 @@ const fetchSlogan = async () => {
   }
 };
 
+let isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const isDarkMode = computed(() => route.query.dark === 'true' ? true : route.query.dark === 'auto' ? isSystemDark : false);
+
 watch(config, (newConfig) => {
   if (newConfig?.failureState) {
     offlineSlogan.value = newConfig.failureState.defaultSlogan;
@@ -154,7 +160,7 @@ watch(config, (newConfig) => {
     </div>
 
     <teleport to="body" v-if="!isOffline && serverData.mod_info?.modList?.length">
-      <InfoModal :show="isModalVisible" :title="modalTitle" @close="isModalVisible = false">
+      <InfoModal :show="isModalVisible" :title="modalTitle" :is-dark="isDarkMode" @close="isModalVisible = false">
         <table class="mod-table">
           <thead>
             <tr>
@@ -274,7 +280,7 @@ watch(config, (newConfig) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--background-color-light, #f8f9fa);
+  background-color: var(--card-background);
   color: var(--text-color-light);
   padding: 2rem;
   box-sizing: border-box;

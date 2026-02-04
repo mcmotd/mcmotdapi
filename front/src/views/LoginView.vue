@@ -11,6 +11,9 @@ const isLoading = ref(false);
 
 const router = useRouter();
 
+const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+if(isDarkMode) document.body.classList.add('dark-theme');
+
 const handleLogin = async () => {
     if (!username.value || !password.value) {
         errorMessage.value = '请输入用户名和密码。';
