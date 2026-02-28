@@ -13,32 +13,26 @@ RUN pnpm run build:docker
 # =================================================================
 # 第二阶段: 运行环境
 # =================================================================
-FROM node:20-alpine3.17
+FROM node:20-alpine
 WORKDIR /app
 
-# 安装 Canvas 运行时依赖
-RUN apk add --no-cache \
-    cairo \
-    libjpeg-turbo \
-    pango \
-    giflib \
-    libpng \
-    freetype \
-    fontconfig \
-    libxml2
+# 显式指定从当前构建上下文的 backend 目录拷贝
+# 这里的 ./backend 是相对于你 git push 上去的根目录
+COPY ./backend/package*.json ./
+RUN npm install --production
 
-# 1. 先拷贝 package.json 安装后端依赖
-# 注意：确保这个 package.json 包含了 express 等依赖
-COPY package*.json ./
-RUN npm install --omit=dev --force
+COPY ./backend/ ./
 
-# 2. 拷贝后端代码 (假设 server.js 在 backend 目录下)
-# 如果你的 server.js 在 backend 文件夹里，拷贝到当前目录
-COPY backend/ .
-
-# 3. 从前端构建阶段拷贝产物
+# 拷贝前端产物
 COPY --from=frontend-builder /app/dist ./dist
 
-EXPOSE 3000
+# 强制检查一次，如果为空，构建直接报错
+RUN if [ ! -f "package.json" ]; then echo "文件拷贝失败！" && exit 1; fi
+
+# 如果你还是启动不起来，暂时用这个“假启动”
+# CMD ["tail", "-f", "/dev/null"]
+# CMD ["npm", "start"]
+
+EXPOSE 3123
 # 启动
 CMD [ "node", "server.js" ]
