@@ -2,7 +2,7 @@
 /backend/config/
 /backend/data/
 *.zip
-/test/
+/test
 # Logs
 logs
 *.log

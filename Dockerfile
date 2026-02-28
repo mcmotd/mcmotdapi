@@ -39,9 +39,9 @@ RUN apk add --no-cache\
     libxml2 \
     musl-dev
 
-ENV canvas_binary_host_mirror=https://registry.npmmirror.com/-/binary/canvas/
-# 设置npm镜像源
-ENV npm_config_registry=https://registry.npmmirror.com
+# ENV canvas_binary_host_mirror=https://registry.npmmirror.com/-/binary/canvas/
+# # 设置npm镜像源
+# ENV npm_config_registry=https://registry.npmmirror.com
 
 # 复制package.json（先装依赖，利用缓存）
 COPY package.json package-lock.json* ./
