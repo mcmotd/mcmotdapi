@@ -19,7 +19,7 @@ dist-ssr
 .vscode/
 
 # ttf
-*.ttf
+# *.ttf
 
 # Editor directories and files
 .vscode/*
