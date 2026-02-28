@@ -14,26 +14,31 @@ RUN pnpm run build:docker
 # =================================================================
 # 第二阶段: 运行环境
 # =================================================================
-FROM node:20-alpine
+FROM node:20-slim
 WORKDIR /app
 ENV PORT=3123
 
-# 安装系统依赖
-RUN apk add --no-cache cairo jpeg pango giflib
-RUN apk add --no-cache --virtual .build-deps build-base g++ python3 pkgconf cairo-dev jpeg-dev pango-dev giflib-dev
+# 1. 安装 Debian 下 canvas 所需的系统依赖 (非常稳定)
+RUN apt-get update && apt-get install -y \
+    libcairo2 \
+    libjpeg62-turbo \
+    libpango-1.0-0 \
+    libgif7 \
+    librsvg2-2 \
+    && rm -rf /var/lib/apt/lists/*
 
-# --- [关键修正：保持 backend 层级] ---
-# 1. 拷贝 backend 整个目录（包含它里面的 package.json）
+# 2. 拷贝 backend 目录
 COPY backend/ ./backend/
 
-# 2. 进入 backend 目录安装后端依赖
+# 3. 进入目录并安装
 WORKDIR /app/backend
+
+# GitHub Actions 环境不需要换源，直接安装
+# 如果报错，它会打印出具体的错误原因
 RUN npm install --production
 
-# 3. 复制前端产物到指定位置
-# 假设你的 backend 代码里是通过 ../dist 或 ./dist 访问前端的，请根据代码调整
+# 4. 复制前端产物 (根据你 server.js 访问路径调整)
 COPY --from=frontend-builder /app/dist ./dist
-
 # 清理编译工具
 RUN apk del .build-deps && rm -rf /var/cache/apk/* /tmp/*
 
