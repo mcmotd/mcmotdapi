@@ -1,15 +1,13 @@
 # =================================================================
 # 第一阶段: 编译前端
 # =================================================================
-FROM node:24.4.1 AS frontend-builder
+FROM node:24.4.1-slim AS frontend-builder
 WORKDIR /app
 RUN npm install -g pnpm
-COPY front/package*.json front/pnpm-lock.yaml ./front/
-# 注意这里：要进入 front 目录安装
-WORKDIR /app/front
-RUN pnpm install
-COPY front/ .
-RUN pnpm run build:docker
+COPY front/package*.json front/pnpm-lock.yaml ./
+# 路径修正：确保拷贝到正确位置
+COPY front/ ./
+RUN pnpm install && pnpm run build:docker
 
 # =================================================================
 # 第二阶段: 运行环境
