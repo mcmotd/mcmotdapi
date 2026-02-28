@@ -38,7 +38,7 @@ RUN npm install --production
 # 4. 复制前端产物 (根据你 server.js 访问路径调整)
 COPY --from=frontend-builder /app/dist ./dist
 # 清理编译工具
-RUN apk del .build-deps && rm -rf /var/cache/apk/* /tmp/*
+# RUN apk del .build-deps && rm -rf /var/cache/apk/* /tmp/*
 
 # 暴露端口
 EXPOSE $PORT
