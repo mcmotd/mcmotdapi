@@ -17,5 +17,11 @@
     "enable": true,
     "ttl_seconds": 60,
     "srv_ttl_second": 600
+  },
+  "appImage": {
+    "width": 700,
+    "height": 389,
+    "ttlSeconds": 300,
+    "tempDir": "./data/appImage-temp"
   }
 }

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 // [新增] 引入 useConfig Hook
 import { useConfig } from '../composables/useConfig';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 // [新增] 获取全局配置
 const config = useConfig();
 // 获取 t 函数和当前的 locale
@@ -31,7 +31,10 @@ const imageUrl = ref('');
 const selectedTheme = ref('');
 
 // [新增] 从全局配置中安全地获取可用主题列表
-const availableThemes = computed(() => config.value?.image_generator?.themes || []);
+const availableThemes = computed(() => {
+    const themes = config.value?.image_generator?.themes || [];
+    return [...themes, { name: t('comp.imgG.previewCard'), value: 'app_card' }];
+});
 
 // [新增] 监听配置加载，设置默认主题
 watch(config, (newConfig) => {
@@ -54,8 +57,12 @@ watch(() => [props.address, props.port, props.serverType, props.isSrv, selectedT
     if (props.serverType) params.append('stype', props.serverType);
     if (props.isSrv) params.append('srv', String(props.isSrv));
     // [新增] 将选中的主题作为 template 参数添加到 URL 中
+    if (selectedTheme.value === 'app_card') {
+        params.append('lang', locale.value || 'zh-CN');
+        imageUrl.value = `/api/app_img?${params.toString()}`;
+        return;
+    }
     params.append('theme', selectedTheme.value);
-
     imageUrl.value = `/api/status_img?${params.toString()}`;
 
 }, { immediate: true, deep: true });

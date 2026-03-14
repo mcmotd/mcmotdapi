@@ -116,6 +116,84 @@ if(isDarkMode) document.body.classList.add('dark-theme');
                         </table>
                     </section>
 
+                    <section class="api-section">
+                        <div class="api-heading">
+                            <span class="api-method get">GET</span>
+                            <h2>/api/app_img</h2>
+                        </div>
+                        <p class="api-description">
+                            {{ t('view.docs.appImg.description') }}
+                        </p>
+
+                        <h3>{{ t('view.docs.common.requestParams') }}</h3>
+                        <p>{{ t('view.docs.appImg.supportsParams') }}</p>
+                        <table class="param-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ t('view.docs.common.param') }}</th>
+                                    <th>{{ t('view.docs.common.type') }}</th>
+                                    <th>{{ t('view.docs.common.required') }}</th>
+                                    <th>{{ t('view.docs.common.description') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>lang</td>
+                                    <td>string</td>
+                                    <td>{{ t('view.docs.common.no') }}</td>
+                                    <td>{{ t('view.docs.appImg.paramLang') }}</td>
+                                </tr>
+                                <tr>
+                                    <td>dark</td>
+                                    <td>boolean</td>
+                                    <td>{{ t('view.docs.common.no') }}</td>
+                                    <td>{{ t('view.docs.appImg.paramDark') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section class="api-section">
+                        <div class="api-heading">
+                            <span class="api-method get">GET</span>
+                            <h2>/api/sync_app_img</h2>
+                        </div>
+                        <div class="api-heading">
+                            <span class="api-method post">POST</span>
+                            <h2>/api/sync_app_img</h2>
+                        </div>
+                        <p class="api-description">
+                            {{ t('view.docs.syncAppImg.description') }}
+                        </p>
+
+                        <h3>{{ t('view.docs.common.requestParams') }}</h3>
+                        <p>{{ t('view.docs.syncAppImg.supportsParams') }}</p>
+                        <table class="param-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ t('view.docs.common.param') }}</th>
+                                    <th>{{ t('view.docs.common.type') }}</th>
+                                    <th>{{ t('view.docs.common.required') }}</th>
+                                    <th>{{ t('view.docs.common.description') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>lang</td>
+                                    <td>string</td>
+                                    <td>{{ t('view.docs.common.no') }}</td>
+                                    <td>{{ t('view.docs.appImg.paramLang') }}</td>
+                                </tr>
+                                <tr>
+                                    <td>dark</td>
+                                    <td>boolean</td>
+                                    <td>{{ t('view.docs.common.no') }}</td>
+                                    <td>{{ t('view.docs.appImg.paramDark') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
                     <!-- Interactive API Tester Section -->
                     <section class="api-section interactive-section">
                         <div class="api-heading">
@@ -200,6 +278,10 @@ h1 {
 
 .api-method.tool {
     background-color: #6c757d;
+}
+
+.api-method.post {
+    background-color: #28a745;
 }
 
 h2 {
