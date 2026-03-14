@@ -120,6 +120,7 @@ watch(() => isOffline.value, (currentlyOffline) => {
     // fetchSlogan(); // 调用现在是安全的
   } else {
     dynamicMotd.value = { motd: props.serverData.motd, motd_html: props.serverData.motd_html };
+    fetchLatestMotd();
     motdUpdateInterval = setInterval(fetchLatestMotd, 5000); // 调用现在是安全的
   }
 }, { immediate: true });

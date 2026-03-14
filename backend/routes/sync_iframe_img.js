@@ -6,9 +6,10 @@ const logger = require('../utils/logger');
 const bgPath = path.join(__dirname, '../', 'img', 'status_img.png');
 
 const { getContext, addRequestToQueue, handleBrowserCrash } = require('../utils/browserManager');
-const { setScreenshot,startManager } = require('../utils/screenshotManager');
+const { setScreenshot, startManager } = require('../utils/screenshotManager');
 const config = require('../config.json');
 const PORT = config.serverPort || 3000;
+const timeout = 30 * 1000;
 
 //启动截图管理器
 startManager();
@@ -19,44 +20,41 @@ async function handleRequest(req, res) {
 
     try {
         const page = await (await getContext()).newPage();
-        await page.setDefaultNavigationTimeout(15000);
-        await page.setDefaultTimeout(10000);
+        await page.setDefaultNavigationTimeout(timeout);
+        await page.setDefaultTimeout(timeout);
 
         const url = `http://127.0.0.1:${PORT}/iframe?${new URLSearchParams(req.query).toString()}`;
 
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 30*1000 });
-        await page.waitForSelector('#app', { timeout: 30*1000 });
-
-        // 获取页面实际高度
-        const actualHeight = await page.evaluate(() => {
-            return Math.max(
-                document.body.scrollHeight,
-                document.documentElement.scrollHeight,
-                document.body.offsetHeight,
-                document.documentElement.offsetHeight,
-                document.body.clientHeight,
-                document.documentElement.clientHeight
-            );
+        await page.goto(url, {
+            waitUntil: 'load',
+            timeout: 60 * 1000
         });
 
-        // 增强的截图流程
-        await page.setViewportSize({
-            width: 700,
-            height: actualHeight,
-            deviceScaleFactor: 1
-        });
+        await page.waitForSelector('#app', { timeout: 30000 });
+        await page.waitForFunction('window.serverData !== undefined', { timeout: 30000 });
+
+        // 等待所有图片加载完成
+        await page.waitForFunction(() => {
+            const images = Array.from(document.querySelectorAll('img'));
+            return images.every(img => img.complete);
+        }, { timeout: 3 * 1000 });
 
         const filename = `${Math.random().toString(36).substring(2, 15)}.png`;
         const filePath = path.join(__dirname, '../../', 'screenshots', filename);
 
 
-        const screenshot = await page.screenshot({
+        // 截图 app 区域
+        const appElement = await page.$('#app');
+        const screenshot = await (appElement
+            ? appElement.screenshot({ type: 'png' })
+            : page.screenshot({ type: 'png', path: filePath }));
+        /*const screenshot = await page.screenshot({
             type: 'png',
             fullPage: true,
             omitBackground: false,
             captureBeyondViewport: false,
             path: filePath
-        });
+        });*/
 
         // 等待 Vue 组件挂载完成
         await page.waitForFunction('window.serverData !== undefined');
@@ -74,13 +72,13 @@ async function handleRequest(req, res) {
 
         await page.close()
         return res.send(JSON.stringify(dataPackage));
-    } 
+    }
     catch (error) {
         console.error(error)
         logger.error('[SYNC IFRAME]', 'Request Failed:', error.message);
-        if('TimeoutError' === error.name) {
+        if ('TimeoutError' === error.name) {
             logger.error('[SYNC IFRAME]', 'Request Failed:TimeOut');
-            const errorPackage = {serverData:{status: 'offline'}}
+            const errorPackage = { serverData: { status: 'offline' } }
             return res.send(JSON.stringify(errorPackage))
         }
         logger.error('[SYNC IFRAME]', 'Request Failed:', error.message);

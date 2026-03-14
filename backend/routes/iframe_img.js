@@ -1,3 +1,4 @@
+// routes/iframe_img.js
 const express = require('express');
 const router = express.Router();
 const path = require('path');
@@ -8,59 +9,53 @@ const bgPath = path.join(__dirname, '../', 'img', 'status_img.png');
 const { getContext, addRequestToQueue, handleBrowserCrash } = require('../utils/browserManager');
 const config = require('../config.json');
 const PORT = config.serverPort || 3000;
+const timeout = 15 * 1000;
 
-// 路由处理器
 async function handleRequest(req, res) {
     res.setHeader('Content-Type', 'image/png');
+    let page = null;
 
     try {
-        const page = await (await getContext()).newPage();
-        await page.setDefaultNavigationTimeout(15000);
-        await page.setDefaultTimeout(10000);
+        const context = await getContext();
+        page = await context.newPage();
 
         const url = `http://127.0.0.1:${PORT}/iframe?${new URLSearchParams(req.query).toString()}`;
 
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 15000 });
-        await page.waitForSelector('#app', { timeout: 5000 });
-
-        const actualHeight = await page.evaluate(() => {
-            return Math.max(
-                document.body.scrollHeight,
-                document.documentElement.scrollHeight,
-                document.body.offsetHeight,
-                document.documentElement.offsetHeight,
-                document.body.clientHeight,
-                document.documentElement.clientHeight
-            );
+        await page.goto(url, {
+            waitUntil: 'load',
+            timeout: 60 * 1000
         });
 
-        await page.setViewportSize({
-            width: 700,
-            height: actualHeight,
-            deviceScaleFactor: 1
-        });
+        await page.waitForSelector('#app', { timeout: 3*1000 });
+        await page.waitForFunction('window.serverData !== undefined', { timeout: 3*1000 });
 
-        const screenshot = await page.screenshot({
-            type: 'png',
-            fullPage: true,
-            omitBackground: false,
-            captureBeyondViewport: false
-        });
+        // 等待所有图片加载完成
+        await page.waitForFunction(() => {
+            const images = Array.from(document.querySelectorAll('img'));
+            return images.every(img => img.complete);
+        }, { timeout: 3*1000 });
+
+        // 截图 app 区域
+        const appElement = await page.$('#app');
+        const screenshot = await (appElement
+            ? appElement.screenshot({ type: 'png' })
+            : page.screenshot({ type: 'png' }));
 
         await page.close();
         return res.send(screenshot);
-    } catch (error) {
-        logger.error('[IFRAME]', 'Request Failed:', error.message);
+    } catch (e) {
+        logger.error('[IFRAME]', 'Request Failed:', e.message);
+        if (page) await page.close().catch(() => { });
         handleBrowserCrash();
-        return res.send(await error4img(bgPath, [`Error: ${error.message.replace(/[\n\r]/g, ' ')}`]));
+        return res.send(await error4img(bgPath, [`Error: ${e.message.replace(/[\n\r]/g, ' ')}`]));
     }
 }
 
-// 启动浏览器管理器
+
 router.get('/', (req, res) => {
-    addRequestToQueue(() => handleRequest(req, res)).catch(async error => {
-        logger.error('[IFRAME]', 'Queue Error:', error.message);
-        res.status(500).send(await error4img(bgPath, [`Error: ${error.message.replace(/[\n\r]/g, ' ')}`]));
+    addRequestToQueue(() => handleRequest(req, res)).catch(async err => {
+        logger.error('[IFRAME]', 'Queue Error:', err.message);
+        res.status(500).send(await error4img(bgPath, [`Error: ${err.message.replace(/[\n\r]/g, ' ')}`]));
     });
 });
 
