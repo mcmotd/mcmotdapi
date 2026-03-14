@@ -53,6 +53,9 @@ analyticsService.init();
 
 const cacheService = require('./services/cacheService');
 cacheService.init();
+const appImageStorage = require('./services/appImageStorage');
+appImageStorage.ensureTempDir();
+appImageStorage.cleanupExpiredFiles();
 
 
 
@@ -60,6 +63,9 @@ cacheService.init();
 // 导入所有路由模块
 const statusRoute = require('./routes/status');
 const statusImageRoute = require('./routes/status_img'); // 导入新的图片路由
+const appImageRoute = require('./routes/appImage');
+const syncAppImageRoute = require('./routes/sync_appImage');
+const screenshotRoute = require('./routes/screenshot');
 const configRoute = require('./routes/config');
 const AuthRoute = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
@@ -75,6 +81,9 @@ app.use(express.json());
 // --- API 路由 ---
 app.use('/api/status', statusRoute);
 app.use('/api/status_img', statusImageRoute); // 挂载新的图片路由
+app.use('/api/app_img', appImageRoute);
+app.use('/api/sync_app_img', syncAppImageRoute);
+app.use('/api/screenshot', screenshotRoute);
 app.use('/api/config', configRoute);
 app.use('/api/login', AuthRoute);
 app.use('/api/admin', adminRoutes); // 挂载 admin 路由

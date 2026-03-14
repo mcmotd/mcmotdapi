@@ -12,6 +12,10 @@ const testStype = ref('auto');
 const testSrv = ref(false);
 const testTheme = ref('simple');
 const testIcon = ref('');
+const testLang = ref('zh-CN');
+const testDark = ref(false);
+const testJsonEndpoint = ref('/api/status');
+const testImageEndpoint = ref('/api/status_img');
 
 const jsonResponse = ref(null);
 const isJsonLoading = ref(false);
@@ -25,7 +29,11 @@ const generatedJsonUrl = computed(() => {
     if (testStype.value !== 'auto') params.append('stype', testStype.value);
     if (testSrv.value) params.append('srv', 'true');
     if (testIcon.value) params.append('icon', testIcon.value);
-    return `/api/status?${params.toString()}`;
+    if (testJsonEndpoint.value === '/api/sync_app_img') {
+        if (testLang.value) params.append('lang', testLang.value);
+        if (testDark.value) params.append('dark', 'true');
+    }
+    return `${testJsonEndpoint.value}?${params.toString()}`;
 });
 
 const generatedImageUrl = computed(() => {
@@ -34,9 +42,15 @@ const generatedImageUrl = computed(() => {
     if (testPort.value) params.append('port', testPort.value);
     if (testStype.value !== 'auto') params.append('stype', testStype.value);
     if (testSrv.value) params.append('srv', 'true');
-    if (testTheme.value) params.append('theme', testTheme.value);
     if (testIcon.value) params.append('icon', testIcon.value);
-    return `/api/status_img?${params.toString()}`;
+    if (testImageEndpoint.value === '/api/status_img' && testTheme.value) {
+        params.append('theme', testTheme.value);
+    }
+    if (testImageEndpoint.value === '/api/app_img') {
+        if (testLang.value) params.append('lang', testLang.value);
+        if (testDark.value) params.append('dark', 'true');
+    }
+    return `${testImageEndpoint.value}?${params.toString()}`;
 });
 
 // --- Methods ---
@@ -69,8 +83,18 @@ const sendJsonRequest = async () => {
                         <option value="je">je</option>
                         <option value="be">be</option>
                     </select></div>
+                <div class="form-group"><label>{{ t('comp.apiTester.jsonEndpointLabel') }}</label><select v-model="testJsonEndpoint">
+                        <option value="/api/status">/api/status</option>
+                        <option value="/api/sync_app_img">/api/sync_app_img</option>
+                    </select></div>
+                <div class="form-group"><label>{{ t('comp.apiTester.imageEndpointLabel') }}</label><select v-model="testImageEndpoint">
+                        <option value="/api/status_img">/api/status_img</option>
+                        <option value="/api/app_img">/api/app_img</option>
+                    </select></div>
                 <div class="form-group"><label>{{ t('comp.apiTester.themeLabel') }}</label><input type="text"
                         v-model="testTheme"></div>
+                <div class="form-group"><label>{{ t('comp.apiTester.langLabel') }}</label><input type="text"
+                        v-model="testLang"></div>
             </div>
             <div class="form-group full-width">
                 <label>{{ t('comp.apiTester.iconLabel') }}</label>
@@ -80,6 +104,11 @@ const sendJsonRequest = async () => {
                 <input id="srv-check-component" type="checkbox" v-model="testSrv">
                 <label for="srv-check-component">{{ t('comp.apiTester.srvLabel') }}</label>
             </div>
+            <div class="form-group checkbox-group">
+                <input id="dark-check-component" type="checkbox" v-model="testDark">
+                <label for="dark-check-component">{{ t('comp.apiTester.darkLabel') }}</label>
+            </div>
+            <p class="control-hint">{{ t('comp.apiTester.darkHint') }}</p>
             <button class="send-btn" @click="sendJsonRequest" :disabled="isJsonLoading">
                 <span v-if="isJsonLoading" class="spinner"></span>
                 {{ isJsonLoading ? t('comp.apiTester.querying') : t('comp.apiTester.sendRequest') }}
@@ -96,10 +125,12 @@ const sendJsonRequest = async () => {
             <div class="tab-content">
                 <div v-show="activeTab === 'json'" class="json-result">
                     <div v-if="isJsonLoading" class="loading-overlay">{{ t('comp.apiTester.querying') }}...</div>
+                    <p class="endpoint-hint">{{ generatedJsonUrl }}</p>
                     <pre v-if="jsonResponse"><code>{{ JSON.stringify(jsonResponse, null, 2) }}</code></pre>
                     <div v-else class="placeholder">{{ t('comp.apiTester.placeholder') }}</div>
                 </div>
                 <div v-show="activeTab === 'image'" class="image-result">
+                    <p class="endpoint-hint">{{ generatedImageUrl }}</p>
                     <p>{{ t('comp.apiTester.imageHint') }}</p>
                     <div class="image-preview">
                         <img :src="generatedImageUrl" :alt="t('comp.apiTester.imageAlt')" :key="generatedImageUrl">
@@ -147,6 +178,12 @@ const sendJsonRequest = async () => {
     align-items: center;
     gap: 0.5rem;
     margin-top: 1rem;
+}
+
+.control-hint {
+    margin-top: 0.5rem;
+    color: var(--text-color-light);
+    font-size: 0.9rem;
 }
 
 label {
@@ -249,6 +286,12 @@ input[type="checkbox"] {
     text-align: center;
     color: var(--text-color-light);
     margin: 0 0 1rem 0;
+}
+
+.endpoint-hint {
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+    font-size: 0.85rem;
+    word-break: break-all;
 }
 
 .image-preview {

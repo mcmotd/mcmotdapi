@@ -36,6 +36,16 @@
                 "supportsParams": "此接口支持 /api/status 的所有参数，并额外支持以下参数：",
                 "paramTheme": "图片的预设主题样式。如果留空，将使用默认主题 (simple)。"
             },
+            "appImg": {
+                "description": "生成与站点状态卡片布局一致的 PNG 图片。",
+                "supportsParams": "此接口支持 /api/status 的所有参数，并额外支持以下参数：",
+                "paramLang": "用于卡片文本标签的语言。常见值如 zh-CN、en。",
+                "paramDark": "设为 true 时以暗色模式渲染卡片。"
+            },
+            "syncAppImg": {
+                "description": "在一次请求中完成服务器查询与 app 图片生成，返回服务器数据和可用的截图链接。",
+                "supportsParams": "此接口支持 /api/status 的所有参数，并额外支持以下参数："
+            },
             "tester": {
                 "title": "API 交互式测试",
                 "description": "在此处构建您的请求，并实时查看返回结果。"
@@ -48,9 +58,14 @@
             "ipLabel": "ip / host",
             "portLabel": "port",
             "stypeLabel": "stype",
+            "jsonEndpointLabel": "JSON 接口",
+            "imageEndpointLabel": "图片接口",
             "themeLabel": "theme",
+            "langLabel": "lang",
             "iconLabel": "自定义图标 URL (可选)",
             "srvLabel": "启用 SRV 解析",
+            "darkLabel": "暗色模式",
+            "darkHint": "仅对 /api/app_img 和 /api/sync_app_img 生效。",
             "querying": "正在查询...",
             "sendRequest": "发送请求",
             "jsonResponse": "JSON 响应",
@@ -88,7 +103,8 @@
             "title": "生成状态图片链接",
             "description": "复制下方链接，你可以将其用于论坛签名档或 Markdown 文档中。",
             "preview": "图片预览",
-            "theme":"主题"
+            "theme":"主题",
+            "previewCard": "预览卡片"
         },
         "joinM": {
             "title": "即将加入服务器",
