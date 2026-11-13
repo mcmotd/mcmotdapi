@@ -1,19 +1,23 @@
 const { createCanvas, loadImage, registerFont } = require('canvas');
 const fs = require('fs');
 const path = require('path');
-// const {} = require("../pic.json")
+const configService = require('./configService');
 
-// 1. 加载并解析配置文件
-const config = JSON.parse(fs.readFileSync(path.join(__dirname,'../','config', 'pic.json'), 'utf8'));
+// 配置对象由 configService 持有（内部保持对象引用不变），改 pic.json 后无需重启
+const config = configService.get('pic');
 
-const fontPath = path.isAbsolute(config.font.path) ? config.font.path : path.join(__dirname,'../',config.font.path);
-// 2. 注册全局字体
-try {
-    registerFont(fontPath, { family: config.font.name });
-} catch (e) {
-    console.error(`[错误] 字体文件加载失败: ${fontPath}`);
-    process.exit(1);
+let registeredFontPath = null;
+function ensureFont() {
+    const fontPath = path.isAbsolute(config.font.path) ? config.font.path : path.join(__dirname, '../', config.font.path);
+    if (registeredFontPath === fontPath) return;
+    try {
+        registerFont(fontPath, { family: config.font.name });
+        registeredFontPath = fontPath;
+    } catch (e) {
+        console.error(`[错误] 字体文件加载失败: ${fontPath}`);
+    }
 }
+ensureFont();
 
 /**
  * [新增] 辅助函数：根据路径字符串从对象中安全地取值
@@ -97,7 +101,14 @@ function drawRoundRect(ctx, x, y, width, height, radius) {
 
 
 async function generateImage(templateName, data) {
-    const templateConfig = config.templates[templateName];
+    ensureFont();
+    let name = templateName;
+    let templateConfig = config.templates[name];
+    // 未知模板回退到默认模板，而不是直接抛错（用户可能是旧链接）
+    if (!templateConfig) {
+        name = config.default_template;
+        templateConfig = config.templates[name];
+    }
     if (!templateConfig) throw new Error(`模板 "${templateName}" 在配置文件中未找到。`);
 
     // [修改] 在渲染前，调用处理函数
@@ -110,7 +121,7 @@ async function generateImage(templateName, data) {
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    switch (templateName) {
+    switch (name) {
         case 'dark_tech':
             await renderDarkTech(ctx, templateConfig, finalData.serverData);
             break;
@@ -342,4 +353,16 @@ async function renderGlassCard(ctx, conf, serverData) {
         }
     }
 }
-module.exports = { generateImage };
+/** 列出可用模板（后台展示 / 校验参数用） */
+function listThemes() {
+    return {
+        default_template: config.default_template,
+        themes: Object.keys(config.templates || {}).map(name => ({
+            name,
+            width: config.templates[name].width,
+            height: config.templates[name].height,
+        })),
+    };
+}
+
+module.exports = { generateImage, listThemes };

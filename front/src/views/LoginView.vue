@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import CryptoJS from 'crypto-js';
-import axios from 'axios';
+import api, { setToken, setMustChangePassword, clearToken } from '../utils/api';
 
 const username = ref('');
 const password = ref('');
@@ -22,32 +22,28 @@ const handleLogin = async () => {
 
     isLoading.value = true;
     errorMessage.value = '';
+    clearToken();
 
-    // 使用 crypto-js 对密码进行 MD5 加密
+    // 使用 crypto-js 对密码进行 MD5 加密（后端存的就是 md5）
     const hashedPassword = CryptoJS.MD5(password.value).toString();
 
     try {
-        // [修改] 启用真实的后端 API 请求
-        const response = await axios.post('/api/login', {
+        const response = await api.post('/api/login', {
             username: username.value,
             password: hashedPassword
         });
 
-        // [移除] 删除此处的后端逻辑模拟代码
-
         if (response.data.success) {
-            // 登录成功，在 sessionStorage 中设置一个标记
+            setToken(response.data.token, response.data.expiresAt);
+            setMustChangePassword(Boolean(response.data.mustChangePassword));
             sessionStorage.setItem('isAdminAuthenticated', 'true');
-            // 跳转到管理员面板
+            sessionStorage.setItem('adminUsername', response.data.username || username.value);
             router.push('/admin');
         } else {
-            // 理论上，如果 success 为 false，后端应该返回错误状态码，由 catch 块处理
-            // 但为保险起见，保留此逻辑
             errorMessage.value = response.data.error || '登录失败。';
         }
 
     } catch (err) {
-        // Axios 会将 4xx 和 5xx 的响应视为错误，在这里捕获
         errorMessage.value = err.response?.data?.error || '登录时发生未知错误。';
     } finally {
         isLoading.value = false;

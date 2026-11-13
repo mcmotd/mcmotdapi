@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue';
-import axios from 'axios';
+import api from '../../utils/api';
 
 const props = defineProps({
     config: {
@@ -19,20 +19,20 @@ const localConfig = ref({});
 
 // 深度拷贝props.config，并在配置更新时同步
 watch(() => props.config, (newConfig) => {
-    localConfig.value = JSON.parse(JSON.stringify(newConfig));
+    localConfig.value = JSON.parse(JSON.stringify(newConfig || {}));
 }, { immediate: true, deep: true });
 
 
-// 通用的保存函数，现在 value 就是更新后的整个对象或数组
+// 通用的保存函数，value 就是更新后的整个对象或数组
 const saveSection = async (key) => {
     statusMessage.value = `正在保存 ${key} ...`;
     errorMessage.value = '';
 
     const keys = key.split('.');
-    const valueToSave = keys.reduce((obj, k) => obj[k], localConfig.value);
+    const valueToSave = keys.reduce((obj, k) => obj && obj[k], localConfig.value);
 
     try {
-        const response = await axios.post('/api/update', { key, value: valueToSave });
+        const response = await api.post('/api/update', { target: 'front', key, value: valueToSave });
         if (response.data.success) {
             statusMessage.value = response.data.message;
             emit('config-updated');
@@ -66,6 +66,12 @@ const addLanguage = () => {
     localConfig.value.i18n.languages.push({ name: "New Language", code: "xx-XX" });
 };
 const deleteLanguage = (index) => { localConfig.value.i18n.languages.splice(index, 1); };
+
+const addTheme = () => {
+    if (!localConfig.value.image_generator.themes) localConfig.value.image_generator.themes = [];
+    localConfig.value.image_generator.themes.push({ name: "新主题", value: "simple" });
+};
+const deleteTheme = (index) => { localConfig.value.image_generator.themes.splice(index, 1); };
 </script>
 
 <template>
@@ -192,6 +198,51 @@ const deleteLanguage = (index) => { localConfig.value.i18n.languages.splice(inde
                 <button @click="saveSection('footer')">保存页脚更改</button>
                 <button @click="saveSection('client')" style="margin-left: 1rem;">保存客户端更改</button>
             </div>
+        </fieldset>
+
+        <fieldset class="config-section">
+            <legend>接口与嵌入 (API / Embed)</legend>
+            <div class="form-grid">
+                <div class="form-group"><label>API 基础路径</label><input type="text" v-model="localConfig.api.baseUrl"></div>
+                <div class="form-group"><label>iframe 嵌入路径</label><input type="text" v-model="localConfig.embed.baseUrl"></div>
+            </div>
+            <div class="section-actions">
+                <button @click="saveSection('api')">保存 API 配置</button>
+                <button @click="saveSection('embed')" style="margin-left: 1rem;">保存嵌入配置</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="config-section">
+            <legend>图片生成 (Image Generator)</legend>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>默认主题</label>
+                    <input type="text" v-model="localConfig.image_generator.default_theme" placeholder="simple / dark_tech / glass_card">
+                </div>
+            </div>
+            <div class="array-editor">
+                <label class="array-label">可选主题列表</label>
+                <div v-for="(theme, index) in localConfig.image_generator.themes" :key="index" class="array-item">
+                    <input type="text" v-model="theme.name" placeholder="显示名称">
+                    <input type="text" v-model="theme.value" placeholder="模板 key">
+                    <button @click="deleteTheme(index)" class="delete-btn" title="删除此项">×</button>
+                </div>
+                <button @click="addTheme" class="add-btn">新增主题</button>
+            </div>
+            <div class="section-actions"><button @click="saveSection('image_generator')">保存图片配置</button></div>
+        </fieldset>
+
+        <fieldset class="config-section">
+            <legend>离线状态 (Failure State)</legend>
+            <div class="form-grid">
+                <div class="form-group full-width"><label>离线标语 API</label><input type="text"
+                        v-model="localConfig.failureState.sloganApi"></div>
+                <div class="form-group full-width"><label>默认标语</label><input type="text"
+                        v-model="localConfig.failureState.defaultSlogan"></div>
+                <div class="form-group full-width"><label>副标题</label><input type="text"
+                        v-model="localConfig.failureState.subtext"></div>
+            </div>
+            <div class="section-actions"><button @click="saveSection('failureState')">保存离线配置</button></div>
         </fieldset>
 
         <fieldset class="config-section">

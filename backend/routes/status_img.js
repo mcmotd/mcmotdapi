@@ -1,7 +1,7 @@
 const express = require('express');
-const fs = require("fs")
+const fs = require('fs');
 const router = express.Router();
-const path = require("path");
+const path = require('path');
 const bgPath = path.join(__dirname, '../', 'img', 'status_img.png');
 const { queryServerStatus } = require('../services/queryService');
 const { generateImage } = require('../services/imageGenerator');
@@ -9,32 +9,31 @@ const { default: parseHost } = require('../utils/parsehost');
 const Logger = require('../utils/logger');
 const { logQuery } = require('../services/analyticsService');
 
+function clientIpOf(req) {
+    const ip = req.ip || req.socket?.remoteAddress || '';
+    return ip === '::1' ? '127.0.0.1' : String(ip).replace(/^::ffff:/, '');
+}
+
 router.get('/', async (req, res) => {
-    const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
-    var { ip, port, host, stype, icon, srv,theme:theme } = req.query;
+    const clientIP = clientIpOf(req);
+    const { ip, port, host, stype, icon, srv } = req.query;
+    let { theme } = req.query;
     const isInternalRequest = req.headers['x-internal-request'] === 'true';
 
     let referrer = req.headers['referer'] || null;
-    // console.log(req.headers)
     if (referrer) {
         try {
-            referrer = new URL(referrer).hostname; // 只保留域名，更干净
+            referrer = new URL(referrer).hostname;
         } catch (e) {
-            referrer = null; // 如果 Referer 无效，则忽略
+            referrer = null;
         }
     }
 
-    if(!theme){
-        theme = 'simple';
-    }
-    let pre_host = parseHost(ip, port, host);
+    if (!theme) theme = 'simple';
 
+    const pre_host = parseHost(ip, port, host);
     if (!pre_host.success) {
-        res.status(400).json({
-            status: 'error',
-            message: pre_host.message
-        });
-        return;
+        return res.status(400).json({ status: 'error', message: pre_host.message || pre_host.error });
     }
 
     res.setHeader('Content-Type', 'image/png');
@@ -42,12 +41,15 @@ router.get('/', async (req, res) => {
     const fullAddress = pre_host.port ? `${pre_host.ip}:${pre_host.port}` : pre_host.ip;
     Logger.debug('[QUERY_IMG]', `${clientIP} 查询 ${fullAddress}`);
 
+    const startedAt = Date.now();
+
     try {
-        // 同样调用核心查询服务来获取数据
-        const serverData = await queryServerStatus(pre_host.ip, pre_host.port, icon, stype, Boolean(srv == 'true'), isInternalRequest);
+        const serverData = await queryServerStatus(
+            pre_host.ip, pre_host.port, icon, stype, Boolean(srv == 'true'), isInternalRequest
+        );
+
         const simpleData = {
-            serverData: serverData, // 传入 serverData 让模板自己格式化
-            // backgroundPath: './bg.png', // 仍然可以覆盖默认背景
+            serverData,
             iconOptions: {
                 base64Icon: serverData.icon,
                 x: 490,
@@ -64,13 +66,15 @@ router.get('/', async (req, res) => {
             clientIp: clientIP,
             success: true,
             serverType: serverData.type,
-            referrer: referrer,
-            from_cache: serverData.cached
+            referrer,
+            from_cache: serverData.cached,
+            delayMs: Date.now() - startedAt,
         });
 
         return res.send(pngBuffer);
-
     } catch (error) {
+        const reason = error.reason || error.message;
+        Logger.info('[QUERY_IMG]', `查询失败: ${fullAddress} -> ${reason}`);
 
         logQuery({
             endpoint: '/api/status_img',
@@ -79,12 +83,18 @@ router.get('/', async (req, res) => {
             clientIp: clientIP,
             success: false,
             serverType: null,
-            referrer: referrer
+            referrer,
+            from_cache: false,
+            delayMs: Date.now() - startedAt,
+            error: reason,
         });
 
-        console.log(error)
-        // 在这里，您可以发送一张表示“服务器离线”的图片
-        return res.send(fs.readFileSync(bgPath));
+        // 返回一张“离线”占位图
+        try {
+            return res.send(fs.readFileSync(bgPath));
+        } catch (e) {
+            return res.status(500).json({ status: 'error', message: '图片生成失败。' });
+        }
     }
 });
 

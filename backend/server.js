@@ -1,96 +1,108 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
+// 配置必须最先加载：它会从 example 复制缺失文件、补齐默认项、生成 token 密钥
+const configService = require('./services/configService');
+const config = configService.init();
+
 const logger = require('./utils/logger');
-const fs = require('fs');
-
-
-
-// --- [核心改动] 配置文件自动创建逻辑 ---
-const configPath = path.join(__dirname, 'config','config.json');
-const frontPath = path.join(__dirname, 'config', 'front.json');
-const picPath = path.join(__dirname, 'config','pic.json');
-
-const exampleConfigPath = path.join(__dirname, 'example','config.example.json');
-const exampleFrontPath = path.join(__dirname, 'example', 'front.example.json');
-const examplPicPath = path.join(__dirname, 'example', 'pic.example.json');
-
-
-function cehckConfig(cfgPath,examplePath) { 
-  if(!fs.existsSync(path.join(__dirname, 'config'))){
-    fs.mkdirSync(path.join(__dirname, 'config'));
-  }
-  if (!fs.existsSync(cfgPath)) {
-    logger.warn('[CONFIG]', `未找到 ${cfgPath} 文件。`);
-    // 如果不存在，则检查 config.example.json 是否存在
-    if (fs.existsSync(examplePath)) {
-      try {
-        // 如果范例文件存在，则复制它来创建新的 config.json
-        fs.copyFileSync(examplePath, cfgPath);
-        logger.info('[CONFIG]', `已成功从${examplePath}  复制创建了新的 ${cfgPath} 文件。`);
-      } catch (err) {
-        logger.error('[CONFIG]', '从范例文件创建配置文件失败:', err);
-        process.exit(1); // 发生错误，退出程序
-      }
-    } else {
-      // 如果连范例文件都没有，程序无法运行
-      logger.error('[CONFIG]', `严重错误: ${examplePath} 和 ${cfgPath} 均未找到。程序无法启动。`);
-      process.exit(1);
-    }
-  }
-}
-
-cehckConfig(configPath,exampleConfigPath);
-cehckConfig(frontPath,exampleFrontPath);
-cehckConfig(picPath,examplPicPath);
-
-
-const config = require('./config/config.json');
-
+const db = require('./db');
 const analyticsService = require('./services/analyticsService');
-// 初始化数据库
-analyticsService.init();
-
 const cacheService = require('./services/cacheService');
-cacheService.init();
 
-
-
-
-// 导入所有路由模块
 const statusRoute = require('./routes/status');
-const statusImageRoute = require('./routes/status_img'); // 导入新的图片路由
+const statusImageRoute = require('./routes/status_img');
 const configRoute = require('./routes/config');
-const AuthRoute = require('./routes/auth');
+const authRoute = require('./routes/auth');
+const updateRoute = require('./routes/update');
 const adminRoutes = require('./routes/admin');
 
-
 const app = express();
-const PORT = config.serverPort || 3000;
+const PORT = Number(config.serverPort) || 3000;
 
 app.use(cors());
-app.use(express.json());
-
+app.use(express.json({ limit: '2mb' }));
+// 反向代理后面部署时，req.ip 才能拿到真实客户端地址
+app.set('trust proxy', true);
 
 // --- API 路由 ---
 app.use('/api/status', statusRoute);
-app.use('/api/status_img', statusImageRoute); // 挂载新的图片路由
+app.use('/api/status_img', statusImageRoute);
 app.use('/api/config', configRoute);
-app.use('/api/login', AuthRoute);
-app.use('/api/admin', adminRoutes); // 挂载 admin 路由
+app.use('/api/login', authRoute);
+app.use('/api/update', updateRoute);
+app.use('/api/admin', adminRoutes);
 
-// --- 静态文件托管与Vue Router支持 ---
-app.use(express.static(path.join(__dirname, 'dist')));
-app.get(/(.*)/, (req, res) => { // 使用 '*' 捕获所有未匹配的路由，包括 / 和 /iframe
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// 未匹配的 /api 请求返回 JSON，不要掉进 SPA 的 index.html
+app.use('/api', (req, res) => {
+    res.status(404).json({ status: 'error', message: `接口不存在: ${req.method} ${req.originalUrl}` });
 });
 
-
-// --- 启动服务器 ---
-app.listen(PORT, (err) => {
-  if (err) {
-    logger.error('[SERVER]', err);
-  } else {
-    logger.info('[SERVER]', `后端服务器正在 http://localhost:${PORT} 上运行`);
-  }
+// --- 静态文件托管与 Vue Router 支持 ---
+const distDir = path.join(__dirname, 'dist');
+app.use(express.static(distDir));
+app.get(/(.*)/, (req, res) => {
+    res.sendFile(path.join(distDir, 'index.html'));
 });
+
+// 统一错误处理，避免异常直接把进程掀翻
+app.use((err, req, res, next) => {
+    logger.error('[SERVER]', `未捕获的请求异常: ${err.message}`);
+    if (res.headersSent) return next(err);
+    res.status(500).json({ status: 'error', message: '服务器内部错误。' });
+});
+
+let server = null;
+
+async function bootstrap() {
+    // 初始化数据库 + 统计服务（内部会完成建表、旧库迁移、旧日志导入）
+    await analyticsService.init();
+    await cacheService.init();
+
+    const info = await db.info().catch(() => null);
+    if (info) {
+        logger.info('[SERVER]', `数据库: ${info.driver} -> ${info.target}`);
+    }
+
+    server = app.listen(PORT, (err) => {
+        if (err) {
+            logger.error('[SERVER]', err);
+            process.exit(1);
+        }
+        logger.info('[SERVER]', `后端服务器正在 http://localhost:${PORT} 上运行`);
+    });
+}
+
+let shuttingDown = false;
+async function shutdown(signal) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    logger.info('[SERVER]', `收到 ${signal}，正在关闭…`);
+    try {
+        if (server) {
+            await new Promise(resolve => server.close(() => resolve()));
+        }
+        await analyticsService.shutdown();
+        await db.close();
+    } catch (e) {
+        logger.warn('[SERVER]', `关闭时出错: ${e.message}`);
+    }
+    process.exit(0);
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('unhandledRejection', (reason) => {
+    logger.error('[SERVER]', `未处理的 Promise 拒绝: ${reason && (reason.stack || reason.message || reason)}`);
+});
+process.on('uncaughtException', (err) => {
+    logger.error('[SERVER]', `未捕获异常: ${err && (err.stack || err.message || err)}`);
+});
+
+bootstrap().catch((err) => {
+    logger.error('[SERVER]', `启动失败: ${err.stack || err.message}`);
+    process.exit(1);
+});
+
+module.exports = app;

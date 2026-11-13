@@ -1,6 +1,7 @@
 // src/router/index.js
 
 import { createRouter, createWebHistory } from 'vue-router';
+import { getToken } from '../utils/api';
 // 我们将很快创建这两个新文件
 import HomeView from '../views/HomeView.vue';
 import EmbedView from '../views/EmbedView.vue';
@@ -46,8 +47,8 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     // 检查目标路由是否需要认证
     if (to.matched.some(record => record.meta.requiresAuth)) {
-        // 检查用户是否已登录 (通过 sessionStorage 标记)
-        if (sessionStorage.getItem('isAdminAuthenticated') === 'true') {
+        // 以 token 为准（sessionStorage 的布尔标记谁都能改）
+        if (getToken()) {
             next(); // 已登录，放行
         } else {
             next('/login'); // 未登录，重定向到登录页

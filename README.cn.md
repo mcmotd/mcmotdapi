@@ -71,11 +71,51 @@ pnpm install
 
 ### 3\. 修改配置 (Modify Configuration)
 
-所有配置文件均位于 `backend/config/` 目录下。
+所有配置文件均位于 `backend/config/` 目录下，保存后会自动热重载（`serverPort` 与 `database` 需要重启）。
 
-  - **主后端配置**: `backend/config/config`
+  - **主后端配置**: `backend/config/config.json`
   - **前端配置**: `backend/config/front.json`
   - **图片生成器配置**: `backend/config/pic.json`
+
+#### 数据库：SQLite / MySQL 二选一
+
+`config.json` 的 `database.driver` 决定存储后端，默认 `sqlite`（零依赖，文件为 `backend/data/mcmotd.db`）。
+
+```json
+{
+  "database": {
+    "driver": "mysql",
+    "mysql": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "user": "root",
+      "password": "your-password",
+      "database": "mcmotd",
+      "connectionLimit": 10
+    }
+  }
+}
+```
+
+切换驱动后重启服务即可，库与表会自动创建。MySQL 驱动依赖 `mysql2`（已写入 `backend/package.json`）。
+
+#### 访问统计的存储方式
+
+统计不再「一次查询写一行日志」，而是分三层：
+
+| 表 | 作用 | 默认保留 |
+| --- | --- | --- |
+| `stat_daily` / `stat_hourly` | 按「时间 × 服务器 × 接口 × 成功/缓存」聚合的计数 | 永久 / 60 天 |
+| `query_logs` | 短期原始日志（可采样、可跳过缓存命中） | 3 天 |
+| `servers` / `clients` / `referrers` | 维度表，日志里只存 ID | — |
+
+写入走内存缓冲 + 定时批量事务，长时间运行数据库体积基本只跟「服务器数量」增长，而不是跟请求量增长。
+保留期、采样率、是否记录缓存命中都可以在管理后台调整。
+
+#### 管理后台
+
+访问 `http://localhost:3123/admin`，首次登录使用 `admin` / `password`，登录后会被强制要求修改密码。
+管理后台支持：数据统计、原始日志检索、前台配置编辑、服务端配置（超时 / 缓存 / 统计 / 数据库）、数据库维护（落盘 / 清理 / 压缩 / 清空）。
 
 ### 4\. 启动项目 (Run the Project)
 

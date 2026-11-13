@@ -32,10 +32,10 @@ watch(serverType, (newType) => {
     if (newType === 'srv') {
         port.value = ''; // 当切换到 SRV 时，清空端口
     }
-    if(newType === 'java'){
+    if (newType === 'je') {
         port.value = '25565';
     }
-    if(newType === 'bedrock'){
+    if (newType === 'be') {
         port.value = '19132';
     }
 });

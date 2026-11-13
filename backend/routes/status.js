@@ -4,77 +4,93 @@ const logger = require('../utils/logger');
 const { queryServerStatus } = require('../services/queryService');
 const { default: parseHost } = require('../utils/parsehost');
 const { logQuery } = require('../services/analyticsService');
+const configService = require('../services/configService');
 
-router.get('/', async (req, res) => {
-    // 获取客户端IP，并进行标准化处理
-    const clientIP = req.ip === '::1' ? '127.0.0.1' : req.ip.replace(/^::ffff:/, '');
+function clientIpOf(req) {
+    const ip = req.ip || req.socket?.remoteAddress || '';
+    return ip === '::1' ? '127.0.0.1' : String(ip).replace(/^::ffff:/, '');
+}
 
-    const { ip, port, host, icon ,stype ,srv} = req.query;
-
+function referrerOf(req) {
     let referrer = req.headers['referer'] || null;
-    
     if (referrer) {
         try {
-            referrer = new URL(referrer).hostname; // 只保留域名，更干净
+            referrer = new URL(referrer).hostname;
         } catch (e) {
-            referrer = null; // 如果 Referer 无效，则忽略
+            referrer = null;
         }
     }
+    return referrer;
+}
 
+router.get('/', async (req, res) => {
+    const clientIP = clientIpOf(req);
+    const referrer = referrerOf(req);
+    const { ip, port, host, icon, stype, srv } = req.query;
     const isInternalRequest = req.headers['x-internal-request'] === 'true';
 
-    let pre_host = parseHost(ip, port,host);
+    const pre_host = parseHost(ip, port, host);
 
-    if(!pre_host.success){
-        res.status(400).json({
-            status:'error',
-            message:pre_host.message
-        });
+    if (!pre_host.success) {
+        // parseHost 失败时字段名是 error，之前这里取的是 message，导致错误提示永远是空的
+        res.status(400).json({ status: 'error', message: pre_host.message || pre_host.error });
         return;
     }
 
-    // --- 步骤 3: 执行与响应 ---
-    // 根据是否存在有效端口，动态构建用于日志的完整地址
-    const fullAddress = pre_host.port? `${pre_host.ip}:${pre_host.port}` : pre_host.ip;
+    const fullAddress = pre_host.port ? `${pre_host.ip}:${pre_host.port}` : pre_host.ip;
     logger.debug('[QUERY]', `${clientIP} 查询 ${fullAddress}`);
 
-    try {
-        // [核心改动] 调用核心服务。
-        // 如果 numericPort 是 undefined，JavaScript 会视其为未传递该参数。
-        const serverData = await queryServerStatus(pre_host.ip, pre_host.port, icon, stype, Boolean(srv == 'true'), isInternalRequest);
+    const startedAt = Date.now();
 
-        logQuery( {
+    try {
+        const serverData = await queryServerStatus(
+            pre_host.ip, pre_host.port, icon, stype, Boolean(srv == 'true'), isInternalRequest
+        );
+
+        logQuery({
             endpoint: '/api/status',
             ip: pre_host.ip,
             port: pre_host.port,
             clientIp: clientIP,
             success: true,
             serverType: serverData.type,
-            referrer: referrer,
-            from_cache: serverData.cached
+            referrer,
+            from_cache: serverData.cached,
+            delayMs: Date.now() - startedAt,
         });
 
+        const cached = Boolean(serverData.cached);
         serverData.cached = undefined;
 
+        res.setHeader('X-Cache', cached ? 'HIT' : 'MISS');
         return res.json(serverData);
     } catch (error) {
-        logger.info('[QUERY]', `查询失败: ${fullAddress}`);
+        const elapsed = Date.now() - startedAt;
+        const reason = error.reason || error.message;
+        logger.info('[QUERY]', `查询失败: ${fullAddress} -> ${reason}`);
 
-        logQuery( {
+        logQuery({
             endpoint: '/api/status',
             ip: pre_host.ip,
             port: pre_host.port,
             clientIp: clientIP,
             success: false,
             serverType: null,
-            referrer: referrer
+            referrer,
+            from_cache: false,
+            delayMs: elapsed,
+            error: reason,
         });
 
-        return res.json({
+        const payload = {
             status: 'offline',
-            "host": fullAddress,
-            error: '无法连接到服务器，它可能已离线或地址/端口不正确。'
-        });
+            host: fullAddress,
+            error: '无法连接到服务器，它可能已离线或地址/端口不正确。',
+        };
+        // 排查问题时把真实原因带出来；面向公众时默认隐藏
+        if (configService.get('config').log_level >= 3) payload.reason = reason;
+
+        return res.json(payload);
     }
 });
 

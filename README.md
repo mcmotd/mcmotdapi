@@ -70,11 +70,31 @@ pnpm install
 
 ### 3\. Modify Configuration
 
-All configuration files are located in the `backend/config/` directory.
+All configuration files are located in the `backend/config/` directory and are hot-reloaded on save (`serverPort` and `database` require a restart).
 
-  - **Main Backend Config**: `backend/config/config`
+  - **Main Backend Config**: `backend/config/config.json`
   - **Frontend Config**: `backend/config/front.json`
   - **Image Generator Config**: `backend/config/pic.json`
+
+#### Database: SQLite or MySQL
+
+`database.driver` in `config.json` selects the storage backend. The default is `sqlite` (zero dependency, file at `backend/data/mcmotd.db`). Switch to `mysql` and restart to use MySQL — the database and tables are created automatically. The `mysql2` driver is already declared in `backend/package.json`.
+
+#### How query analytics are stored
+
+Instead of one row per request, analytics use three layers:
+
+| Table | Purpose | Default retention |
+| --- | --- | --- |
+| `stat_daily` / `stat_hourly` | aggregated counts per time × server × endpoint × ok/cache | forever / 60 days |
+| `query_logs` | short-term raw log (samplable, can skip cache hits) | 3 days |
+| `servers` / `clients` / `referrers` | dimension tables, logs only keep IDs | — |
+
+Writes are buffered in memory and flushed in batched transactions, so the database grows with the number of servers rather than the number of requests. Retention, sampling and cache-hit logging can all be tuned in the admin panel.
+
+#### Admin panel
+
+Open `http://localhost:3123/admin` and sign in with `admin` / `password`; you will be forced to change the password on first login. The panel covers analytics, raw log search, frontend config editing, server config (timeouts / cache / analytics / database) and database maintenance (flush / prune / compact / clear).
 
 ### 4\. Run the Project
 
