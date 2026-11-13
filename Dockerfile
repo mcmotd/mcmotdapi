@@ -3,7 +3,9 @@
 # =================================================================
 FROM node:24.4.1-slim AS frontend-builder
 WORKDIR /app
-RUN npm install -g pnpm
+# 固定 pnpm 大版本：pnpm 10+ 默认不再自动执行依赖的安装脚本，
+# 允许清单写在 front/package.json 的 pnpm.onlyBuiltDependencies 里
+RUN npm install -g pnpm@10
 COPY front/package*.json front/pnpm-lock.yaml ./
 # 路径修正：确保拷贝到正确位置
 COPY front/ ./
